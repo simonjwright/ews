@@ -44,7 +44,7 @@ package body EWS.HTTP is
    URL_Request : constant String :=
      "^(GET|POST)"
      & "\s"
-     & "(/|((/[a-z0-9._-]+)+))"                 -- the URL
+     & "(/|((/[a-z0-9._-]+)+)/?)"                 -- the URL
      & "(\?([a-z0-9._=&%-]+))?"                 -- query
      & "\s"
      & "HTTP/\d\.\d"
