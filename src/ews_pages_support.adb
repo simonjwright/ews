@@ -17,7 +17,7 @@
 --  $Date$
 --  $Author$
 
-with GNAT.IO; use GNAT.IO;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body EWS_Pages_Support is
 
@@ -42,7 +42,7 @@ package body EWS_Pages_Support is
 
    procedure Output (This : access Variable) is
    begin
-      null;
+      raise Program_Error;
    end Output;
 
 
