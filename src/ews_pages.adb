@@ -120,6 +120,7 @@ procedure EWS_Pages is
                else
                   raise Constraint_Error;
                end if;
+
             end if;
 
             Start := End_Matches (0).Last + 1;

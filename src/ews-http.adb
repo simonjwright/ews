@@ -217,10 +217,10 @@ package body EWS.HTTP is
       String'Write
         (S,
          "HTTP/1.0 " & Response_Kind (This) & CRLF &
-         "Server: EWS" & CRLF &
-         "Connection: close" & CRLF &
-         "Content-Type: " & Content_Type (This) & CRLF &
-         "Content-Length: " & Content_Length (This)'Img & CRLF &
+           "Server: EWS" & CRLF &
+           "Connection: close" & CRLF &
+           "Content-Type: " & Content_Type (This) & CRLF &
+           "Content-Length: " & Content_Length (This)'Img & CRLF &
            CRLF);
       Free_Stream (S);
       Write_Content (This, To);
