@@ -19,6 +19,7 @@
 
 with Ada.Strings.Unbounded;
 with BC.Containers.Collections.Unmanaged;
+with GNAT.Regpat;
 
 package EWS_Pages_Support is
 
@@ -76,6 +77,12 @@ package EWS_Pages_Support is
 
 
    procedure Output (This : Compiled_Page);
+
+
+   function To_String
+     (In_String : String;
+      From : GNAT.Regpat.Match_Array;
+      At_Location : Natural) return String;
 
 
 end EWS_Pages_Support;
