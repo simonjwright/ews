@@ -1,17 +1,63 @@
 --  $Id$
 
-with "Options";
-
 project EWS is
 
-  for Main use ("ews-make_htdocs", "ews-server-test");
+  for Main use ("ews_pages", "ews-make_htdocs", "ews-server-test");
   for Exec_Dir use ".";
-  for Source_Dirs use (".");
-  for Object_Dir use Options'Object_Dir;
-  package IDE renames Options.IDE;
-  package Builder renames Options.Builder;
-  package Compiler renames Options.Compiler;
-  package Binder renames Options.Binder;
-  package Linker renames Options.Linker;
+
+  for Source_Dirs use
+    (
+     ".",
+     "/home/simon/bc"
+    );
+
+  for Object_Dir use ".build";
+
+  --  GLIDE configuration. Available in gnat-3.13p and gcc-3.3+;
+  --  comment out if using earlier gcc-3 releases.
+  package Ide is
+
+     for Compiler_Command ("ada") use "gnatmake";
+     for Gnatlist use "gnatls";
+
+  end Ide;
+
+  --  GNATMAKE configuration options.
+  package Builder is
+
+     for Default_Switches ("ada") use
+       (
+        "-g",
+        "-j2",
+        "-m"
+       );
+
+  end Builder;
+
+  --  GCC configuration options.
+  package Compiler is
+
+     for Default_Switches ("ada") use
+       (
+        "-gnatqQafoy",
+        "-fstack-check",
+        "-gnatwaL",
+        "-gnatVa",
+        "-O2"
+       );
+
+  end Compiler;
+
+  -- GNATBIND configuration options.
+  package Binder is
+
+     for Default_Switches ("ada") use ("-E");
+
+  end Binder;
+
+  --  GNATLINK configuration options.
+  package Linker is
+
+  end Linker;
 
 end EWS;
