@@ -23,7 +23,7 @@ all::
 	@echo "   dist [SUBRELEASE=x]"
 
 ews-server-test: ews-htdocs.adb
-	gnatmake -m ews-server-test
+	gnatmake -g -m ews-server-test -bargs -E
 
 ews-htdocs.adb: force ews-make_htdocs
 	(cd ../doc && ../src/ews-make_htdocs >../src/$@)
@@ -35,14 +35,13 @@ ews-make_htdocs: ews-make_htdocs.adb
 ############################
 # Distribution construction
 
-# Create the current date, in the form yyyymmdd. This certainly works in Linux.
+# Create the current date, in the form yyyymmdd. This works fine in Linux.
 DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
 
 DOCS = \
 ../doc/index.html
 
 SRC = \
-Makefile \
 ews.ads \
 ews-dynamic.adb \
 ews-dynamic.ads \
@@ -67,12 +66,13 @@ dist: ews-$(DATE) $(DISTRIBUTION_FILES) COPYING $(DOCS)
 	cp -p COPYING $(DOCS) dist/
 	cp $(DISTRIBUTION_FILES) dist/download/
 
-ews-$(DATE): $(DOCS) $(SRC) force
+ews-$(DATE): $(DOCS) $(SRC) Makefile-dist force
 	-rm -rf $@
-	mkdir $@
-	cp -p $(SRC) $@
+	mkdir -p $@
+	cp -p $(SRC) $@/
+	cp -p Makefile-dist $@/Makefile
 	mkdir $@/html
-	cp -p $(DOCS) $@/html
+	cp -p $(DOCS) $@/html/
 
 ews-$(DATE).tgz: ews-$(DATE)
 	-rm $@
