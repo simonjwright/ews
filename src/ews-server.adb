@@ -71,7 +71,7 @@ package body EWS.Server is
             Request : aliased HTTP.Request;
          begin
             HTTP.Initialize (Request, From => Socket);
---              Put_Line ("URL |"
+--          Put_Line ("URL |"
 --                      & HTTP.Get_URL (Request)
 --                      & "|");
             begin
