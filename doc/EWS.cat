@@ -1,0 +1,771 @@
+
+(object Petal
+    version    	45
+    _written   	"Rose 7.6.0109.2314"
+    charSet    	0)
+
+(object Class_Category "EWS"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    quid       	"3C3DC1160118"
+    documentation 	
+|This domain describes the Embedded Web Server (EWS), which is a construction kit for building web servers to run in, report on and, possibly, control restricted environments.
+|
+|{ revision = $Revision$ }
+    
+    exportControl 	"Public"
+    logical_models 	(list unit_reference_list
+	(object Class "Server"
+	    quid       	"3C3DC13F035F"
+	    used_nodes 	(list uses_relationship_list
+		(object Uses_Relationship
+		    quid       	"3C3DC1880204"
+		    supplier   	"Logical View::EWS::Request"
+		    quidu      	"3C3DC14702EF")
+		(object Uses_Relationship
+		    quid       	"3C3DC1940142"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281")))
+	(object Class "Request"
+	    quid       	"3C3DC14702EF"
+	    operations 	(list Operations
+		(object Operation "create"
+		    quid       	"3C3DC23D0093"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "from"
+			    quid       	"3FB5967E0368"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "url"
+		    quid       	"3C3DC2100150"
+		    result     	"url_string"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "property"
+		    quid       	"3C3DC22502DA"
+		    parameters 	(list Parameters
+			(object Parameter "string"
+			    quid       	"3FB5967E036B"))
+		    result     	"property_string"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)))
+	(object Class "Response"
+	    quid       	"3C3DC1520281"
+	    used_nodes 	(list uses_relationship_list
+		(object Uses_Relationship
+		    quid       	"3C3DC18F01F7"
+		    supplier   	"Logical View::EWS::Request"
+		    quidu      	"3C3DC14702EF"))
+	    operations 	(list Operations
+		(object Operation "find"
+		    quid       	"3C3DC1BF0336"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "for_request"
+			    quid       	"3FB5967E0375"
+			    type       	"request"))
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "respond"
+		    quid       	"3C3DC1E702B5"
+		    stereotype 	"abstract"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E0378"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "not_found_response"
+		    quid       	"3C40B0680188"
+		    stereotype 	"class"
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "not implemented response"
+		    quid       	"3C40B0830316"
+		    stereotype 	"class"
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "exception response"
+		    quid       	"3C40B0B60218"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "e"
+			    quid       	"3FB5967E037F"
+			    type       	"exception occurrence"))
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0))
+	    abstract   	TRUE)
+	(object Class "Static Response"
+	    quid       	"3C3DC15A020D"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DC18003D6"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281"))
+	    operations 	(list Operations
+		(object Operation "find"
+		    quid       	"3C3DC27802E3"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "for_request"
+			    quid       	"3FB5967E0385"
+			    type       	"request"))
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "respond"
+		    quid       	"3C3DC25E0016"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E0387"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)))
+	(object Class "Dynamic Response"
+	    quid       	"3C3DC3980395"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DC4A801F3"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281"))
+	    operations 	(list Operations
+		(object Operation "create_proc"
+		    quid       	"3C3DC4680192"
+		    documentation 	
+|This is an "access to function" type. It's used to register the instance creation operation to be used for a given URL.
+		    
+		    stereotype 	"access"
+		    parameters 	(list Parameters
+			(object Parameter "for_request"
+			    quid       	"3FB5967E038D"
+			    type       	"request"))
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "register"
+		    quid       	"3C3DC3B100A8"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "at_url"
+			    quid       	"3FB5967E0390"
+			    type       	"url_string;creator:create_proc"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0))
+	    abstract   	TRUE)
+	(object Class "Not Found Response T"
+	    quid       	"3C3DC87003A8"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DC97E014B"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281"))
+	    operations 	(list Operations
+		(object Operation "respond"
+		    quid       	"3C3DC8A900FC"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E0395"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)))
+	(object Class "Not Implemented Response T"
+	    quid       	"3C3DC87B03A7"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DC982037F"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281"))
+	    operations 	(list Operations
+		(object Operation "respond"
+		    quid       	"3C3DC8AE0272"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E039A"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)))
+	(object Class "Exception Response T"
+	    quid       	"3C3DC88E004B"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DC9850379"
+		    supplier   	"Logical View::EWS::Response"
+		    quidu      	"3C3DC1520281"))
+	    operations 	(list Operations
+		(object Operation "respond"
+		    quid       	"3C3DC8B3029A"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E039F"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)))
+	(object Class "Sample"
+	    quid       	"3C3DCA7B028F"
+	    superclasses 	(list inheritance_relationship_list
+		(object Inheritance_Relationship
+		    quid       	"3C3DCAD50214"
+		    supplier   	"Logical View::EWS::Dynamic Response"
+		    quidu      	"3C3DC3980395"))
+	    operations 	(list Operations
+		(object Operation "register"
+		    quid       	"3C3DCA93003F"
+		    stereotype 	"init"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "create"
+		    quid       	"3C3DCAAA0226"
+		    stereotype 	"class"
+		    parameters 	(list Parameters
+			(object Parameter "for_request"
+			    quid       	"3FB5967E03A7"
+			    type       	"request"))
+		    result     	"response'class"
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0)
+		(object Operation "respond"
+		    quid       	"3C3DCAC50029"
+		    parameters 	(list Parameters
+			(object Parameter "to"
+			    quid       	"3FB5967E03A9"
+			    type       	"socket_type"))
+		    concurrency 	"Sequential"
+		    opExportControl 	"Public"
+		    uid        	0))))
+    logical_presentations 	(list unit_reference_list
+	(object ClassDiagram "Main"
+	    quid       	"3C3DC1350256"
+	    title      	"Main"
+	    documentation 	
+|This domain describes the Embedded Web Server (EWS), which is a construction kit for building web servers to run in, report on and, possibly, control restricted environments.
+|
+|{ revision = $Revision$ }
+	    
+	    zoom       	85
+	    max_height 	28350
+	    max_width  	21600
+	    origin_x   	0
+	    origin_y   	0
+	    items      	(list diagram_item_list
+		(object ClassView "Class" "Logical View::EWS::Server" @1
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(603, 373)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@1
+			location   	(522, 324)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	162
+			justify    	0
+			label      	"Server")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC13F035F"
+		    height     	120
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object ClassView "Class" "Logical View::EWS::Request" @2
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(1323, 341)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@2
+			location   	(937, 210)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	772
+			justify    	0
+			label      	"Request")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC14702EF"
+		    compartment 	(object Compartment
+			Parent_View 	@2
+			location   	(937, 271)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	4
+			max_width  	771
+			compartmentItems 	(list Compartment
+			    "<<class>> + create(from : socket_type)"
+			    "+ url() : url_string"
+			    "+ property(string) : property_string"))
+		    width      	790
+		    height     	286
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object ClassView "Class" "Logical View::EWS::Response" @3
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(1307, 933)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	TRUE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@3
+			location   	(569, 752)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	1476
+			justify    	0
+			label      	"Response")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC1520281"
+		    compartment 	(object Compartment
+			Parent_View 	@3
+			location   	(569, 813)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	TRUE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	6
+			max_width  	1474
+			compartmentItems 	(list Compartment
+			    "<<class>> + find(for_request : request) : response'class"
+			    "<<abstract>> + respond(to : socket_type)"
+			    "<<class>> + not_found_response() : response'class"
+			    "<<class>> + not implemented response() : response'class"
+			    "<<class>> + exception response(e : exception occurrence) : response'class"))
+		    width      	1494
+		    height     	386
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object ClassView "Class" "Logical View::EWS::Static Response" @4
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(775, 1347)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@4
+			location   	(229, 1241)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	1092
+			justify    	0
+			label      	"Static Response")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC15A020D"
+		    compartment 	(object Compartment
+			Parent_View 	@4
+			location   	(229, 1302)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	3
+			max_width  	1089
+			compartmentItems 	(list Compartment
+			    "<<class>> + find(for_request : request) : response'class"
+			    "+ respond(to : socket_type)"))
+		    width      	1110
+		    height     	236
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object InheritView "" @5
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC18003D6"
+		    client     	@4
+		    supplier   	@3
+		    line_style 	0)
+		(object UsesView "" @6
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC1880204"
+		    client     	@1
+		    supplier   	@2
+		    line_style 	0)
+		(object UsesView "" @7
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC18F01F7"
+		    client     	@3
+		    supplier   	@2
+		    line_style 	0)
+		(object UsesView "" @8
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC1940142"
+		    client     	@1
+		    supplier   	@3
+		    line_style 	0)
+		(object ClassView "Class" "Logical View::EWS::Dynamic Response" @9
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(2091, 1349)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	TRUE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@9
+			location   	(1446, 1243)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	1290
+			justify    	0
+			label      	"Dynamic Response")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC3980395"
+		    compartment 	(object Compartment
+			Parent_View 	@9
+			location   	(1446, 1304)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	TRUE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	3
+			max_width  	1289
+			compartmentItems 	(list Compartment
+			    "<<access>> + create_proc(for_request : request) : response'class"
+			    "<<class>> + register(at_url : url_string;creator:create_proc)"))
+		    width      	1308
+		    height     	236
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object InheritView "" @10
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC4A801F3"
+		    client     	@9
+		    supplier   	@3
+		    line_style 	0)
+		(object ClassView "Class" "Logical View::EWS::Not Found Response T" @11
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(2443, 597)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@11
+			location   	(2176, 516)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	534
+			justify    	0
+			label      	"Not Found Response T")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC87003A8"
+		    compartment 	(object Compartment
+			Parent_View 	@11
+			location   	(2176, 577)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	2
+			max_width  	533
+			compartmentItems 	(list Compartment
+			    "+ respond(to : socket_type)"))
+		    width      	552
+		    height     	186
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object ClassView "Class" "Logical View::EWS::Not Implemented Response T" @12
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(2475, 821)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@12
+			location   	(2198, 740)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	554
+			justify    	0
+			label      	"Not Implemented Response T")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC87B03A7"
+		    compartment 	(object Compartment
+			Parent_View 	@12
+			location   	(2198, 801)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	2
+			max_width  	533
+			compartmentItems 	(list Compartment
+			    "+ respond(to : socket_type)"))
+		    width      	572
+		    height     	186
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object ClassView "Class" "Logical View::EWS::Exception Response T" @13
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(2459, 1061)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@13
+			location   	(2192, 980)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	534
+			justify    	0
+			label      	"Exception Response T")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DC88E004B"
+		    compartment 	(object Compartment
+			Parent_View 	@13
+			location   	(2192, 1041)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	2
+			max_width  	533
+			compartmentItems 	(list Compartment
+			    "+ respond(to : socket_type)"))
+		    width      	552
+		    height     	186
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object InheritView "" @14
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC97E014B"
+		    client     	@11
+		    supplier   	@3
+		    line_style 	0)
+		(object InheritView "" @15
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC982037F"
+		    client     	@12
+		    supplier   	@3
+		    line_style 	0)
+		(object InheritView "" @16
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DC9850379"
+		    client     	@13
+		    supplier   	@3
+		    line_style 	0)
+		(object ClassView "Class" "Logical View::EWS::Sample" @17
+		    ShowCompartmentStereotypes 	TRUE
+		    ShowOperationSignature 	TRUE
+		    location   	(1643, 1829)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@17
+			location   	(1071, 1698)
+			fill_color 	13434879
+			nlines     	1
+			max_width  	1144
+			justify    	0
+			label      	"Sample")
+		    icon_style 	"Label"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DCA7B028F"
+		    compartment 	(object Compartment
+			Parent_View 	@17
+			location   	(1071, 1759)
+			font       	(object Font
+			    size       	10
+			    face       	"Arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			icon_style 	"Label"
+			fill_color 	13434879
+			anchor     	2
+			nlines     	4
+			max_width  	1142
+			compartmentItems 	(list Compartment
+			    "<<init>> + register()"
+			    "<<class>> + create(for_request : request) : response'class"
+			    "+ respond(to : socket_type)"))
+		    width      	1162
+		    height     	286
+		    annotation 	8
+		    autoResize 	TRUE)
+		(object InheritView "" @18
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DCAD50214"
+		    client     	@17
+		    supplier   	@9
+		    line_style 	0)
+		(object Label @19
+		    location   	(206, 2341)
+		    font       	(object Font
+			size       	10
+			face       	"Arial"
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    nlines     	1
+		    max_width  	2095
+		    label      	"$Id$")))))

@@ -1,0 +1,17 @@
+--  $Id$
+
+with "Options";
+
+project EWS is
+
+  for Main use ("ews-make_htdocs", "ews-server-test");
+  for Exec_Dir use ".";
+  for Source_Dirs use (".");
+  for Object_Dir use Options'Object_Dir;
+  package IDE renames Options.IDE;
+  package Builder renames Options.Builder;
+  package Compiler renames Options.Compiler;
+  package Binder renames Options.Binder;
+  package Linker renames Options.Linker;
+
+end EWS;
