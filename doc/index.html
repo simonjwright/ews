@@ -9,17 +9,22 @@
 EWS is a web server construction kit, designed for embedded
 applications using the <a
 href="http://libre.act-europe.fr/GNAT/">GNAT</a> Ada
-compiler. Download EWS <a href="download/">here</a>.
+compiler.
+
+<p>The project is hosted on SourceForge. There are no releases yet,
+but you can <a
+href="http://cvs.sourceforge.net/viewcvs.py/embed-web-srvr/">browse
+the CVS repository</a>.
 
 <p>Documentation will be forthcoming! For the moment, in the
 distribution directory (<tt>ews-<i>yyyymmdd</i>/</tt>), and provided
 you are running a Linux system and have GNAT installed,
 <pre>
-   $ make ews-server-test
+   $ make demo
 </pre>
 
-will create a server, which when executed will listen on port 8080 and
-respond with these pages.
+will create a server (<tt>ews-server-test</tt>), which when executed
+will listen on port 8080 and respond with these pages.
 
 <p>The server should build and run fine under Windows, it's just the
 makefile that can't cope yet!
