@@ -31,7 +31,8 @@ procedure EWS_Pages is
       At_Location : Natural) return String
      renames EWS_Pages_Support.To_String;
 
-   procedure Compile (S : String);
+   procedure Compile (S : String;
+                      Page : out EWS_Pages_Support.Compiled_Page);
 
    function Get_Contents (Of_File : String) return String;
 
@@ -52,7 +53,8 @@ procedure EWS_Pages is
    end Get_Contents;
 
 
-   procedure Compile (S : String) is
+   procedure Compile (S : String;
+                      Page : out EWS_Pages_Support.Compiled_Page) is
 
       use type GNAT.Regpat.Regexp_Flags;
 
@@ -71,20 +73,18 @@ procedure EWS_Pages is
 
       Start : Positive := S'First;
 
-      Page : EWS_Pages_Support.Compiled_Page;
-
       use type GNAT.Regpat.Match_Location;
 
    begin
 
+      Scan :
       loop
 
          GNAT.Regpat.Match (Next_Tag_Matcher, S, Matches, Data_First => Start);
 
          if Matches (0) = GNAT.Regpat.No_Match then
             EWS_Pages_Support.Add_Text (S (Start .. S'Last), To => Page);
-            EWS_Pages_Support.Output (Page);
-            exit;
+            exit Scan;
          end if;
 
          EWS_Pages_Support.Add_Text (To_String (S, Matches, 1), To => Page);
@@ -127,15 +127,18 @@ procedure EWS_Pages is
 
          end;
 
-      end loop;
+      end loop Scan;
 
    end Compile;
+
+
+   Page : EWS_Pages_Support.Compiled_Page;
 
 
    Test_String : constant String
      := Get_Contents ("t.ewp");
 
-
 begin
-   Compile (Test_String);
+   Compile (Test_String, Page);
+   EWS_Pages_Support.Output (Page);
 end EWS_Pages;
