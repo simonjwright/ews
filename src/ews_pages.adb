@@ -28,28 +28,17 @@ procedure EWS_Pages is
    function To_String
      (In_String : String;
       From : GNAT.Regpat.Match_Array;
-      At_Location : Natural) return String;
+      At_Location : Natural) return String
+     renames EWS_Pages_Support.To_String;
 
    procedure Compile (S : String);
 
    function Get_Contents (Of_File : String) return String;
 
 
-   function To_String
-     (In_String : String;
-      From : GNAT.Regpat.Match_Array;
-      At_Location : Natural) return String is
-   begin
-      return In_String (From (At_Location).First .. From (At_Location).Last);
-   exception
-      when others => return "";
-   end To_String;
-
-
    function Get_Contents (Of_File : String) return String is
       File : Ada.Text_IO.File_Type;
       Result : Ada.Strings.Unbounded.Unbounded_String;
-      use Ada.Text_IO;
       use Ada.Strings.Unbounded;
       use Ada.Strings.Unbounded.Text_IO;
    begin
@@ -64,6 +53,7 @@ procedure EWS_Pages is
 
 
    procedure Compile (S : String) is
+
       use type GNAT.Regpat.Regexp_Flags;
 
       Next_Tag_Regexp : constant String
