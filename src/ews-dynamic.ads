@@ -37,7 +37,7 @@ package EWS.Dynamic is
      (For_Request : access HTTP.Request) return HTTP.Response'Class;
 
    type Dynamic_Response (R : HTTP.Request_P)
-      is new HTTP.Response with  private;
+      is new HTTP.Response with private;
 
    type Creator
       is access function (From_Request : HTTP.Request_P)
@@ -45,7 +45,7 @@ package EWS.Dynamic is
 
    --  The server will call the given Creator when the given URL is
    --  requested.
-   --  in "http://foo.com:1234/bar", for example, the URL is "/bar".
+   --  In "http://foo.com:1234/bar", for example, the URL is "/bar".
    procedure Register (The_Creator : Creator; For_The_URL : HTTP.URL);
 
    --  Operations callable by Creator functions.
