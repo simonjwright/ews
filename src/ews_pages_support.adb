@@ -66,9 +66,41 @@ package body EWS_Pages_Support is
 
 
    procedure Add_Text (S : String; To : in out Compiled_Page) is
+
+      use type GNAT.Regpat.Regexp_Flags;
+
+      Line_Regexp : constant String := "^(.*)$";
+
+      Line_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
+        GNAT.Regpat.Compile (Line_Regexp,
+                             Flags => GNAT.Regpat.Multiple_Lines);
+
+      Line_Max_Parens : constant GNAT.Regpat.Match_Count :=
+        GNAT.Regpat.Paren_Count (Line_Matcher);
+
+      Matches : GNAT.Regpat.Match_Array (0 .. Line_Max_Parens);
+
+      Start : Positive := S'First;
+
+      use type GNAT.Regpat.Match_Location;
+
    begin
-      Collections.Append
-        (To.Text, new Literal'(Text => +S));
+
+      loop
+
+         GNAT.Regpat.Match (Line_Matcher, S, Matches, Data_First => Start);
+         exit when Matches (0) = GNAT.Regpat.No_Match;
+
+         if Matches (0).Last > Matches (0).First then
+            Collections.Append
+              (To.Text, new Literal'(Text => +To_String (S, Matches, 0)));
+         end if;
+
+         Start := Matches (0).Last + 2; -- skip the \n
+         exit when Start > S'Last;
+
+      end loop;
+
    end Add_Text;
 
 
@@ -95,6 +127,17 @@ package body EWS_Pages_Support is
          Next (Text);
       end loop;
    end Output;
+
+
+   function To_String
+     (In_String : String;
+      From : GNAT.Regpat.Match_Array;
+      At_Location : Natural) return String is
+   begin
+      return In_String (From (At_Location).First .. From (At_Location).Last);
+   exception
+      when others => return "";
+   end To_String;
 
 
 end EWS_Pages_Support;
