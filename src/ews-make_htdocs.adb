@@ -19,17 +19,16 @@
 
 with Ada.Streams.Stream_IO; use Ada.Streams; use Ada.Streams.Stream_IO;
 with Ada.Text_IO; use Ada.Text_IO;
+with GNAT.Command_Line;
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with GNAT.Regpat; use GNAT.Regpat;
 
 procedure EWS.Make_Htdocs is
 
-   Base_Dir_Name : constant Dir_Name_Str := Get_Current_Dir;
-
    procedure Scan_Directory (Named : Dir_Name_Str);
    procedure Save_File (Named : String);
-   procedure Output;
+   procedure Output (Base_Dir : String);
    procedure Output_Contents (Of_File : String);
 
    procedure Scan_Directory (Named : Dir_Name_Str) is
@@ -107,8 +106,8 @@ procedure EWS.Make_Htdocs is
       end if;
    end Save_File;
 
-   procedure Output is
-      Base_Dir_Len : constant Positive := Base_Dir_Name'Length;
+   procedure Output (Base_Dir : String) is
+      Base_Dir_Len : constant Positive := Base_Dir'Length;
       Id : Positive;
       F : File_Info_P;
       function Image (P : Positive) return String;
@@ -216,15 +215,32 @@ procedure EWS.Make_Htdocs is
    end Output_Contents;
 
 begin
-   Put_Line ("pragma Style_Checks (Off);");
-   Put_Line ("with Ada.Streams; use Ada.Streams;");
-   Put_Line ("with EWS.Types; use EWS.Types;");
-   Put_Line ("package body EWS.Htdocs is");
-   Scan_Directory (Base_Dir_Name);
-   Output;
-   Put_Line ("   function Static_Urls return Url_Info_Array_P is");
-   Put_Line ("   begin");
-   Put_Line ("      return Documents'Access;");
-   Put_Line ("   end Static_Urls;");
-   Put_Line ("end EWS.Htdocs;");
+
+   declare
+      Argument : constant String := GNAT.Command_Line.Get_Argument;
+   begin
+      Put_Line ("pragma Style_Checks (Off);");
+      Put_Line ("with Ada.Streams; use Ada.Streams;");
+      Put_Line ("with EWS.Types; use EWS.Types;");
+      Put_Line ("package body EWS.Htdocs is");
+      if Argument'Length = 0 then
+         declare
+            Current : constant String := Get_Current_Dir;
+         begin
+            Scan_Directory (Current);
+            Output (Current);
+         end;
+      else
+         --  Need to mae sure this is a valid directory name (with
+         --  trailing separator character)
+         Scan_Directory (Dir_Name (Argument));
+         Output (Dir_Name (Argument));
+      end if;
+      Put_Line ("   function Static_Urls return Url_Info_Array_P is");
+      Put_Line ("   begin");
+      Put_Line ("      return Documents'Access;");
+      Put_Line ("   end Static_Urls;");
+      Put_Line ("end EWS.Htdocs;");
+   end;
+
 end EWS.Make_Htdocs;
