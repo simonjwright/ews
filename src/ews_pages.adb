@@ -17,12 +17,9 @@
 --  $Date$
 --  $Author$
 
-with EWS_Pages_Support;
-
 with Ada.Strings.Unbounded.Text_IO;
-with Ada.Text_IO;
-
-with GNAT.IO; use GNAT.IO;
+with Ada.Text_IO; use Ada.Text_IO;
+with EWS_Pages_Support;
 with GNAT.Regpat;
 
 procedure EWS_Pages is
