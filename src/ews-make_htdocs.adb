@@ -231,7 +231,7 @@ begin
             Output (Current);
          end;
       else
-         --  Need to mae sure this is a valid directory name (with
+         --  Need to make sure this is a valid directory name (with
          --  trailing separator character)
          Scan_Directory (Dir_Name (Argument));
          Output (Dir_Name (Argument));
