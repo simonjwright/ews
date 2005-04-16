@@ -165,7 +165,7 @@ package body EWS.HTTP is
          R : constant Response'Class
            := Dynamic.Find (For_Request);
       begin
-         if (R in Dynamic.Dynamic_Response'Class) then
+         if R in Dynamic.Dynamic_Response'Class then
             return R;
          end if;
       end;
@@ -360,7 +360,7 @@ package body EWS.HTTP is
 
 
    function Read_Request (From : Socket_Type) return String is
-      Tmp : Stream_Element_Array (1 .. 1024);
+      Tmp : Stream_Element_Array (1 .. 2048);
       Last : Stream_Element_Offset := Tmp'First - 1;
       Next : Stream_Element_Offset;
       Termination : constant Stream_Element_Array :=
@@ -393,10 +393,9 @@ package body EWS.HTTP is
 
       declare
          Result : String (1 .. Natural (Last));
+         pragma Import (Ada, Result);
+         for Result'Address use Tmp'Address;
       begin
-         for C in 1 .. Last loop
-            Result (Positive (C)) := Character'Val (Tmp (C));
-         end loop;
          return Result;
       end;
 
