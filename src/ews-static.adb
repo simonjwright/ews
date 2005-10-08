@@ -102,7 +102,7 @@ package body EWS.Static is
       For_URL : constant HTTP.URL := HTTP.Get_URL (For_Request.all);
       Location : Index;
    begin
-      if For_URL (For_URL'Last) = '/' then
+      if For_URL'Length = 0 or else For_URL (For_URL'Last) = '/' then
          Location := Find (For_URL & "index.html");
          if Location > 0 then
             return Static_Response'
