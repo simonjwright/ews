@@ -59,25 +59,24 @@ package body EWS.Dynamic is
 
 
    function Content_Type (This : Dynamic_Response) return String is
-      Format_HTML : aliased constant String
-        := "text/html";
-      Format_Plain : aliased constant String
-        := "text/plain";
-      Format_JPEG : aliased constant String
-        := "image/jpeg";
-      Format_GIF : aliased constant String
-        := "image/gif";
-      Format_PNG : aliased constant String
-        := "image/png";
+      Format_CSS : aliased constant String := "text/css";
+      Format_GIF : aliased constant String := "image/gif";
+      Format_HTML : aliased constant String := "text/html";
+      Format_ICO : aliased constant String := "image/x-icon";
+      Format_JPEG : aliased constant String := "image/jpeg";
       Format_Octet_Stream : aliased constant String
         := "application/octet-stream";
+      Format_PNG : aliased constant String := "image/png";
+      Format_Plain : aliased constant String := "text/plain";
       Type_Info : constant array (Types.Format) of Types.String_P
-        := (Types.HTML => Format_HTML'Unchecked_Access,
-            Types.Plain => Format_Plain'Unchecked_Access,
-            Types.JPEG => Format_JPEG'Unchecked_Access,
+        := (Types.CSS => Format_CSS'Unchecked_Access,
+            Types.HTML => Format_HTML'Unchecked_Access,
+            Types.ICO => Format_ICO'Unchecked_Access,
             Types.GIF => Format_GIF'Unchecked_Access,
+            Types.JPEG => Format_JPEG'Unchecked_Access,
+            Types.OCTET_STREAM => Format_Octet_Stream'Unchecked_Access,
             Types.PNG => Format_PNG'Unchecked_Access,
-            Types.OCTET_STREAM => Format_Octet_Stream'Unchecked_Access);
+            Types.Plain => Format_Plain'Unchecked_Access);
    begin
       return Type_Info (This.Form).all;
    end Content_Type;
