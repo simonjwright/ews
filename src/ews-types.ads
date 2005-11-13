@@ -36,9 +36,11 @@ package EWS.Types is
    type Format is
      (HTML,
       Plain,
+      CSS,
       JPEG,
       GIF,
       PNG,
+      ICO,
       OCTET_STREAM);
 
    type URL_Info is record
