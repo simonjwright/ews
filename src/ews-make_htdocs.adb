@@ -58,14 +58,16 @@ procedure EWS.Make_Htdocs is
       Close (Dir => Wd);
    end Scan_Directory;
 
-   Java_File : constant Pattern_Matcher := Compile ("\.(class|jar)$");
+   Css_File :constant Pattern_Matcher := Compile ("\.css$");
    Gif_File : constant Pattern_Matcher := Compile ("\.gif$");
    Html_File : constant Pattern_Matcher := Compile ("\.(html|htm)$");
+   Ico_File : constant Pattern_Matcher := Compile ("\.ico$");
+   Java_File : constant Pattern_Matcher := Compile ("\.(class|jar)$");
    Jpeg_File : constant Pattern_Matcher := Compile ("\.(jpeg|jpg)$");
    Png_File : constant Pattern_Matcher := Compile ("\.png$");
 
    type String_P is access constant String;
-   type Content_Type is (Gif, Html, Jpeg, Png, Octet_Stream);
+   type Content_Type is (Css, Gif, Html, Ico, Jpeg, Png, Octet_Stream);
    type File_Info;
    type File_Info_P is access File_Info;
    type File_Info is record
@@ -93,16 +95,20 @@ procedure EWS.Make_Htdocs is
          end if;
       end Add_File;
    begin
-      if Match (Html_File, Named) >= Named'First then
-         Add_File (Html);
-      elsif Match (Jpeg_File, Named) >= Named'First then
-         Add_File (Jpeg);
+      if Match (Css_File, Named) >= Named'First then
+         Add_File (Css);
       elsif Match (Gif_File, Named) >= Named'First then
          Add_File (Gif);
-      elsif Match (Png_File, Named) >= Named'First then
-         Add_File (Png);
+      elsif Match (Html_File, Named) >= Named'First then
+         Add_File (Html);
+      elsif Match (Ico_File, Named) >= Named'First then
+         Add_File (Ico);
       elsif Match (Java_File, Named) >= Named'First then
          Add_File (Octet_Stream);
+      elsif Match (Jpeg_File, Named) >= Named'First then
+         Add_File (Jpeg);
+      elsif Match (Png_File, Named) >= Named'First then
+         Add_File (Png);
       end if;
    end Save_File;
 
