@@ -17,9 +17,11 @@
 --  $Date$
 --  $Author$
 
+with Ada.Command_Line;
 with Ada.Strings.Unbounded.Text_IO;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;
 with EWS_Pages_Support;
+with GNAT.Exception_Traces;
 with GNAT.Regpat;
 
 procedure EWS_Pages is
@@ -31,29 +33,25 @@ procedure EWS_Pages is
       At_Location : Natural) return String
      renames EWS_Pages_Support.To_String;
 
-   procedure Compile (S : String;
+   procedure Compile (File : Ada.Text_IO.File_Type;
                       Page : out EWS_Pages_Support.Compiled_Page);
 
-   function Get_Contents (Of_File : String) return String;
+   function Get_Contents (Of_File : Ada.Text_IO.File_Type) return String;
 
 
-   function Get_Contents (Of_File : String) return String is
-      File : Ada.Text_IO.File_Type;
+   function Get_Contents (Of_File : Ada.Text_IO.File_Type) return String is
       Result : Ada.Strings.Unbounded.Unbounded_String;
-      use Ada.Strings.Unbounded;
-      use Ada.Strings.Unbounded.Text_IO;
+      use type Ada.Strings.Unbounded.Unbounded_String;
    begin
-      Open (File, Mode => In_File, Name => Of_File);
-      while not End_Of_File (File) loop
-         Result := Result & Get_Line (File);
-         Append (Result, ASCII.LF);
+      while not Ada.Text_IO.End_Of_File (Of_File) loop
+         Result := Result & Ada.Strings.Unbounded.Text_IO.Get_Line (Of_File);
+         Ada.Strings.Unbounded.Append (Result, ASCII.LF);
       end loop;
-      Close (File);
-      return To_String (Result);
+      return Ada.Strings.Unbounded.To_String (Result);
    end Get_Contents;
 
 
-   procedure Compile (S : String;
+   procedure Compile (File : Ada.Text_IO.File_Type;
                       Page : out EWS_Pages_Support.Compiled_Page) is
 
       use type GNAT.Regpat.Regexp_Flags;
@@ -71,11 +69,19 @@ procedure EWS_Pages is
 
       Matches : GNAT.Regpat.Match_Array (0 .. Next_Tag_Max_Parens);
 
+      S : constant String := Get_Contents (File);
+
       Start : Positive := S'First;
 
       use type GNAT.Regpat.Match_Location;
 
    begin
+
+      if S'Length = 0 then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "input file is empty.");
+         return;
+      end if;
 
       Scan :
       loop
@@ -107,7 +113,7 @@ procedure EWS_Pages is
                Data_First => Matches (0).Last + 1);
 
             if End_Matches (0) = GNAT.Regpat.No_Match then
-               Put_Line ("no closing tag.");
+               Ada.Text_IO.Put_Line ("no closing tag.");
                raise Program_Error;
             else
 
@@ -134,11 +140,26 @@ procedure EWS_Pages is
 
    Page : EWS_Pages_Support.Compiled_Page;
 
-
-   Test_String : constant String
-     := Get_Contents ("t.ewp");
-
 begin
-   Compile (Test_String, Page);
+
+   GNAT.Exception_Traces.Trace_On
+     (Kind => GNAT.Exception_Traces.Unhandled_Raise);
+
+   if Ada.Command_Line.Argument_Count = 0 then
+      Compile (Ada.Text_IO.Standard_Input, Page);
+   else
+      declare
+         File : constant String := Ada.Command_Line.Argument (1);
+         Input : Ada.Text_IO.File_Type;
+      begin
+         Ada.Text_IO.Open (Input,
+                           Mode => Ada.Text_IO.In_File,
+                           Name => File);
+         Compile (Input, Page);
+         Ada.Text_IO.Close (Input);
+      end;
+   end if;
+
    EWS_Pages_Support.Output (Page);
+
 end EWS_Pages;
