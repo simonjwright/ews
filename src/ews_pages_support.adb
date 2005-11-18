@@ -21,6 +21,9 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body EWS_Pages_Support is
 
+   procedure Colophon;
+   procedure Front_Matter;
+
 
    function "+"
      (S : String)
@@ -34,6 +37,30 @@ package body EWS_Pages_Support is
      renames Ada.Strings.Unbounded.To_String;
 
 
+   procedure Colophon is
+   begin
+      Put_Line ("return Result;");
+      Put_Line ("end Page;");
+   end Colophon;
+
+
+   procedure Front_Matter is
+   begin
+      Put_Line ("with Ada.Characters.Latin_1;");
+      Put_Line ("with EWS.Types;");
+      Put_Line ("pragma Style_Checks (Off);");
+      Put_Line ("function Page");
+      Put_Line ("(From_Request : EWS.HTTP.Request_P)");
+      Put_Line ("return EWS.Dynamic.Dynamic_Response'Class is");
+      Put_Line ("use Ada.Characters.Latin_1;");
+      Put_Line ("Result : EWS.Dynamic.Dynamic_Response (From_Request);");
+      Put_Line ("use EWS.Dynamic;");
+      Put_Line ("use EWS.Types;");
+      Put_Line ("begin");
+      Put_Line ("Set_Content_Type (Result, To => HTML);");
+   end Front_Matter;
+
+
    procedure Output (This : access Context) is
    begin
       Put_Line ("with " & (+This.Text) & ";");
@@ -41,20 +68,30 @@ package body EWS_Pages_Support is
 
 
    procedure Output (This : access Variable) is
+      Unimplemented : exception;
    begin
-      raise Program_Error;
+      raise Unimplemented;
    end Output;
 
 
    procedure Output (This : access Code) is
    begin
-      Put_Line (+This.Text);
+      Put_Line ("Append (Result, """ & (+This.Text) & """ & CR & LF);");
    end Output;
 
 
    procedure Output (This : access Literal) is
+      Escaped : Ada.Strings.Unbounded.Unbounded_String;
+      use Ada.Strings.Unbounded;
    begin
-      Put_Line ("Put_Line (""" & (+This.Text) & """);");
+      for I in 1 .. Length (This.Text) loop
+         if Element (This.Text, I) = '"' then
+            Append (Escaped, """""");
+         else
+            Append (Escaped, Element (This.Text, I));
+         end if;
+      end loop;
+      Put_Line ("Append (Result, """ & (+Escaped) & """ & CR & LF);");
    end Output;
 
 
@@ -122,10 +159,12 @@ package body EWS_Pages_Support is
          Output (Current_Item (Context));
          Next (Context);
       end loop;
+      Front_Matter;
       while not Is_Done (Text) loop
          Output (Current_Item (Text));
          Next (Text);
       end loop;
+      Colophon;
    end Output;
 
 
