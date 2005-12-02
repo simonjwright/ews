@@ -35,7 +35,8 @@ package body EWS.Server is
 
    task type Server is
       entry Start (Using_Port : GNAT.Sockets.Port_Type;
-                   At_Priority : System.Priority);
+                   At_Priority : System.Priority;
+                   Tracing : Boolean);
    end Server;
    type Server_P is access Server;
 
@@ -43,15 +44,18 @@ package body EWS.Server is
    task body Server is
       Port : Port_Type;
       Priority : System.Priority;
+      Trace : Boolean;
       Address : Sock_Addr_Type;
       Server : Socket_Type;
       Socket : Socket_Type;
    begin
       Initialize;
       accept Start (Using_Port : GNAT.Sockets.Port_Type;
-                   At_Priority : System.Priority) do
+                    At_Priority : System.Priority;
+                    Tracing : Boolean) do
          Port := Using_Port;
          Priority := At_Priority;
+         Trace := Tracing;
       end Start;
       Ada.Dynamic_Priorities.Set_Priority (Priority);
       Address.Addr := Any_Inet_Addr;
@@ -65,22 +69,30 @@ package body EWS.Server is
       Listen_Socket (Server);
       loop
          Accept_Socket (Server, Socket, Address);
---           Put_Line ("connected socket: " & Image (Socket));
---           Put_Line ("Address: " & Image (Get_Peer_Name (Socket)));
+         if Trace then
+            Put_Line (Standard_Error,
+                      "EWS: connected socket: " & Image (Socket));
+            Put_Line (Standard_Error,
+                      "EWS: address: " & Image (Get_Peer_Name (Socket)));
+         end if;
          declare
             Request : aliased HTTP.Request;
          begin
             HTTP.Initialize (Request, From => Socket);
---          Put_Line ("URL |"
---                      & HTTP.Get_URL (Request)
---                      & "|");
+            if Trace then
+               Put_Line (Standard_Error,
+                         "EWS: url |"
+                           & HTTP.Get_URL (Request)
+                           & "|");
+            end if;
             begin
                HTTP.Respond (HTTP.Find (Request'Unchecked_Access),
                              To => Socket);
             exception
                when E : others =>
-                  Put_Line ("failed in immediate read/respond, "
-                            & Exception_Information (E));
+                  Put_Line (Standard_Error,
+                            "EWS: failed in immediate read/respond, "
+                              & Exception_Information (E));
                begin
                   HTTP.Respond
                     (HTTP.Exception_Response (E, Request'Unchecked_Access),
@@ -90,7 +102,8 @@ package body EWS.Server is
             Close_Socket (Socket);
          exception
             when E : others =>
-               Put_Line ("failed in outer read/respond, "
+               Put_Line (Standard_Error,
+                         "EWS: failed in outer read/respond, "
                            & Exception_Information (E));
                begin
                   Close_Socket (Socket);
@@ -101,17 +114,19 @@ package body EWS.Server is
       end loop;
    exception
       when E : others =>
-         Put_Line ("failed in outer, " & Exception_Information (E));
+         Put_Line (Standard_Error,
+                   "EWS: failed in outer, " & Exception_Information (E));
          Close_Socket (Server);
    end Server;
 
 
    procedure Serve
      (Using_Port : GNAT.Sockets.Port_Type;
-      At_Priority : System.Priority := System.Default_Priority) is
+      At_Priority : System.Priority := System.Default_Priority;
+      Tracing : Boolean := False) is
       New_Server : constant Server_P := new Server;
    begin
-      New_Server.Start (Using_Port, At_Priority);
+      New_Server.Start (Using_Port, At_Priority, Tracing);
    end Serve;
 
 
