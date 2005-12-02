@@ -67,7 +67,19 @@ procedure EWS_Pages is
       Next_Tag_Max_Parens : constant GNAT.Regpat.Match_Count :=
         GNAT.Regpat.Paren_Count (Next_Tag_Matcher);
 
+      End_Tag_Regexp : constant String
+        := "(.*?)</ews:([-a-z]+)>";
+
+      End_Tag_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
+        GNAT.Regpat.Compile (End_Tag_Regexp,
+                             Flags => GNAT.Regpat.Case_Insensitive
+                               or GNAT.Regpat.Single_Line);
+
+      End_Tag_Max_Parens : constant GNAT.Regpat.Match_Count :=
+        GNAT.Regpat.Paren_Count (End_Tag_Matcher);
+
       Matches : GNAT.Regpat.Match_Array (0 .. Next_Tag_Max_Parens);
+      End_Matches : GNAT.Regpat.Match_Array (0 .. End_Tag_Max_Parens);
 
       S : constant String := Get_Contents (File);
 
@@ -97,23 +109,19 @@ procedure EWS_Pages is
 
          declare
             Tag : constant String := To_String (S, Matches, 2);
-            End_Regexp : constant String
-              := "(.*?)</ews:" & Tag & ">";
-            End_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
-              GNAT.Regpat.Compile (End_Regexp,
-                                   Flags => GNAT.Regpat.Case_Insensitive
-                                     or GNAT.Regpat.Single_Line);
-            End_Matches : GNAT.Regpat.Match_Array (0 .. 1);
          begin
 
             GNAT.Regpat.Match
-              (End_Matcher,
+              (End_Tag_Matcher,
                S,
                End_Matches,
                Data_First => Matches (0).Last + 1);
 
             if End_Matches (0) = GNAT.Regpat.No_Match then
                Ada.Text_IO.Put_Line ("no closing tag.");
+               raise Program_Error;
+            elsif To_String (S, End_Matches, 2) /= Tag then
+               Ada.Text_IO.Put_Line ("mismatched closing tag.");
                raise Program_Error;
             else
 
