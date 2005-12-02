@@ -8,19 +8,19 @@ project EWS is
   for Source_Dirs use
     (
      ".",
-     "/home/simon/bc"
+     external ("HOME") & "/bc"
     );
 
   for Object_Dir use ".build";
 
-  --  GLIDE configuration. Available in gnat-3.13p and gcc-3.3+;
+  --  GLIDE configuration. Available in gnat-3.15p and gcc-3.3+;
   --  comment out if using earlier gcc-3 releases.
-  package Ide is
+  package IDE is
 
      for Compiler_Command ("ada") use "gnatmake";
      for Gnatlist use "gnatls";
 
-  end Ide;
+  end IDE;
 
   --  GNATMAKE configuration options.
   package Builder is
