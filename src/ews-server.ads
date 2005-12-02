@@ -32,6 +32,8 @@ package EWS.Server is
    pragma Elaborate_Body;
 
    procedure Serve (Using_Port : GNAT.Sockets.Port_Type;
-                    At_Priority : System.Priority := System.Default_Priority);
+                    At_Priority : System.Priority := System.Default_Priority;
+                    Tracing : Boolean := False);
+   --  Tracing tells the server to report requests.
 
 end EWS.Server;
