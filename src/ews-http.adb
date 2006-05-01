@@ -190,24 +190,41 @@ package body EWS.HTTP is
    -------------------------------
 
    function Response_Kind (This : Response) return String is
-      pragma Warnings (Off, This);
+      pragma Unreferenced (This);
    begin
       return "200 OK";
    end Response_Kind;
 
 
    function Content_Type (This : Response) return String is
-      pragma Warnings (Off, This);
+      pragma Unreferenced (This);
    begin
       return "text/plain";
    end Content_Type;
 
 
    function Content_Length (This : Response) return Integer is
-      pragma Warnings (Off, This);
    begin
-      return 0;
+      return Content (Response'Class (This))'Length;
+      --  NB the dispatching call.
    end Content_Length;
+
+
+   function Content (This : Response) return String is
+      pragma Unreferenced (This);
+   begin
+      return "";
+   end Content;
+
+
+   procedure Write_Content (This : Response;
+                            To : GNAT.Sockets.Socket_Type) is
+      S : Stream_Access := Stream (To);
+   begin
+      String'Write (Stream (To), Content (Response'Class (This)));
+      --  NB the dispatching call.
+      Free_Stream (S);
+   end Write_Content;
 
 
    procedure Respond (This : Response'Class;
@@ -234,8 +251,8 @@ package body EWS.HTTP is
    type Not_Found_Response (To : Request_P)
    is new Response (To) with null record;
 
-   procedure Write_Content (This : Not_Found_Response;
-                            To : GNAT.Sockets.Socket_Type);
+   function Response_Kind (This : Not_Found_Response) return String;
+   function Content (This : Not_Found_Response) return String;
 
    function Not_Found
      (R : access Request) return Response'Class is
@@ -247,9 +264,8 @@ package body EWS.HTTP is
    type Not_Implemented_Response (To : Request_P)
    is new Response (To) with null record;
 
-   procedure Write_Content (This : Not_Implemented_Response;
-                            To : GNAT.Sockets.Socket_Type);
-
+   function Response_Kind (This : Not_Implemented_Response) return String;
+   function Content (This : Not_Implemented_Response) return String;
 
    function Not_Implemented
      (R : access Request) return Response'Class is
@@ -263,9 +279,8 @@ package body EWS.HTTP is
       Info : Str.Bounded_String;
    end record;
 
-   procedure Write_Content (This : Exception_Response_T;
-                            To : GNAT.Sockets.Socket_Type);
-
+   function Response_Kind (This : Exception_Response_T) return String;
+   function Content (This : Exception_Response_T) return String;
 
    function Exception_Response
      (E : Ada.Exceptions.Exception_Occurrence;
@@ -428,35 +443,42 @@ package body EWS.HTTP is
    --  Error response bodies  --
    -----------------------------
 
-   procedure Write_Content (This : Not_Found_Response;
-                            To : GNAT.Sockets.Socket_Type) is
-      pragma Warnings (Off, This);
-      S : Stream_Access := Stream (To);
+   function Response_Kind (This : Not_Found_Response) return String is
+      pragma Unreferenced (This);
    begin
-      String'Write (S, "Not found.");
-      Free_Stream (S);
-   end Write_Content;
+      return "404 Not Found";
+   end Response_Kind;
 
-
-   procedure Write_Content (This : Not_Implemented_Response;
-                            To : GNAT.Sockets.Socket_Type) is
-      pragma Warnings (Off, This);
-      S : Stream_Access := Stream (To);
+   function Content (This : Not_Found_Response) return String is
+      pragma Unreferenced (This);
    begin
-      String'Write (Stream (To), "Not implemented.");
-      Free_Stream (S);
-   end Write_Content;
+      return "Not found.";
+   end Content;
 
 
-   procedure Write_Content (This : Exception_Response_T;
-                            To : GNAT.Sockets.Socket_Type) is
-      S : Stream_Access := Stream (To);
+   function Response_Kind (This : Not_Implemented_Response) return String is
+      pragma Unreferenced (This);
    begin
-      String'Write (Stream (To),
-                    "Exception: "
-                      & Str.To_String (This.Info));
-      Free_Stream (S);
-   end Write_Content;
+      return "501 Not implemented";
+   end Response_Kind;
+
+   function Content (This : Not_Implemented_Response) return String is
+      pragma Unreferenced (This);
+   begin
+      return "Not implemented.";
+   end Content;
+
+
+   function Response_Kind (This : Exception_Response_T) return String is
+      pragma Unreferenced (This);
+   begin
+      return "500 Internal server error";
+   end Response_Kind;
+
+   function Content (This : Exception_Response_T) return String is
+   begin
+      return "Exception: " & Str.To_String (This.Info);
+   end Content;
 
 
 end EWS.HTTP;
