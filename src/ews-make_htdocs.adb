@@ -19,6 +19,7 @@
 
 with Ada.Streams.Stream_IO; use Ada.Streams; use Ada.Streams.Stream_IO;
 with Ada.Text_IO; use Ada.Text_IO;
+with EWS.Types; use EWS.Types;
 with GNAT.Command_Line;
 with GNAT.Directory_Operations; use GNAT.Directory_Operations;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
@@ -58,16 +59,19 @@ procedure EWS.Make_Htdocs is
       Close (Dir => Wd);
    end Scan_Directory;
 
-   Css_File :constant Pattern_Matcher := Compile ("\.css$");
-   Gif_File : constant Pattern_Matcher := Compile ("\.gif$");
-   Html_File : constant Pattern_Matcher := Compile ("\.(html|htm)$");
-   Ico_File : constant Pattern_Matcher := Compile ("\.ico$");
+   CSS_File : constant Pattern_Matcher := Compile ("\.css$");
+   GIF_File : constant Pattern_Matcher := Compile ("\.gif$");
+   HTML_File : constant Pattern_Matcher := Compile ("\.(html|htm)$");
+   ICO_File : constant Pattern_Matcher := Compile ("\.ico$");
+   JPEG_File : constant Pattern_Matcher := Compile ("\.(jpeg|jpg)$");
+   JavaScript_File : constant Pattern_Matcher := Compile ("\.js$");
    Java_File : constant Pattern_Matcher := Compile ("\.(class|jar)$");
-   Jpeg_File : constant Pattern_Matcher := Compile ("\.(jpeg|jpg)$");
-   Png_File : constant Pattern_Matcher := Compile ("\.png$");
+   PNG_File : constant Pattern_Matcher := Compile ("\.png$");
+   XML_File : constant Pattern_Matcher := Compile ("\.xml$");
+   XSL_File : constant Pattern_Matcher := Compile ("\.xsl$");
 
    type String_P is access constant String;
-   type Content_Type is (Css, Gif, Html, Ico, Jpeg, Png, Octet_Stream);
+   subtype Content_Type is Types.Format;
    type File_Info;
    type File_Info_P is access File_Info;
    type File_Info is record
@@ -95,20 +99,26 @@ procedure EWS.Make_Htdocs is
          end if;
       end Add_File;
    begin
-      if Match (Css_File, Named) >= Named'First then
-         Add_File (Css);
-      elsif Match (Gif_File, Named) >= Named'First then
-         Add_File (Gif);
-      elsif Match (Html_File, Named) >= Named'First then
-         Add_File (Html);
-      elsif Match (Ico_File, Named) >= Named'First then
-         Add_File (Ico);
+      if Match (CSS_File, Named) >= Named'First then
+         Add_File (CSS);
+      elsif Match (GIF_File, Named) >= Named'First then
+         Add_File (GIF);
+      elsif Match (HTML_File, Named) >= Named'First then
+         Add_File (HTML);
+      elsif Match (ICO_File, Named) >= Named'First then
+         Add_File (ICO);
       elsif Match (Java_File, Named) >= Named'First then
          Add_File (Octet_Stream);
-      elsif Match (Jpeg_File, Named) >= Named'First then
-         Add_File (Jpeg);
-      elsif Match (Png_File, Named) >= Named'First then
-         Add_File (Png);
+      elsif Match (JPEG_File, Named) >= Named'First then
+         Add_File (JPEG);
+      elsif Match (JavaScript_File, Named) >= Named'First then
+         Add_File (JavaScript);
+      elsif Match (PNG_File, Named) >= Named'First then
+         Add_File (PNG);
+      elsif Match (XML_File, Named) >= Named'First then
+         Add_File (XML);
+      elsif Match (XSL_File, Named) >= Named'First then
+         Add_File (XSL);
       end if;
    end Save_File;
 
