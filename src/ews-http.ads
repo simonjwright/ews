@@ -60,6 +60,9 @@ package EWS.HTTP is
 
    type Response_P is access all Response;
 
+   --  You do not need to override Content_Length and Write_Content
+   --  provided you have overridden Content.
+
    function Response_Kind (This : Response) return String;
    --  default "200 OK"
 
@@ -69,8 +72,11 @@ package EWS.HTTP is
    function Content_Length (This : Response) return Integer;
    --  default 0
 
+   function Content (This : Response) return String;
+   --  default "".
+
    procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Socket_Type) is abstract;
+                            To : GNAT.Sockets.Socket_Type);
 
    procedure Respond (This : Response'Class;
                       To : GNAT.Sockets.Socket_Type);
