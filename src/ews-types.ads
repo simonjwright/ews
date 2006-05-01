@@ -34,22 +34,20 @@ package EWS.Types is
      access constant Ada.Streams.Stream_Element_Array;
 
    type Format is
-     (HTML,
-      Plain,
+     (
       CSS,
-      JPEG,
       GIF,
-      PNG,
+      HTML,
       ICO,
-      OCTET_STREAM);
+      JPEG,
+      JavaScript,
+      OCTET_STREAM,
+      PNG,
+      Plain,
+      XML,
+      XSL
+     );
 
-   type URL_Info is record
-      URL : String_P;
-      Doc : Stream_Element_Array_P;
-      Form : Format;
-   end record;
-
-   type URL_Info_Array is array (Positive range <>) of URL_Info;
-   type URL_Info_Array_P is access constant URL_Info_Array;
+   function Content_Type (For_Format : Format) return String;
 
 end EWS.Types;
