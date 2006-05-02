@@ -25,7 +25,7 @@ all::
 ews-server-test: ews-htdocs.adb
 	gnatmake -g -m ews-server-test -bargs -E
 
-ews-htdocs.adb: force ews-make_htdocs
+ews-htdocs.adb: ews-make_htdocs force
 	(cd ../doc && ../src/ews-make_htdocs >../src/$@)
 
 ews-make_htdocs: ews-make_htdocs.adb
@@ -54,6 +54,7 @@ ews-server.ads \
 ews-server-test.adb \
 ews-static.adb \
 ews-static.ads \
+ews-types.adb \
 ews-types.ads
 
 DISTRIBUTION_FILES = \
