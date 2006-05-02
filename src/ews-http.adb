@@ -64,8 +64,7 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From : GNAT.Regpat.Match_Array;
-      At_Location : Natural) return String;
+      From : GNAT.Regpat.Match_Location) return String;
    pragma Inline (To_String);
 
    function Unescape (S : String) return String;
@@ -105,7 +104,7 @@ package body EWS.HTTP is
       if Matches (0) = GNAT.Regpat.No_Match then
          return "";
       else
-         return Unescape (To_String (Input, Matches, 2));
+         return Unescape (To_String (Input, Matches (2)));
       end if;
    end Get_URL;
 
@@ -123,23 +122,22 @@ package body EWS.HTTP is
       GNAT.Regpat.Match (URL_Matcher, Query_Input, Query_Matches);
       --  which has to succeed, we wouldn't get here with an illegal head
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
-      if To_String (Query_Input, Query_Matches, 1) = "GET"
+      if To_String (Query_Input, Query_Matches (1)) = "GET"
       and then Query_Matches (6) /= GNAT.Regpat.No_Match then
          declare
             Property_Input : constant String :=
-              To_String (Query_Input, Query_Matches, 6);
+              To_String (Query_Input, Query_Matches (6));
          begin
             GNAT.Regpat.Match
               (Property_Matcher, Property_Input, Property_Matches);
             if Property_Matches (0) = GNAT.Regpat.No_Match then
                return "";
             else
-               return Plus_To_Space (Unescape (To_String (Property_Input,
-                                                          Property_Matches,
-                                                          2)));
+               return Plus_To_Space
+                 (Unescape (To_String (Property_Input, Property_Matches (2))));
             end if;
          end;
-      elsif To_String (Query_Input, Query_Matches, 1) = "POST" then
+      elsif To_String (Query_Input, Query_Matches (1)) = "POST" then
          declare
             Property_Input : constant String := Str.To_String (From.Content);
          begin
@@ -148,9 +146,8 @@ package body EWS.HTTP is
             if Property_Matches (0) = GNAT.Regpat.No_Match then
                return "";
             else
-               return Plus_To_Space (Unescape (To_String (Property_Input,
-                                                          Property_Matches,
-                                                          2)));
+               return Plus_To_Space
+                 (Unescape (To_String (Property_Input, Property_Matches (2))));
             end if;
          end;
       else
@@ -306,10 +303,9 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From : GNAT.Regpat.Match_Array;
-      At_Location : Natural) return String is
+      From : GNAT.Regpat.Match_Location) return String is
    begin
-      return In_String (From (At_Location).First .. From (At_Location).Last);
+      return In_String (From.First .. From.Last);
    end To_String;
 
 
@@ -434,7 +430,7 @@ package body EWS.HTTP is
       else
 --           Put_Line ("content length field "
 --                     & To_String (From, Matches, 1));
-         return Natural'Value (To_String (From, Matches, 1));
+         return Natural'Value (To_String (From, Matches (1)));
       end if;
    end Get_Content_Length;
 
