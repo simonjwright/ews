@@ -41,7 +41,7 @@ package EWS.Types is
       ICO,
       JPEG,
       JavaScript,
-      OCTET_STREAM,
+      Octet_Stream,
       PNG,
       Plain,
       XML,
