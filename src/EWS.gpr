@@ -40,9 +40,7 @@ project EWS is
      for Default_Switches ("ada") use
        (
         "-gnatqQafoy",
-        "-fstack-check",
         "-gnatwaL",
-        "-gnatVa",
         "-O2"
        );
 
