@@ -47,7 +47,7 @@ package body EWS.Types is
             Types.ICO => Format_ICO'Unchecked_Access,
             Types.JPEG => Format_JPEG'Unchecked_Access,
             Types.JavaScript => Format_JavaScript'Unchecked_Access,
-            Types.OCTET_STREAM => Format_Octet_Stream'Unchecked_Access,
+            Types.Octet_Stream => Format_Octet_Stream'Unchecked_Access,
             Types.PNG => Format_PNG'Unchecked_Access,
             Types.Plain => Format_Plain'Unchecked_Access,
             Types.XML => Format_XML'Unchecked_Access,
