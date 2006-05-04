@@ -51,10 +51,24 @@ procedure EWS.Server.Test is
       return Result;
    end Dyn;
 
+   function AJAX_Time
+     (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class;
+   function AJAX_Time
+     (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class is
+      Result : Dynamic.Dynamic_Response (From_Request);
+   begin
+      Dynamic.Set_Content_Type (Result, To => Types.Plain);
+      Dynamic.Set_Content
+        (Result,
+         GNAT.Calendar.Time_IO.Image (Ada.Calendar.Clock, "%c"));
+      return Result;
+   end AJAX_Time;
+
 begin
 
    Dynamic.Register (Dyn'Unrestricted_Access, "/test");
-   Serve (Using_Port => 8080);
+   Dynamic.Register (AJAX_Time'Unrestricted_Access, "/ajaxTime");
+   Serve (Using_Port => 8080, Tracing => True);
    delay 1_000_000.0;
 
 end EWS.Server.Test;
