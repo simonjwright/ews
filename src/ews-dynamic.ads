@@ -24,7 +24,8 @@
 --  $Date$
 --  $Author$
 
-with Ada.Strings.Unbounded;
+with Ada.Finalization;
+with BC.Support.Smart_Pointers;
 with EWS.HTTP;
 with EWS.Types;
 with GNAT.Sockets;
@@ -58,10 +59,26 @@ package EWS.Dynamic is
 
 private
 
+   type String_P is access String;
+
+   type Unbounded_String is new Ada.Finalization.Controlled with record
+      Last : Natural := 0;
+      Buf : String_P;
+   end record;
+
+   procedure Initialize (U : in out Unbounded_String);
+   procedure Finalize (U : in out Unbounded_String);
+   procedure Append (To : in out Unbounded_String; S : String);
+
+   type Unbounded_String_P is access Unbounded_String;
+
+   package Unbounded_String_Pointers is new BC.Support.Smart_Pointers
+     (Unbounded_String, Unbounded_String_P);
+
    type Dynamic_Response (R : HTTP.Request_P)
    is new HTTP.Response (R) with record
       Form : Types.Format := Types.Plain;
-      Content : Ada.Strings.Unbounded.Unbounded_String;
+      Content : Unbounded_String_Pointers.Pointer;
    end record;
 
    function Content_Type (This : Dynamic_Response) return String;

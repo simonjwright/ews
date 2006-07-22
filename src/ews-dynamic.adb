@@ -25,7 +25,6 @@
 --  $Author$
 
 with Ada.Streams; use Ada.Streams;
-with Ada.Strings.Unbounded.Aux;
 with Ada.Unchecked_Deallocation;
 
 package body EWS.Dynamic is
@@ -46,15 +45,46 @@ package body EWS.Dynamic is
    Registry : Cell_P;
 
 
-   procedure Free_Stream
+   procedure Free
+   is new Ada.Unchecked_Deallocation (String,
+                                      String_P);
+
+   procedure Free
    is new Ada.Unchecked_Deallocation (Root_Stream_Type'Class,
                                       GNAT.Sockets.Stream_Access);
 
 
    procedure Append (This : in out Dynamic_Response;
                      Adding : String) is
+      use type Unbounded_String_Pointers.Pointer;
    begin
-      Ada.Strings.Unbounded.Append (This.Content, Adding);
+      if This.Content = Unbounded_String_Pointers.Null_Pointer then
+         This.Content :=
+           Unbounded_String_Pointers.Create (new Unbounded_String);
+      end if;
+      Append (Unbounded_String_Pointers.Value (This.Content).all, Adding);
+   end Append;
+
+
+   procedure Append (To : in out Unbounded_String; S : String) is
+   begin
+      if To.Last + S'Length > To.Buf'Length then
+         declare
+            Extended_Size : Positive := To.Buf'Length;
+            New_Buffer : String_P;
+         begin
+            loop
+               Extended_Size := Extended_Size * 2;
+               exit when To.Last + S'Length <= Extended_Size;
+            end loop;
+            New_Buffer := new String (1 .. Extended_Size);
+            New_Buffer (1 .. To.Last) := To.Buf (1 .. To.Last);
+            Free (To.Buf);
+            To.Buf := New_Buffer;
+         end;
+      end if;
+      To.Buf (To.Last + 1 .. To.Last + S'Length) := S;
+      To.Last := To.Last + S'Length;
    end Append;
 
 
@@ -66,8 +96,16 @@ package body EWS.Dynamic is
 
    function Content_Length (This : Dynamic_Response) return Integer is
    begin
-      return Ada.Strings.Unbounded.Length (This.Content);
+      return Unbounded_String_Pointers.Value (This.Content).Last;
    end Content_Length;
+
+
+   procedure Finalize (U : in out Unbounded_String) is
+   begin
+      if U.Buf /= null then
+         Free (U.Buf);
+      end if;
+   end Finalize;
 
 
    function Find
@@ -85,6 +123,12 @@ package body EWS.Dynamic is
    end Find;
 
 
+   procedure Initialize (U : in out Unbounded_String) is
+   begin
+      U.Buf := new String (1 .. 1024);
+   end Initialize;
+
+
    procedure Register (The_Creator : Creator; For_The_URL : HTTP.URL) is
    begin
       Registry := new Cell'(The_URL => new HTTP.URL'(For_The_URL),
@@ -96,7 +140,8 @@ package body EWS.Dynamic is
    procedure Set_Content (This : in out Dynamic_Response;
                           To : String) is
    begin
-      This.Content := Ada.Strings.Unbounded.To_Unbounded_String (To);
+      This.Content := Unbounded_String_Pointers.Create (new Unbounded_String);
+      Append (This, To);
    end Set_Content;
 
 
@@ -111,15 +156,14 @@ package body EWS.Dynamic is
                             To : GNAT.Sockets.Socket_Type) is
       --  We need to send only the contents, _without_ any bounds. So,
       --  we create a (sub)type with the correct bounds and use its
-      --  'Write. There may well be constraint checks involved, but at
-      --  least there should be no massive copies!
-      use Ada.Strings.Unbounded;
-      subtype This_String is String (1 .. Length (This.Content));
+      --  'Write.
+      Content : Unbounded_String
+        renames Unbounded_String_Pointers.Value (This.Content).all;
+      subtype This_String is String (1 .. Content.Last);
       S : GNAT.Sockets.Stream_Access := GNAT.Sockets.Stream (To);
    begin
-      This_String'Write (S,
-                         Aux.Get_String (This.Content).all);
-      Free_Stream (S);
+      This_String'Write (S, Content.Buf (1 .. Content.Last));
+      Free (S);
    end Write_Content;
 
 
