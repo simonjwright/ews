@@ -22,15 +22,25 @@ all::
 	@echo "   ews-make_htdocs"
 	@echo "   dist [SUBRELEASE=x]"
 
-ews-server-test: ews-htdocs.adb
-	gnatmake -g -m ews-server-test -bargs -E
+ews-server-test: ews-htdocs.adb .build
+	gnatmake -PEWS ews-server-test
+clean::
+	rm -f ews-server-test
 
 ews-htdocs.adb: ews-make_htdocs force
 	(cd ../doc && ../src/ews-make_htdocs >../src/$@)
+clean::
+	rm -f ews-htdocs.adb
 
-ews-make_htdocs: ews-make_htdocs.adb
-	gnatmake ews-make_htdocs
-	-rm ews-make_htdocs.{o,ali}
+ews-make_htdocs: ews-make_htdocs.adb .build
+	gnatmake -PEWS ews-make_htdocs
+clean::
+	rm -f ews-make_htdocs
+
+.build:
+	mkdir .build
+clean::
+	rm -rf .build
 
 ############################
 # Distribution construction
@@ -39,9 +49,12 @@ ews-make_htdocs: ews-make_htdocs.adb
 DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
 
 DOCS = \
-../doc/index.html
+../doc/index.html \
+../doc/ajax.html \
+../doc/ajax.js
 
 SRC = \
+EWS.gpr \
 ews.ads \
 ews-dynamic.adb \
 ews-dynamic.ads \
