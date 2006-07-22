@@ -18,7 +18,7 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 
 EWS is a web server construction kit, designed for embedded
 applications using the <a
-href="http://libre.act-europe.fr/GNAT/">GNAT</a> Ada
+href="http://libre.adacore.com/">GNAT</a> Ada
 compiler.
 
 <p>The project is hosted on SourceForge. You can see
@@ -26,22 +26,41 @@ the <a
 href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
 and you
 can <a
-href="http://cvs.sourceforge.net/viewcvs.py/embed-web-srvr/ews/">browse
+href="http://embed-web-srvr.cvs.sourceforge.net/embed-web-srvr/ews/">browse
 the CVS repository</a>.
 
-<p>Documentation will be forthcoming! For the moment, in the
-distribution directory (<tt>ews-<i>yyyymmdd</i>/</tt>), and provided
-you have GNAT installed and are running a Linux or other Unix system
-(only tested on Mac OS X with GCC 4.0.0),
+<p>Documentation will be forthcoming.
+
+<p>For the moment, and provided you are running on a Linux or Mac OS X
+system (other Unix systems should work as described, and the software
+runs on Windows but the makefile doesn't)
+
+<ul>
+
+<li>Install GNAT
+
+<li>Download
+the <a href="http://www.nczonline.net/downloads/">zXml</a> library,
+unpack it and copy <tt>zXml/distrib/zxml.js</tt> to the EWS HTML
+directory <tt>ews-<i>yyyymmdd</i>/html</tt>
+
+<li>Download
+the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
+95 Booch Components</a>, unpack, place a symbolic link in your home
+directory:<br/>
+<tt>   $ ln -s <i>/where/ever</i>/bc-<i>yyyymmdd</i> .</tt>
+
+</ul>
+
+<p>Then, in the EWS distribution directory
+(<tt>ews-<i>yyyymmdd</i></tt>),
 <pre>
    $ make ews-server-test
 </pre>
 
 will create a server (<tt>ews-server-test</tt>), which when executed
 will listen on port 8080 and respond with these pages.
-
-<p>The server should build and run fine under Windows, it's just the
-makefile that can't cope yet!
 
 <p>
 <hr>
