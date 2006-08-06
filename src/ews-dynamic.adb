@@ -88,6 +88,13 @@ package body EWS.Dynamic is
    end Append;
 
 
+   function Cacheable (This : Dynamic_Response) return Boolean is
+      pragma Unreferenced (This);
+   begin
+      return False;
+   end Cacheable;
+
+
    function Content_Type (This : Dynamic_Response) return String is
    begin
       return Types.Content_Type (This.Form);
@@ -95,8 +102,13 @@ package body EWS.Dynamic is
 
 
    function Content_Length (This : Dynamic_Response) return Integer is
+      use type Unbounded_String_Pointers.Pointer;
    begin
-      return Unbounded_String_Pointers.Value (This.Content).Last;
+      if This.Content = Unbounded_String_Pointers.Null_Pointer then
+         return 0;
+      else
+         return Unbounded_String_Pointers.Value (This.Content).Last;
+      end if;
    end Content_Length;
 
 
@@ -154,16 +166,22 @@ package body EWS.Dynamic is
 
    procedure Write_Content (This : Dynamic_Response;
                             To : GNAT.Sockets.Socket_Type) is
-      --  We need to send only the contents, _without_ any bounds. So,
-      --  we create a (sub)type with the correct bounds and use its
-      --  'Write.
-      Content : Unbounded_String
-        renames Unbounded_String_Pointers.Value (This.Content).all;
-      subtype This_String is String (1 .. Content.Last);
-      S : GNAT.Sockets.Stream_Access := GNAT.Sockets.Stream (To);
+      use type Unbounded_String_Pointers.Pointer;
    begin
-      This_String'Write (S, Content.Buf (1 .. Content.Last));
-      Free (S);
+      if This.Content /= Unbounded_String_Pointers.Null_Pointer then
+         declare
+            --  We need to send only the contents, _without_ any
+            --  bounds. So, we create a (sub)type with the correct
+            --  bounds and use its 'Write.
+            Content : Unbounded_String
+              renames Unbounded_String_Pointers.Value (This.Content).all;
+            subtype This_String is String (1 .. Content.Last);
+            S : GNAT.Sockets.Stream_Access := GNAT.Sockets.Stream (To);
+         begin
+            This_String'Write (S, Content.Buf (1 .. Content.Last));
+            Free (S);
+         end;
+      end if;
    end Write_Content;
 
 
