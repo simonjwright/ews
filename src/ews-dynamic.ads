@@ -81,6 +81,7 @@ private
       Content : Unbounded_String_Pointers.Pointer;
    end record;
 
+   function Cacheable (This : Dynamic_Response) return Boolean;
    function Content_Type (This : Dynamic_Response) return String;
    function Content_Length (This : Dynamic_Response) return Integer;
    procedure Write_Content (This : Dynamic_Response;
