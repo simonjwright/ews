@@ -100,7 +100,7 @@ package body EWS.Server is
                      GNAT.Sockets.Set (Sockets, Socket);
                   elsif Socket = GNAT.Sockets.No_Socket then
                      Put_Line (Standard_Error,
-                               "got no socket");
+                               "EWS: server got No_Socket");
                   else
                      Trace ("request", Socket, Tracing);
                      Respond (Socket, Sockets, Tracing);
@@ -108,14 +108,16 @@ package body EWS.Server is
                end;
             else
                Put_Line (Standard_Error,
-                         "Check_Selector returned " & Status'Img);
+                         "EWS: server: Check_Selector returned "
+                           & Status'Img);
             end if;
          end;
       end loop;
    exception
       when E : others =>
          Put_Line (Standard_Error,
-                   "EWS: failed in outer, " & Exception_Information (E));
+                   "EWS: server failed in outer loop, "
+                     & Exception_Information (E));
          GNAT.Sockets.Close_Socket (Server_Socket);
    end Server;
 
