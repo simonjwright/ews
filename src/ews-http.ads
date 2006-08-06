@@ -43,13 +43,18 @@ package EWS.HTTP is
 
    procedure Initialize (R : out Request; From : GNAT.Sockets.Socket_Type);
 
+   subtype Method is String;
+   subtype Version is String;
    subtype URL is String;
    subtype Property is String;
 
+   function Get_Method (From : Request) return Method;
+
+   function Get_Version (From : Request) return Version;
+
    function Get_URL (From : Request) return URL;
 
-   function Get_Property (Named : String;
-                          From : Request) return Property;
+   function Get_Property (Named : String; From : Request) return Property;
 
 
    ---------------------------
@@ -65,6 +70,9 @@ package EWS.HTTP is
 
    function Response_Kind (This : Response) return String;
    --  default "200 OK"
+
+   function Cacheable (This : Response) return Boolean;
+   --  default True
 
    function Content_Type (This : Response) return String;
    --  default "text/plain"
