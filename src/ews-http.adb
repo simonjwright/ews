@@ -42,13 +42,19 @@ package body EWS.HTTP is
 
 
    URL_Request : constant String :=
-     "^(GET|POST)"
+     "(\r\n)?"
+     & "(GET|POST)"                             -- request, 2
      & "\s"
-     & "(/|((/[a-z0-9._-]+)+)/?)"               -- the URL
-     & "(\?([a-z0-9._=&%-]+))?"                 -- query
+     & "(/|((/[a-z0-9._-]+)+)/?)"               -- the URL, 3
+     & "(\?([a-z0-9._=&%-]+))?"                 -- query, 6
      & "\s"
-     & "HTTP/\d\.\d"
+     & "HTTP/(\d\.\d)"                          -- version, 8
      & "\r\n";
+
+   Method_Match : constant := 2;
+   URL_Match     : constant := 3;
+   Query_Match   : constant := 6;
+   Version_Match : constant := 8;
 
    URL_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
      GNAT.Regpat.Compile (URL_Request,
@@ -78,6 +84,7 @@ package body EWS.HTTP is
    procedure Free_Stream
    is new Ada.Unchecked_Deallocation (Root_Stream_Type'Class, Stream_Access);
 
+
    -------------------------
    --  Public operations  --
    -------------------------
@@ -95,6 +102,34 @@ package body EWS.HTTP is
    end Initialize;
 
 
+   function Get_Method (From : Request) return Method is
+      Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
+      Input : constant String := Str.To_String (From.Head);
+      use type GNAT.Regpat.Match_Location;
+   begin
+      GNAT.Regpat.Match (URL_Matcher, Input, Matches);
+      if Matches (0) = GNAT.Regpat.No_Match then
+         return "";
+      else
+         return To_String (Input, Matches (Method_Match));
+      end if;
+   end Get_Method;
+
+
+   function Get_Version (From : Request) return Version is
+      Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
+      Input : constant String := Str.To_String (From.Head);
+      use type GNAT.Regpat.Match_Location;
+   begin
+      GNAT.Regpat.Match (URL_Matcher, Input, Matches);
+      if Matches (0) = GNAT.Regpat.No_Match then
+         return "";
+      else
+         return To_String (Input, Matches (Version_Match));
+      end if;
+   end Get_Version;
+
+
    function Get_URL (From : Request) return URL is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Input : constant String := Str.To_String (From.Head);
@@ -104,7 +139,7 @@ package body EWS.HTTP is
       if Matches (0) = GNAT.Regpat.No_Match then
          return "";
       else
-         return Unescape (To_String (Input, Matches (2)));
+         return Unescape (To_String (Input, Matches (URL_Match)));
       end if;
    end Get_URL;
 
@@ -122,11 +157,11 @@ package body EWS.HTTP is
       GNAT.Regpat.Match (URL_Matcher, Query_Input, Query_Matches);
       --  which has to succeed, we wouldn't get here with an illegal head
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
-      if To_String (Query_Input, Query_Matches (1)) = "GET"
-      and then Query_Matches (6) /= GNAT.Regpat.No_Match then
+      if To_String (Query_Input, Query_Matches (Method_Match)) = "GET"
+      and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match then
          declare
             Property_Input : constant String :=
-              To_String (Query_Input, Query_Matches (6));
+              To_String (Query_Input, Query_Matches (Query_Match));
          begin
             GNAT.Regpat.Match
               (Property_Matcher, Property_Input, Property_Matches);
@@ -137,7 +172,8 @@ package body EWS.HTTP is
                  (Unescape (To_String (Property_Input, Property_Matches (2))));
             end if;
          end;
-      elsif To_String (Query_Input, Query_Matches (1)) = "POST" then
+      elsif To_String (Query_Input, Query_Matches (Method_Match))
+        = "POST" then
          declare
             Property_Input : constant String := Str.To_String (From.Content);
          begin
@@ -193,6 +229,13 @@ package body EWS.HTTP is
    end Response_Kind;
 
 
+   function Cacheable (This : Response) return Boolean is
+      pragma Unreferenced (This);
+   begin
+      return True;
+   end Cacheable;
+
+
    function Content_Type (This : Response) return String is
       pragma Unreferenced (This);
    begin
@@ -228,16 +271,28 @@ package body EWS.HTTP is
                       To : GNAT.Sockets.Socket_Type) is
       S : Stream_Access := Stream (To);
    begin
-      String'Write
-        (S,
-         "HTTP/1.0 " & Response_Kind (This) & CRLF &
-           "Server: EWS" & CRLF &
-           "Connection: close" & CRLF &
-           "Content-Type: " & Content_Type (This) & CRLF &
-           "Content-Length: " & Content_Length (This)'Img & CRLF &
-           CRLF);
-      Free_Stream (S);
+      if Get_Version (This.To.all) = "1.0" then
+         String'Write
+           (S,
+            "HTTP/1.0 " & Response_Kind (This) & CRLF &
+              "Server: EWS" & CRLF &
+              "Connection: close" & CRLF &
+              "Content-Type: " & Content_Type (This) & CRLF &
+              "Content-Length: " & Content_Length (This)'Img & CRLF);
+      else
+         String'Write
+           (S,
+            "HTTP/1.1 " & Response_Kind (This) & CRLF &
+              "Server: EWS" & CRLF &
+              "Content-Type: " & Content_Type (This) & CRLF &
+              "Content-Length: " & Content_Length (This)'Img & CRLF);
+      end if;
+      if not Cacheable (This) then
+         String'Write (S, "Cache-Control: no-cache" & CRLF);
+      end if;
+      String'Write (S, CRLF);
       Write_Content (This, To);
+      Free_Stream (S);
    end Respond;
 
 
