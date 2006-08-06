@@ -37,6 +37,6 @@ private package EWS.Htdocs is
    type URL_Info_Array is array (Positive range <>) of URL_Info;
    type URL_Info_Array_P is access constant URL_Info_Array;
 
-   function Static_Urls return Url_Info_Array_P;
+   function Static_Urls return URL_Info_Array_P;
 
 end EWS.Htdocs;
