@@ -27,7 +27,7 @@
 with Ada.Dynamic_Priorities;
 with Ada.Exceptions; use Ada.Exceptions;
 with Ada.Text_IO; use Ada.Text_IO;
-with GNAT.Sockets; use GNAT.Sockets;
+with GNAT.Sockets;
 
 with EWS.HTTP;
 
@@ -40,83 +40,83 @@ package body EWS.Server is
    end Server;
    type Server_P is access Server;
 
+   procedure Respond (To : GNAT.Sockets.Socket_Type;
+                      In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
+                      Tracing : Boolean);
+   procedure Trace (Str : String;
+                    Skt : GNAT.Sockets.Socket_Type;
+                    Tracing : Boolean);
+   procedure Trace (S : String; Tracing : Boolean);
 
    task body Server is
-      Port : Port_Type;
+      Port : GNAT.Sockets.Port_Type;
       Priority : System.Priority;
-      Trace : Boolean;
-      Address : Sock_Addr_Type;
-      Server : Socket_Type;
-      Socket : Socket_Type;
+      Tracing : Boolean;
+      Address : GNAT.Sockets.Sock_Addr_Type;
+      Server_Socket : GNAT.Sockets.Socket_Type;
+      Sockets : GNAT.Sockets.Socket_Set_Type;
+      Selector : GNAT.Sockets.Selector_Type;
    begin
-      Initialize;
+      GNAT.Sockets.Initialize;
       accept Start (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority;
                     Tracing : Boolean) do
          Port := Using_Port;
          Priority := At_Priority;
-         Trace := Tracing;
+         Server.Tracing := Tracing;
       end Start;
       Ada.Dynamic_Priorities.Set_Priority (Priority);
-      Address.Addr := Any_Inet_Addr;
+      Address.Addr := GNAT.Sockets.Any_Inet_Addr;
       Address.Port := Port;
-      Create_Socket (Server);
-      Set_Socket_Option
-        (Server,
-         Socket_Level,
-         (Reuse_Address, True));
-      Bind_Socket (Server, Address);
-      Listen_Socket (Server);
+      GNAT.Sockets.Create_Socket (Server_Socket);
+      GNAT.Sockets.Set_Socket_Option
+        (Server_Socket,
+         GNAT.Sockets.Socket_Level,
+         (GNAT.Sockets.Reuse_Address, True));
+      GNAT.Sockets.Bind_Socket (Server_Socket, Address);
+      GNAT.Sockets.Listen_Socket (Server_Socket);
+      GNAT.Sockets.Set (Sockets, Server_Socket);
+      GNAT.Sockets.Create_Selector (Selector);
       loop
-         Accept_Socket (Server, Socket, Address);
-         if Trace then
-            Put_Line (Standard_Error,
-                      "EWS: connected socket: " & Image (Socket));
-            Put_Line (Standard_Error,
-                      "EWS: address: " & Image (Get_Peer_Name (Socket)));
-         end if;
          declare
-            Request : aliased HTTP.Request;
+            Read_Sockets : GNAT.Sockets.Socket_Set_Type;
+            Write_Sockets : GNAT.Sockets.Socket_Set_Type;
+            Status : GNAT.Sockets.Selector_Status;
+            use type GNAT.Sockets.Selector_Status;
          begin
-            HTTP.Initialize (Request, From => Socket);
-            if Trace then
+            GNAT.Sockets.Copy (Sockets, Read_Sockets);
+            GNAT.Sockets.Check_Selector
+              (Selector, Read_Sockets, Write_Sockets, Status);
+            if Status = GNAT.Sockets.Completed then
+               declare
+                  Socket : GNAT.Sockets.Socket_Type;
+                  use type GNAT.Sockets.Socket_Type;
+               begin
+                  GNAT.Sockets.Get (Read_Sockets, Socket);
+                  if Socket = Server_Socket then
+                     GNAT.Sockets.Accept_Socket
+                       (Server_Socket, Socket, Address);
+                     Trace ("connection", Socket, Tracing);
+                     GNAT.Sockets.Set (Sockets, Socket);
+                  elsif Socket = GNAT.Sockets.No_Socket then
+                     Put_Line (Standard_Error,
+                               "got no socket");
+                  else
+                     Trace ("request", Socket, Tracing);
+                     Respond (Socket, Sockets, Tracing);
+                  end if;
+               end;
+            else
                Put_Line (Standard_Error,
-                         "EWS: url |"
-                           & HTTP.Get_URL (Request)
-                           & "|");
+                         "Check_Selector returned " & Status'Img);
             end if;
-            begin
-               HTTP.Respond (HTTP.Find (Request'Unchecked_Access),
-                             To => Socket);
-            exception
-               when E : others =>
-                  Put_Line (Standard_Error,
-                            "EWS: failed in immediate read/respond, "
-                              & Exception_Information (E));
-               begin
-                  HTTP.Respond
-                    (HTTP.Exception_Response (E, Request'Unchecked_Access),
-                     To => Socket);
-               end;
-            end;
-            Close_Socket (Socket);
-         exception
-            when E : others =>
-               Put_Line (Standard_Error,
-                         "EWS: failed in outer read/respond, "
-                           & Exception_Information (E));
-               begin
-                  Close_Socket (Socket);
-               exception
-                  when others => null;
-               end;
          end;
       end loop;
    exception
       when E : others =>
          Put_Line (Standard_Error,
                    "EWS: failed in outer, " & Exception_Information (E));
-         Close_Socket (Server);
+         GNAT.Sockets.Close_Socket (Server_Socket);
    end Server;
 
 
@@ -128,6 +128,85 @@ package body EWS.Server is
    begin
       New_Server.Start (Using_Port, At_Priority, Tracing);
    end Serve;
+
+
+   procedure Respond (To : GNAT.Sockets.Socket_Type;
+                      In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
+                      Tracing : Boolean) is
+      Request : aliased HTTP.Request;
+   begin
+
+      begin
+         HTTP.Initialize (Request, From => To);
+      exception
+         when E : others =>
+            Put_Line (Standard_Error,
+                      "EWS: failed reading request, "
+                        & Exception_Information (E));
+            GNAT.Sockets.Clear (In_Sockets, To);
+            GNAT.Sockets.Close_Socket (To);
+            return;
+      end;
+
+      Trace ("method "
+               & HTTP.Get_Method (Request)
+               & ", version "
+               & HTTP.Get_Version (Request)
+               & ", url "
+               & HTTP.Get_URL (Request),
+             Tracing);
+
+      begin
+         HTTP.Respond (HTTP.Find (Request'Unchecked_Access),
+                       To => To);
+      exception
+         when E : others =>
+            Put_Line (Standard_Error,
+                      "EWS: failed in respond, "
+                        & Exception_Information (E));
+            begin
+               HTTP.Respond
+                 (HTTP.Exception_Response (E, Request'Unchecked_Access),
+                  To => To);
+            exception
+               when others => null;
+            end;
+            GNAT.Sockets.Clear (In_Sockets, To);
+            GNAT.Sockets.Close_Socket (To);
+            return;
+      end;
+
+      if HTTP.Get_Version (Request) = "1.0" then
+         GNAT.Sockets.Clear (In_Sockets, To);
+         GNAT.Sockets.Close_Socket (To);
+      end if;
+
+   end Respond;
+
+
+   procedure Trace (Str : String;
+                    Skt : GNAT.Sockets.Socket_Type;
+                    Tracing : Boolean) is
+   begin
+      if Tracing then
+         Put_Line
+           (Standard_Error,
+            "EWS: "
+              & Str
+              & ", socket"
+              & GNAT.Sockets.Image (Skt)
+              & " from "
+              & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)));
+      end if;
+   end Trace;
+
+
+   procedure Trace (S : String; Tracing : Boolean) is
+   begin
+      if Tracing then
+         Put_Line (Standard_Error, "EWS: " & S);
+      end if;
+   end Trace;
 
 
 end EWS.Server;
