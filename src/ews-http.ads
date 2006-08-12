@@ -63,8 +63,6 @@ package EWS.HTTP is
 
    type Response (To : Request_P) is abstract tagged private;
 
-   type Response_P is access all Response;
-
    --  You do not need to override Content_Length and Write_Content
    --  provided you have overridden Content.
 
