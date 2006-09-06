@@ -136,10 +136,11 @@ package body EWS.Server is
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
                       Tracing : Boolean) is
       Request : aliased HTTP.Request;
+      Terminated : Boolean;
    begin
 
       begin
-         HTTP.Initialize (Request, From => To);
+         HTTP.Initialize (Request, From => To, Terminated => Terminated);
       exception
          when E : others =>
             Put_Line (Standard_Error,
@@ -149,6 +150,13 @@ package body EWS.Server is
             GNAT.Sockets.Close_Socket (To);
             return;
       end;
+
+      if Terminated then
+         Trace ("connection terminated", Tracing);
+         GNAT.Sockets.Clear (In_Sockets, To);
+         GNAT.Sockets.Close_Socket (To);
+         return;
+      end if;
 
       Trace ("method "
                & HTTP.Get_Method (Request)
@@ -162,6 +170,15 @@ package body EWS.Server is
          HTTP.Respond (HTTP.Find (Request'Unchecked_Access),
                        To => To);
       exception
+         when E : GNAT.Sockets.Socket_Error =>
+            Put_Line (Standard_Error,
+                      "EWS: failed in respond, "
+                        & GNAT.Sockets.Resolve_Exception (E)'Img
+                        & ", "
+                        & Exception_Information (E));
+            GNAT.Sockets.Clear (In_Sockets, To);
+            GNAT.Sockets.Close_Socket (To);
+            return;
          when E : others =>
             Put_Line (Standard_Error,
                       "EWS: failed in respond, "

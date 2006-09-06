@@ -89,7 +89,9 @@ package body EWS.HTTP is
    --  Public operations  --
    -------------------------
 
-   procedure Initialize (R : out Request; From : GNAT.Sockets.Socket_Type) is
+   procedure Initialize (R : out Request;
+                         From : GNAT.Sockets.Socket_Type;
+                         Terminated : out Boolean) is
       Head : constant String := Read_Request (From);
       Content : String (1 .. Get_Content_Length (Head));
       S : Stream_Access := Stream (From);
@@ -98,6 +100,7 @@ package body EWS.HTTP is
       String'Read (S, Content);
       R.Content := Str.To_Bounded_String (Content);
       Free_Stream (S);
+      Terminated := Head'Length = 0;
 --        Put_Line ("content |" & Content & "|");
    end Initialize;
 

@@ -41,7 +41,9 @@ package EWS.HTTP is
 
    type Request_P is access all Request;
 
-   procedure Initialize (R : out Request; From : GNAT.Sockets.Socket_Type);
+   procedure Initialize (R : out Request;
+                         From : GNAT.Sockets.Socket_Type;
+                         Terminated : out Boolean);
 
    subtype Method is String;
    subtype Version is String;
