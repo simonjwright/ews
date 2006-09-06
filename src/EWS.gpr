@@ -2,7 +2,7 @@
 
 project EWS is
 
-  for Main use ("ews_pages", "ews-make_htdocs", "ews-server-test");
+  for Main use ("ews-server-test", "ews_pages", "ews-make_htdocs");
   for Exec_Dir use ".";
 
   for Source_Dirs use
