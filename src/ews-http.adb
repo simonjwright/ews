@@ -92,16 +92,29 @@ package body EWS.HTTP is
    procedure Initialize (R : out Request;
                          From : GNAT.Sockets.Socket_Type;
                          Terminated : out Boolean) is
-      Head : constant String := Read_Request (From);
-      Content : String (1 .. Get_Content_Length (Head));
-      S : Stream_Access := Stream (From);
    begin
-      R.Head := Str.To_Bounded_String (Head);
-      String'Read (S, Content);
-      R.Content := Str.To_Bounded_String (Content);
-      Free_Stream (S);
-      Terminated := Head'Length = 0;
---        Put_Line ("content |" & Content & "|");
+      declare
+         Head : constant String := Read_Request (From);
+         Content : String (1 .. Get_Content_Length (Head));
+         S : Stream_Access := Stream (From);
+         use type GNAT.Sockets.Error_Type;
+      begin
+         R.Head := Str.To_Bounded_String (Head);
+         String'Read (S, Content);
+         R.Content := Str.To_Bounded_String (Content);
+         Free_Stream (S);
+         Terminated := Head'Length = 0;
+      exception
+         when E : GNAT.Sockets.Socket_Error =>
+            if GNAT.Sockets.Resolve_Exception (E)
+              = GNAT.Sockets.Connection_Reset_By_Peer then
+               --  This is what happens on VxWorks; other OSs happily
+               --  read an empty header.
+               Terminated := True;
+            else
+               raise;
+            end if;
+      end;
    end Initialize;
 
 
@@ -486,8 +499,6 @@ package body EWS.HTTP is
       if Matches (0) = GNAT.Regpat.No_Match then
          return 0;
       else
---           Put_Line ("content length field "
---                     & To_String (From, Matches, 1));
          return Natural'Value (To_String (From, Matches (1)));
       end if;
    end Get_Content_Length;
