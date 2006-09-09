@@ -104,17 +104,17 @@ package body EWS.HTTP is
          R.Content := Str.To_Bounded_String (Content);
          Free_Stream (S);
          Terminated := Head'Length = 0;
-      exception
-         when E : GNAT.Sockets.Socket_Error =>
-            if GNAT.Sockets.Resolve_Exception (E)
-              = GNAT.Sockets.Connection_Reset_By_Peer then
-               --  This is what happens on VxWorks; other OSs happily
-               --  read an empty header.
-               Terminated := True;
-            else
-               raise;
-            end if;
       end;
+   exception
+      when E : GNAT.Sockets.Socket_Error =>
+         if GNAT.Sockets.Resolve_Exception (E)
+           = GNAT.Sockets.Connection_Reset_By_Peer then
+            --  This is what happens on VxWorks; other OSs happily
+            --  read an empty header.
+            Terminated := True;
+         else
+            raise;
+         end if;
    end Initialize;
 
 
