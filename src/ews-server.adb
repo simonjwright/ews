@@ -25,8 +25,8 @@
 --  $Author$
 
 with Ada.Dynamic_Priorities;
-with Ada.Exceptions; use Ada.Exceptions;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Exceptions;
+with Ada.Text_IO;
 with GNAT.Sockets;
 
 with EWS.HTTP;
@@ -40,6 +40,9 @@ package body EWS.Server is
    end Server;
    type Server_P is access Server;
 
+   procedure Log (S : String);
+   procedure Log (S : String;
+                  With_Exception : Ada.Exceptions.Exception_Occurrence);
    procedure Respond (To : GNAT.Sockets.Socket_Type;
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
                       Tracing : Boolean);
@@ -99,25 +102,20 @@ package body EWS.Server is
                      Trace ("connection", Socket, Tracing);
                      GNAT.Sockets.Set (Sockets, Socket);
                   elsif Socket = GNAT.Sockets.No_Socket then
-                     Put_Line (Standard_Error,
-                               "EWS: server got No_Socket");
+                     Log ("server got No_Socket");
                   else
                      Trace ("request", Socket, Tracing);
                      Respond (Socket, Sockets, Tracing);
                   end if;
                end;
             else
-               Put_Line (Standard_Error,
-                         "EWS: server: Check_Selector returned "
-                           & Status'Img);
+               Log ("server: Check_Selector returned " & Status'Img);
             end if;
          end;
       end loop;
    exception
       when E : others =>
-         Put_Line (Standard_Error,
-                   "EWS: server failed in outer loop, "
-                     & Exception_Information (E));
+         Log ("server failed in outer loop", With_Exception => E);
          GNAT.Sockets.Close_Socket (Server_Socket);
    end Server;
 
@@ -132,6 +130,29 @@ package body EWS.Server is
    end Serve;
 
 
+   procedure Log (S : String) is
+   begin
+      Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, "EWS: " & S);
+   end Log;
+
+
+   procedure Log (S : String;
+                  With_Exception : Ada.Exceptions.Exception_Occurrence) is
+      use Ada.Exceptions;
+   begin
+      if Exception_Identity (With_Exception)
+        = GNAT.Sockets.Socket_Error'Identity then
+         Log (S
+                & ", "
+                & GNAT.Sockets.Resolve_Exception (With_Exception)'Img
+                & ", "
+                & Exception_Information (With_Exception));
+      else
+         Log (S & ", " & Exception_Information (With_Exception));
+      end if;
+   end Log;
+
+
    procedure Respond (To : GNAT.Sockets.Socket_Type;
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
                       Tracing : Boolean) is
@@ -143,9 +164,7 @@ package body EWS.Server is
          HTTP.Initialize (Request, From => To, Terminated => Terminated);
       exception
          when E : others =>
-            Put_Line (Standard_Error,
-                      "EWS: failed reading request, "
-                        & Exception_Information (E));
+            Log ("failed reading request", With_Exception => E);
             GNAT.Sockets.Clear (In_Sockets, To);
             GNAT.Sockets.Close_Socket (To);
             return;
@@ -171,18 +190,12 @@ package body EWS.Server is
                        To => To);
       exception
          when E : GNAT.Sockets.Socket_Error =>
-            Put_Line (Standard_Error,
-                      "EWS: failed in respond, "
-                        & GNAT.Sockets.Resolve_Exception (E)'Img
-                        & ", "
-                        & Exception_Information (E));
+            Log ("failed in respond", With_Exception => E);
             GNAT.Sockets.Clear (In_Sockets, To);
             GNAT.Sockets.Close_Socket (To);
             return;
          when E : others =>
-            Put_Line (Standard_Error,
-                      "EWS: failed in respond, "
-                        & Exception_Information (E));
+            Log ("failed in respond", With_Exception => E);
             begin
                HTTP.Respond
                  (HTTP.Exception_Response (E, Request'Unchecked_Access),
@@ -208,14 +221,12 @@ package body EWS.Server is
                     Tracing : Boolean) is
    begin
       if Tracing then
-         Put_Line
-           (Standard_Error,
-            "EWS: "
-              & Str
-              & ", socket"
-              & GNAT.Sockets.Image (Skt)
-              & " from "
-              & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)));
+         Log ("EWS: "
+                & Str
+                & ", socket"
+                & GNAT.Sockets.Image (Skt)
+                & " from "
+                & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)));
       end if;
    end Trace;
 
@@ -223,7 +234,7 @@ package body EWS.Server is
    procedure Trace (S : String; Tracing : Boolean) is
    begin
       if Tracing then
-         Put_Line (Standard_Error, "EWS: " & S);
+         Log ("EWS: " & S);
       end if;
    end Trace;
 
