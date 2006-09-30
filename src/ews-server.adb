@@ -27,7 +27,6 @@
 with Ada.Dynamic_Priorities;
 with Ada.Exceptions;
 with Ada.Text_IO;
-with GNAT.Sockets;
 
 with EWS.HTTP;
 
@@ -221,8 +220,7 @@ package body EWS.Server is
                     Tracing : Boolean) is
    begin
       if Tracing then
-         Log ("EWS: "
-                & Str
+         Log (Str
                 & ", socket"
                 & GNAT.Sockets.Image (Skt)
                 & " from "
@@ -234,7 +232,7 @@ package body EWS.Server is
    procedure Trace (S : String; Tracing : Boolean) is
    begin
       if Tracing then
-         Log ("EWS: " & S);
+         Log (S);
       end if;
    end Trace;
 
