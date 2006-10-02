@@ -110,6 +110,8 @@ package body EWS.Server is
             else
                Log ("server: Check_Selector returned " & Status'Img);
             end if;
+            GNAT.Sockets.Empty (Read_Sockets);
+            GNAT.Sockets.Empty (Write_Sockets);
          end;
       end loop;
    exception
