@@ -43,11 +43,6 @@ runs on Windows but the makefile doesn't)
 <li>Install GNAT
 
 <li>Download
-the <a href="http://www.nczonline.net/downloads/">zXml</a> library,
-unpack it and copy <tt>zXml/distrib/zxml.js</tt> to the EWS HTML
-directory <tt>ews-<i>yyyymmdd</i>/html</tt>
-
-<li>Download
 the <a
 href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
 95 Booch Components</a>, unpack, place a symbolic link in your home
@@ -73,7 +68,10 @@ will listen on port 8080 and respond with these pages.
 page <a href="/test">here</a>, and a page
 with <a
 href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
-content <a href="ajax.html">here</a>.
+content <a href="ajax.html">here</a>. Note that the AJAX page doesn't
+work as-is with Internet Explorer up to Version 6, because it has to
+have JavaScript %lt;script&gt; embedded in the page rather than
+linked.
 
 <p>
 <hr>
