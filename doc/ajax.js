@@ -1,4 +1,7 @@
-/*
+/**
+ * @fileoverview Demonstration for AJAX aspects of EWS.
+ * @author Simon Wright (simon@pushface.org)
+ *
  * Copyright (C) Simon Wright <simon@pushface.org>
  *
  * This unit is free software; you can redistribute it and/or modify
@@ -8,7 +11,7 @@
  *
  * This script is used in the AJAX demo for EWS.
  * 
- * It relies on the zXml library from http://www.nczonline.net/downloads/.
+ * It relies on the utility HttpInteraction.js and is a demo for it.
  *
  * $RCSfile$
  * $Revision$
@@ -16,43 +19,21 @@
  * $Author$
  */
 
-var oXmlHttp = null;
-var iInterval = 1000;
+/**
+ * Create an HTTP interaction object which GETs 'ajaxTime' every
+ * second. It expects a text/plain result, which it pastes into the
+ * document at the element identified as 'timeDisplay'. 
+ */
+var timeRequest = new CyclicHttpInteraction
+  ("ajaxTime",
+   function (r) {
+    document.getElementById("timeDisplay").innerHTML = r.responseText;
+   },
+   1000);
 
-function getTime() {
-
-  if (!oXmlHttp) {
-    oXmlHttp = zXmlHttp.createRequest();
-  } else if (oXmlHttp.readyState != 0) {
-    oXmlHttp.abort();
-  }    
-  
-  oXmlHttp.open("get", "ajaxTime", true);
-  oXmlHttp.onreadystatechange = function () {               
-    
-    if (oXmlHttp.readyState == 4) {
-      if (oXmlHttp.status == 200) {
-	
-	var eTimeDisplay = document.getElementById("timeDisplay");
-	eTimeDisplay.innerHTML = oXmlHttp.responseText;
-
-	setTimeout(getTime, iInterval);
-             
-      } else {
-	alert("An error occurred: "+ oXmlHttp.statusText);
-      }                    
-    }
-  };    
-  
-  oXmlHttp.send(null);       
-  
-}
-
-//if Ajax is enabled, assign event handlers and begin fetching
+/**
+ * Assign event handlers and begin fetching.
+ */
 window.onload = function () {
-  if (zXmlHttp.isSupported()) {
-    getTime();              
-  } else {
-    alert("zXmlHttp.isSupported(): false");
-  }
+  timeRequest.start();              
 };

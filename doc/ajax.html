@@ -1,10 +1,12 @@
+
 <!-- $Id$ -->
 <html>
 <head>
 <title>EWS: AJAX demonstration</title>
 
-<script type="text/javascript"src="ajax.js"/>
-<script type="text/javascript"src="zxml.js"/>
+<!-- NB,for Internet Explorer you mustn't use the empty-element syntax. -->
+<script type="text/javascript"src="HttpInteraction.js"></script>
+<script type="text/javascript"src="ajax.js"></script>
 
 </head>
 
@@ -45,11 +47,6 @@ runs on Windows but the makefile doesn't)
 <li>Install GNAT
 
 <li>Download
-the <a href="http://www.nczonline.net/downloads/">zXml</a> library,
-unpack it and copy <tt>zXml/distrib/zxml.js</tt> to the EWS HTML
-directory <tt>ews-<i>yyyymmdd</i>/html</tt>
-
-<li>Download
 the <a
 href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
 95 Booch Components</a>, unpack, place a symbolic link in your home
@@ -78,9 +75,7 @@ page <a href="/test">here</a>.
 using <a
 href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
 technology to display the current time (<span id="timeDisplay"
-style="background:yellow">here</span>) as seen at the server. It
-relies on
-the <i><a href="http://www.nczonline.net/downloads/">zXml</a></i>
+style="background:yellow">here</span>) as seen at the server.
 library.
 
 <p>

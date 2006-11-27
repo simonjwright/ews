@@ -28,9 +28,10 @@ clean::
 	rm -f ews-server-test
 
 ews-htdocs.adb: ews-make_htdocs force
+	cp HttpInteraction.js ../doc/
 	(cd ../doc && ../src/ews-make_htdocs >../src/$@)
 clean::
-	rm -f ews-htdocs.adb
+	rm -f ews-htdocs.adb ../doc/HttpInteraction.js
 
 ews-make_htdocs: ews-make_htdocs.adb .build
 	gnatmake -PEWS ews-make_htdocs
@@ -68,7 +69,8 @@ ews-server-test.adb \
 ews-static.adb \
 ews-static.ads \
 ews-types.adb \
-ews-types.ads
+ews-types.ads \
+HttpInteraction.js
 
 DISTRIBUTION_FILES = \
 ews-$(DATE).tgz \

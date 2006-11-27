@@ -31,7 +31,10 @@ clean::
 	rm -f ews-server-test
 
 ews-htdocs.adb: ews-make_htdocs force
+	cp HttpInteraction.js html/
 	(cd html && ../ews-make_htdocs >../$@)
+clean::
+	rm -f html/HttpInteraction.js
 
 ews-make_htdocs: ews-make_htdocs.adb .build force
 	gnatmake -PEWS ews-make_htdocs
