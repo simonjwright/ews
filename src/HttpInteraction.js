@@ -59,7 +59,9 @@ HttpInteraction.prototype.start = function() {
     object.request.onreadystatechange = function () {
       if (object.request.readyState == 4) {
 	if (object.request.status == 200) {
-	  object.handler(object.request);
+	  if (object.handler) {
+	    object.handler(object.request);
+	  }
 	  if (object.interval) {
 	    setTimeout(object.run, object.interval);
 	  }
