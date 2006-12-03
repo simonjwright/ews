@@ -57,6 +57,12 @@ package EWS.Dynamic is
    procedure Append (This : in out Dynamic_Response;
                      Adding : String);
 
+   --  Utility for XML,for adding a single element with text
+   --  content. Add elements containing other elements "by hand".
+   procedure Append_Element (This : in out Dynamic_Response;
+                             Element : String;
+                             Content : String);
+
 private
 
    type String_P is access String;
