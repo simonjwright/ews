@@ -88,6 +88,22 @@ package body EWS.Dynamic is
    end Append;
 
 
+   procedure Append_Element (This : in out Dynamic_Response;
+                             Element : String;
+                             Content : String) is
+      Str : Unbounded_String
+        renames Unbounded_String_Pointers.Value (This.Content).all;
+   begin
+      Append (Str, "<");
+      Append (Str, Element);
+      Append (Str, ">");
+      Append (Str, Content);
+      Append (Str, "</");
+      Append (Str, Element);
+      Append (Str, ">");
+   end Append_Element;
+
+
    function Cacheable (This : Dynamic_Response) return Boolean is
       pragma Unreferenced (This);
    begin
@@ -137,7 +153,7 @@ package body EWS.Dynamic is
 
    procedure Initialize (U : in out Unbounded_String) is
    begin
-      U.Buf := new String (1 .. 1024);
+      U.Buf := new String (1 .. 256);
    end Initialize;
 
 
