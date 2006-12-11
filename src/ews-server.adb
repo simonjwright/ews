@@ -57,6 +57,7 @@ package body EWS.Server is
       Address : GNAT.Sockets.Sock_Addr_Type;
       Server_Socket : GNAT.Sockets.Socket_Type;
       Sockets : GNAT.Sockets.Socket_Set_Type;
+      Write_Sockets : GNAT.Sockets.Socket_Set_Type; -- never used
       Selector : GNAT.Sockets.Selector_Type;
    begin
       GNAT.Sockets.Initialize;
@@ -82,7 +83,6 @@ package body EWS.Server is
       loop
          declare
             Read_Sockets : GNAT.Sockets.Socket_Set_Type;
-            Write_Sockets : GNAT.Sockets.Socket_Set_Type;
             Status : GNAT.Sockets.Selector_Status;
             use type GNAT.Sockets.Selector_Status;
          begin
@@ -111,7 +111,9 @@ package body EWS.Server is
                Log ("server: Check_Selector returned " & Status'Img);
             end if;
             GNAT.Sockets.Empty (Read_Sockets);
-            GNAT.Sockets.Empty (Write_Sockets);
+         exception
+            when E : others =>
+               Log ("server failed in inner loop", With_Exception => E);
          end;
       end loop;
    exception
@@ -228,6 +230,11 @@ package body EWS.Server is
                 & " from "
                 & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)));
       end if;
+   exception
+      --  Only seen on Mandrake 10 on browser close. Leave it to
+      --  Respond to clear up when it sees the send failure.
+      when E : GNAT.Sockets.Socket_Error =>
+         Log ("failed in trace (" & Str & ")", With_Exception => E);
    end Trace;
 
 
