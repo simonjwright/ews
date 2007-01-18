@@ -97,7 +97,6 @@ package body EWS.HTTP is
          Head : constant String := Read_Request (From);
          Content : String (1 .. Get_Content_Length (Head));
          S : Stream_Access := Stream (From);
-         use type GNAT.Sockets.Error_Type;
       begin
          R.Head := Str.To_Bounded_String (Head);
          String'Read (S, Content);
@@ -106,15 +105,10 @@ package body EWS.HTTP is
          Terminated := Head'Length = 0;
       end;
    exception
-      when E : GNAT.Sockets.Socket_Error =>
-         if GNAT.Sockets.Resolve_Exception (E)
-           = GNAT.Sockets.Connection_Reset_By_Peer then
-            --  This is what happens on VxWorks; other OSs happily
-            --  read an empty header.
-            Terminated := True;
-         else
-            raise;
-         end if;
+      when GNAT.Sockets.Socket_Error =>
+         --  This is what happens on VxWorks when the peer closes the
+         --  socket; other OSs happily read an empty header.
+         Terminated := True;
    end Initialize;
 
 
