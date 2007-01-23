@@ -145,11 +145,19 @@ package body EWS.Server is
    begin
       if Exception_Identity (With_Exception)
         = GNAT.Sockets.Socket_Error'Identity then
-         Log (S
-                & ", "
-                & GNAT.Sockets.Resolve_Exception (With_Exception)'Img
-                & ", "
-                & Exception_Information (With_Exception));
+         begin
+            Log (S
+                   & ", "
+                   & GNAT.Sockets.Resolve_Exception (With_Exception)'Img
+                   & ", "
+                   & Exception_Information (With_Exception));
+            return;
+         exception
+            --  If the special Socket_Error handling fails, revert to
+            --  the standard case.
+            when others =>
+               Log (S & ", " & Exception_Information (With_Exception));
+         end;
       else
          Log (S & ", " & Exception_Information (With_Exception));
       end if;
