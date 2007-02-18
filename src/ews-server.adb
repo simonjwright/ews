@@ -27,32 +27,43 @@
 with Ada.Dynamic_Priorities;
 with Ada.Exceptions;
 with Ada.Text_IO;
-
 with EWS.HTTP;
+with Interfaces.C.Strings;
 
 package body EWS.Server is
 
    task type Server is
       entry Start (Using_Port : GNAT.Sockets.Port_Type;
                    At_Priority : System.Priority;
+                   Logging_Via : Logger;
                    Tracing : Boolean);
    end Server;
    type Server_P is access Server;
 
-   procedure Log (S : String);
-   procedure Log (S : String;
-                  With_Exception : Ada.Exceptions.Exception_Occurrence);
    procedure Respond (To : GNAT.Sockets.Socket_Type;
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
+                      Logging_Via : Logger;
                       Tracing : Boolean);
-   procedure Trace (Str : String;
+
+   --  Logging/tracing
+   procedure Default_Logger (Message : String; Level : Error_Level);
+   procedure Log (Logging_Via : Logger;
+                  Message : String;
+                  With_Exception : Ada.Exceptions.Exception_Occurrence);
+   function Resolve_Exception
+     (Occurrence : Ada.Exceptions.Exception_Occurrence) return String;
+   procedure Trace (Logging_Via : Logger;
+                    Message : String;
                     Skt : GNAT.Sockets.Socket_Type;
                     Tracing : Boolean);
-   procedure Trace (S : String; Tracing : Boolean);
+   procedure Trace (Logging_Via : Logger;
+                    Message : String;
+                    Tracing : Boolean);
 
    task body Server is
       Port : GNAT.Sockets.Port_Type;
       Priority : System.Priority;
+      Logging_Via : Logger;
       Tracing : Boolean;
       Address : GNAT.Sockets.Sock_Addr_Type;
       Server_Socket : GNAT.Sockets.Socket_Type;
@@ -63,9 +74,15 @@ package body EWS.Server is
       GNAT.Sockets.Initialize;
       accept Start (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority;
+                    Logging_Via : Logger;
                     Tracing : Boolean) do
          Port := Using_Port;
          Priority := At_Priority;
+         if Logging_Via = null then
+            Server.Logging_Via := Default_Logger'Access;
+         else
+            Server.Logging_Via := Logging_Via;
+         end if;
          Server.Tracing := Tracing;
       end Start;
       Ada.Dynamic_Priorities.Set_Priority (Priority);
@@ -98,27 +115,33 @@ package body EWS.Server is
                   if Socket = Server_Socket then
                      GNAT.Sockets.Accept_Socket
                        (Server_Socket, Socket, Address);
-                     Trace ("connection", Socket, Tracing);
+                     Trace (Logging_Via, "connection", Socket, Tracing);
                      GNAT.Sockets.Set (Sockets, Socket);
                   elsif Socket = GNAT.Sockets.No_Socket then
-                     Log ("server got No_Socket");
+                     Logging_Via ("server got No_Socket", Error);
                   else
-                     Trace ("request", Socket, Tracing);
-                     Respond (Socket, Sockets, Tracing);
+                     Trace (Logging_Via, "request", Socket, Tracing);
+                     Respond (Socket, Sockets, Logging_Via, Tracing);
                   end if;
                end;
             else
-               Log ("server: Check_Selector returned " & Status'Img);
+               Logging_Via (
+                            "server: Check_Selector returned " & Status'Img,
+                            Error);
             end if;
             GNAT.Sockets.Empty (Read_Sockets);
          exception
             when E : others =>
-               Log ("server failed in inner loop", With_Exception => E);
+               Log (Logging_Via,
+                    "server failed in inner loop",
+                    With_Exception => E);
          end;
       end loop;
    exception
       when E : others =>
-         Log ("server failed in outer loop", With_Exception => E);
+         Log (Logging_Via,
+              "server failed in outer loop",
+              With_Exception => E);
          GNAT.Sockets.Close_Socket (Server_Socket);
    end Server;
 
@@ -126,46 +149,17 @@ package body EWS.Server is
    procedure Serve
      (Using_Port : GNAT.Sockets.Port_Type;
       At_Priority : System.Priority := System.Default_Priority;
+      Logging_Via : Logger := null;
       Tracing : Boolean := False) is
       New_Server : constant Server_P := new Server;
    begin
-      New_Server.Start (Using_Port, At_Priority, Tracing);
+      New_Server.Start (Using_Port, At_Priority, Logging_Via, Tracing);
    end Serve;
-
-
-   procedure Log (S : String) is
-   begin
-      Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, "EWS: " & S);
-   end Log;
-
-
-   procedure Log (S : String;
-                  With_Exception : Ada.Exceptions.Exception_Occurrence) is
-      use Ada.Exceptions;
-   begin
-      if Exception_Identity (With_Exception)
-        = GNAT.Sockets.Socket_Error'Identity then
-         begin
-            Log (S
-                   & ", "
-                   & GNAT.Sockets.Resolve_Exception (With_Exception)'Img
-                   & ", "
-                   & Exception_Information (With_Exception));
-            return;
-         exception
-            --  If the special Socket_Error handling fails, revert to
-            --  the standard case.
-            when others =>
-               Log (S & ", " & Exception_Information (With_Exception));
-         end;
-      else
-         Log (S & ", " & Exception_Information (With_Exception));
-      end if;
-   end Log;
 
 
    procedure Respond (To : GNAT.Sockets.Socket_Type;
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
+                      Logging_Via : Logger;
                       Tracing : Boolean) is
       Request : aliased HTTP.Request;
       Terminated : Boolean;
@@ -175,20 +169,23 @@ package body EWS.Server is
          HTTP.Initialize (Request, From => To, Terminated => Terminated);
       exception
          when E : others =>
-            Log ("failed reading request", With_Exception => E);
+            Log (Logging_Via,
+                 "failed reading request",
+                 With_Exception => E);
             GNAT.Sockets.Clear (In_Sockets, To);
             GNAT.Sockets.Close_Socket (To);
             return;
       end;
 
       if Terminated then
-         Trace ("connection terminated", Tracing);
+         Trace (Logging_Via, "connection terminated", Tracing);
          GNAT.Sockets.Clear (In_Sockets, To);
          GNAT.Sockets.Close_Socket (To);
          return;
       end if;
 
-      Trace ("method "
+      Trace (Logging_Via,
+             "method "
                & HTTP.Get_Method (Request)
                & ", version "
                & HTTP.Get_Version (Request)
@@ -201,12 +198,18 @@ package body EWS.Server is
                        To => To);
       exception
          when E : GNAT.Sockets.Socket_Error =>
-            Log ("failed in respond", With_Exception => E);
+            --  Going to assume that a socket error occurs because of
+            --  some browser behaviour (they've closed the socket
+            --  without waiting for the response).
+            --
+--          Log (Logging_Via,
+--               "failed in respond",
+--               With_Exception => E);
             GNAT.Sockets.Clear (In_Sockets, To);
             GNAT.Sockets.Close_Socket (To);
             return;
          when E : others =>
-            Log ("failed in respond", With_Exception => E);
+            Log (Logging_Via, "failed in respond", With_Exception => E);
             begin
                HTTP.Respond
                  (HTTP.Exception_Response (E, Request'Unchecked_Access),
@@ -227,29 +230,130 @@ package body EWS.Server is
    end Respond;
 
 
-   procedure Trace (Str : String;
+   procedure Default_Logger (Message : String; Level : Error_Level) is
+   begin
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error, "EWS: " & Level'Img & ": " & Message);
+   end Default_Logger;
+
+
+   procedure Log (Logging_Via : Logger;
+                  Message : String;
+                  With_Exception : Ada.Exceptions.Exception_Occurrence) is
+      use Ada.Exceptions;
+   begin
+      if Exception_Identity (With_Exception)
+        = GNAT.Sockets.Socket_Error'Identity then
+         begin
+            Logging_Via
+              (Message & ", "
+                 & Resolve_Exception (With_Exception) & ", "
+                 & Exception_Information (With_Exception),
+               Error);
+         exception
+            --  If the special Socket_Error handling fails (XXX why
+            --  would it?), revert to the standard case.
+            when others =>
+               Logging_Via (Message
+                              & ", "
+                              & Exception_Information (With_Exception),
+                            Error);
+         end;
+      else
+         Logging_Via (Message & ", " & Exception_Information (With_Exception),
+                      Error);
+      end if;
+   end Log;
+
+
+   function Resolve_Exception
+     (Occurrence : Ada.Exceptions.Exception_Occurrence) return String is
+      --  Fragmentarily copied from GNAT.Sockets function of the same
+      --  name.
+      Error : constant GNAT.Sockets.Error_Type
+        := GNAT.Sockets.Resolve_Exception (Occurrence);
+   begin
+      case Error is
+         when GNAT.Sockets.Cannot_Resolve_Error =>
+            --  The errno is at the start of the exception message
+            --  (inside []).
+            declare
+               function C_Strerror
+                 (Errnum : Interfaces.C.int)
+                 return Interfaces.C.Strings.chars_ptr;
+               pragma Import (C, C_Strerror, "strerror");
+               Msg : String
+                 renames Ada.Exceptions.Exception_Message (Occurrence);
+               First : Natural;
+               Last : Natural;
+               Errno : Integer;
+               C_Msg : Interfaces.C.Strings.chars_ptr;
+               use type Interfaces.C.Strings.chars_ptr;
+            begin
+               First := Msg'First;
+               while First <= Msg'Last
+                 and then Msg (First) not in '0' .. '9'
+               loop
+                  First := First + 1;
+               end loop;
+
+               if First > Msg'Last then
+                  return "Cannot_Resolve_Error";
+               end if;
+
+               Last := First;
+               while Last < Msg'Last
+                 and then Msg (Last + 1) in '0' .. '9'
+               loop
+                  Last := Last + 1;
+               end loop;
+
+               Errno := Integer'Value (Msg (First .. Last));
+
+               C_Msg := C_Strerror (Interfaces.C.int (Errno));
+
+               if C_Msg = Interfaces.C.Strings.Null_Ptr then
+                  return "unknown error " & Errno'Img;
+               else
+                  return Interfaces.C.Strings.Value (C_Msg);
+               end if;
+            end;
+         when others =>
+            return Error'Img;
+      end case;
+   end Resolve_Exception;
+
+
+   procedure Trace (Logging_Via : Logger;
+                    Message : String;
                     Skt : GNAT.Sockets.Socket_Type;
                     Tracing : Boolean) is
    begin
       if Tracing then
-         Log (Str
-                & ", socket"
-                & GNAT.Sockets.Image (Skt)
-                & " from "
-                & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)));
+         Logging_Via
+           (Message
+              & ", socket"
+              & GNAT.Sockets.Image (Skt)
+              & " from "
+              & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)),
+           Trace);
       end if;
    exception
       --  Only seen on Mandrake 10 on browser close. Leave it to
       --  Respond to clear up when it sees the send failure.
       when E : GNAT.Sockets.Socket_Error =>
-         Log ("failed in trace (" & Str & ")", With_Exception => E);
+         Log (Logging_Via,
+              "failed in trace (" & Message & ")",
+              With_Exception => E);
    end Trace;
 
 
-   procedure Trace (S : String; Tracing : Boolean) is
+   procedure Trace (Logging_Via : Logger;
+                    Message : String;
+                    Tracing : Boolean) is
    begin
       if Tracing then
-         Log (S);
+         Logging_Via (Message, Trace);
       end if;
    end Trace;
 
