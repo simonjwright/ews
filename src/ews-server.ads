@@ -31,9 +31,16 @@ package EWS.Server is
 
    pragma Elaborate_Body;
 
+   type Error_Level is (Trace, Info, Error);
+
+   type Logger is access procedure (Message : String; Level : Error_Level);
+
    procedure Serve (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority := System.Default_Priority;
+                    Logging_Via : Logger := null;
                     Tracing : Boolean := False);
+   --  Logging_Via tells where to send log messages (the default sends
+   --  output to standard error).
    --  Tracing tells the server to report requests.
 
 end EWS.Server;
