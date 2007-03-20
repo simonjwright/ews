@@ -28,6 +28,9 @@ with EWS.Types;
 
 private package EWS.Htdocs is
 
+   pragma Elaborate_Body;
+   --  Required by GNAT-GPL-2006 on MacOS X
+
    type URL_Info is record
       URL : Types.String_P;
       Doc : Types.Stream_Element_Array_P;
