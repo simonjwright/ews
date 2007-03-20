@@ -25,7 +25,7 @@
 --  $Author$
 
 with Ada.Exceptions;
-with Ada.Strings.Bounded;
+with Ada.Finalization;
 with GNAT.Sockets;
 
 package EWS.HTTP is
@@ -46,9 +46,27 @@ package EWS.HTTP is
                          Terminated : out Boolean);
 
    subtype Method is String;
+   --  GET or POST
+
    subtype Version is String;
+   --  The HTTP version in use1.1 etc
+
    subtype URL is String;
+   --  The file part of the request (eg, /index.html)
+
    subtype Property is String;
+   --  The value of a parameter of the request (eg, in
+   --  "/index.cgi?name=foo", "foo")
+   --
+   --  or
+   --
+   --  The value of a header field (eg, in "Content-Length: 1024",
+   --  "1024")
+
+   subtype Contents is String;
+   --  The body of a request, not including any request parameters of
+   --  header fields. In the case of a multipart message (as in file
+   --  upload), the content of a particular part of the request.
 
    function Get_Method (From : Request) return Method;
 
@@ -57,7 +75,20 @@ package EWS.HTTP is
    function Get_URL (From : Request) return URL;
 
    function Get_Property (Named : String; From : Request) return Property;
+   --  Get the value of the named parameter of the query.
 
+   function Get_Field (Named : String; From : Request) return Property;
+   --  Get the value of the named header field of the query.
+
+   function Get_Body_Field  (Named : String;
+                             From : Request;
+                             Index : Positive := 1) return Property;
+   --  Get the value of the named header field of the Index'th part of
+   --  the body of the request.
+
+   function Get_Body_Content (From : Request;
+                              Index : Positive := 1) return Contents;
+   --  Get the contents of the Index'th part of the body of the request.
 
    ---------------------------
    --  Response management  --
@@ -106,12 +137,13 @@ package EWS.HTTP is
 
 private
 
-   package Str is new Ada.Strings.Bounded.Generic_Bounded_Length (1024);
+   type String_P is access String;
 
-   type Request is limited record
-      Head : Str.Bounded_String;
-      Content : Str.Bounded_String;
+   type Request is new Ada.Finalization.Limited_Controlled with record
+      Head : String_P;
+      Content : String_P;
    end record;
+   procedure Finalize (R : in out Request);
 
    type Response (To : Request_P) is abstract tagged null record;
 
