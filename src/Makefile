@@ -20,7 +20,7 @@ all::
 	@echo "   ews-server-test (the demo)"
 	@echo "   ews-htdocs.adb"
 	@echo "   ews-make_htdocs"
-	@echo "   dist [SUBRELEASE=x]"
+	@echo "   dist [SUBRELEASE=r (d=cvs)]"
 
 ews-server-test: ews-htdocs.adb .build
 	gnatmake -PEWS ews-server-test
@@ -47,6 +47,7 @@ clean::
 # Distribution construction
 
 # Create the current date, in the form yyyymmdd. This works fine in Linux.
+SUBRELEASE ?= cvs
 DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
 
 DOCS = \
