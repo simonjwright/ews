@@ -197,14 +197,10 @@ package body EWS.Server is
          HTTP.Respond (HTTP.Find (Request'Unchecked_Access),
                        To => To);
       exception
-         when E : GNAT.Sockets.Socket_Error =>
+         when GNAT.Sockets.Socket_Error =>
             --  Going to assume that a socket error occurs because of
             --  some browser behaviour (they've closed the socket
             --  without waiting for the response).
-            --
---          Log (Logging_Via,
---               "failed in respond",
---               With_Exception => E);
             GNAT.Sockets.Clear (In_Sockets, To);
             GNAT.Sockets.Close_Socket (To);
             return;
