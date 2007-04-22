@@ -39,6 +39,10 @@ function HttpInteraction(query, handler, interval) {
 HttpInteraction.prototype.start = function() {
   /* preserve the current object in the closure for the nested function */
   var object = this;
+  /* override the query, if any was supplied */
+  if (arguments.length > 0) {
+    object.query = arguments[0];
+  }
   /* the actual work is done in a nested function with the actual
    * HttpInteraction object in its closure, because when we get called
    * after the timeout 'this' is the Window */ 
@@ -66,7 +70,8 @@ HttpInteraction.prototype.start = function() {
 	    setTimeout(object.run, object.interval);
 	  }
 	} else {
-	  alert("An error occurred: " + object.request.statusText);
+	  alert("An HttpInteraction error occurred: "
+		+ object.request.statusText);
 	}                    
       }
     };
