@@ -25,11 +25,11 @@
 --  $Author$
 
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Streams;
 with Ada.Strings.Bounded;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with GNAT.Regpat;
 
@@ -43,6 +43,7 @@ package body EWS.HTTP is
 
 
    use GNAT.Sockets;
+   use Smart_Strings;
 
 
    URL_Request : constant String :=
@@ -87,15 +88,16 @@ package body EWS.HTTP is
 
    function Get_Content_Length (From : String) return Natural;
 
-   function Get_Whole_Body_Part (From : Request;
-                                 Index : Positive := 1) return Contents;
+   --  Find the bounds in the Contents of Within of the Index'th
+   --  part. The bounds include any leading properties.
+   procedure Locate_Whole_Body_Part (Within : Attachments;
+                                     Index : Positive := 1;
+                                     Start : out Positive;
+                                     Finish : out Natural);
 
    procedure Free_Stream
    is new Ada.Unchecked_Deallocation (Ada.Streams.Root_Stream_Type'Class,
                                       Stream_Access);
-
-   procedure Free_String
-     is new Ada.Unchecked_Deallocation (String, String_P);
 
 
    -------------------------
@@ -107,17 +109,18 @@ package body EWS.HTTP is
                          Terminated : out Boolean) is
       S : Stream_Access := Stream (From);
    begin
-      R.Head := new String'(Read_Request (From));
+      R.Head := Create (new String'(Read_Request (From)));
       declare
-         Content_Length : constant Natural := Get_Content_Length (R.Head.all);
+         Content_Length : constant Natural
+           := Get_Content_Length (Value (R.Head).all);
       begin
          if Content_Length > 0 then
-            R.Content := new String (1 .. Content_Length);
-            String'Read (S, R.Content.all);
+            R.Content := Create (new String (1 .. Content_Length));
+            String'Read (S, Value (R.Content).all);
          end if;
       end;
       Free_Stream (S);
-      Terminated := R.Head.all'Length = 0;
+      Terminated := Value (R.Head).all'Length = 0;
    exception
       when GNAT.Sockets.Socket_Error =>
          --  This is what happens on VxWorks when the peer closes the
@@ -128,7 +131,7 @@ package body EWS.HTTP is
 
    function Get_Method (From : Request) return Method is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames From.Head.all;
+      Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -142,7 +145,7 @@ package body EWS.HTTP is
 
    function Get_Version (From : Request) return Version is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames From.Head.all;
+      Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -156,7 +159,7 @@ package body EWS.HTTP is
 
    function Get_URL (From : Request) return URL is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames From.Head.all;
+      Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -171,7 +174,7 @@ package body EWS.HTTP is
    function Get_Property (Named : String;
                           From : Request) return Property is
       Query_Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Query_Input : String renames From.Head.all;
+      Query_Input : String renames Value (From.Head).all;
       Property_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
         GNAT.Regpat.Compile ("(^|&)" & Named & "=([^&]*)",
                              Flags => GNAT.Regpat.Case_Insensitive);
@@ -182,7 +185,7 @@ package body EWS.HTTP is
       --  which has to succeed, we wouldn't get here with an illegal head
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
       if To_String (Query_Input, Query_Matches (Method_Match)) = "GET"
-      and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match then
+        and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match then
          declare
             Property_Input : constant String :=
               To_String (Query_Input, Query_Matches (Query_Match));
@@ -197,9 +200,9 @@ package body EWS.HTTP is
             end if;
          end;
       elsif To_String (Query_Input, Query_Matches (Method_Match))
-        = "POST" and then From.Content /= null then
+        = "POST" and then Value (From.Content) /= null then
          declare
-            Property_Input : String renames From.Content.all;
+            Property_Input : String renames Value (From.Content).all;
          begin
             GNAT.Regpat.Match
               (Property_Matcher, Property_Input, Property_Matches);
@@ -227,67 +230,210 @@ package body EWS.HTTP is
       Matches : GNAT.Regpat.Match_Array (0 .. Field_Max_Parens);
       use type GNAT.Regpat.Match_Location;
    begin
-      GNAT.Regpat.Match (Field_Matcher, From.Head.all, Matches);
+      GNAT.Regpat.Match (Field_Matcher, Value (From.Head).all, Matches);
       if Matches (0) = GNAT.Regpat.No_Match then
          return "";
       else
-         return To_String (From.Head.all, Matches (1));
+         return To_String (Value (From.Head).all, Matches (1));
       end if;
    end Get_Field;
 
 
-   function Get_Body_Field  (Named : String;
-                             From : Request;
-                             Index : Positive := 1) return Property is
+   --  Content/attachment management  --
+
+   function Get_Attachments (From : Request) return Attachments is
    begin
-      if From.Content = null then
+      return Attachments (From);
+   end Get_Attachments;
+
+
+   function Get_Field  (Named : String;
+                        From : Attachments;
+                        Index : Positive := 1) return Property is
+   begin
+      if Value (From.Content) = null then
          return "";
       else
          declare
-            Whole_Part : String renames Get_Whole_Body_Part (From, Index);
-            Finish : constant Natural := Ada.Strings.Fixed.Index (Whole_Part,
-                                                                  CRLF & CRLF);
-            Headers : String
-              renames Whole_Part (Whole_Part'First .. Finish);
-            Field_Request : constant String
-              := Named & ":\s*([[:^cntrl:]]+(\r\n\s[[:^cntrl:]]+)*)";
-            Field_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
-              GNAT.Regpat.Compile (Field_Request,
-                                   Flags => GNAT.Regpat.Case_Insensitive);
-            Field_Max_Parens : constant GNAT.Regpat.Match_Count :=
-              GNAT.Regpat.Paren_Count (Field_Matcher);
-            Matches : GNAT.Regpat.Match_Array (0 .. Field_Max_Parens);
-            use type GNAT.Regpat.Match_Location;
+            Part_Start : Positive;
+            Part_Finish : Natural;
          begin
-            GNAT.Regpat.Match (Field_Matcher, Headers, Matches);
-            if Matches (0) = GNAT.Regpat.No_Match then
-               return "";
-            else
-               return To_String (Headers, Matches (1));
-            end if;
+            Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
+            declare
+               Whole_Part : String
+                 renames Value (From.Content)(Part_Start .. Part_Finish);
+               Finish : constant Natural :=
+                 Ada.Strings.Fixed.Index (Whole_Part,
+                                          CRLF & CRLF);
+               Headers : String
+                 renames Whole_Part (Whole_Part'First .. Finish);
+               Field_Request : constant String
+                 := Named & ":\s*([[:^cntrl:]]+(\r\n\s[[:^cntrl:]]+)*)";
+               Field_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
+                 GNAT.Regpat.Compile (Field_Request,
+                                      Flags => GNAT.Regpat.Case_Insensitive);
+               Field_Max_Parens : constant GNAT.Regpat.Match_Count :=
+                 GNAT.Regpat.Paren_Count (Field_Matcher);
+               Matches : GNAT.Regpat.Match_Array (0 .. Field_Max_Parens);
+               use type GNAT.Regpat.Match_Location;
+            begin
+               GNAT.Regpat.Match (Field_Matcher, Headers, Matches);
+               if Matches (0) = GNAT.Regpat.No_Match then
+                  return "";
+               else
+                  return To_String (Headers, Matches (1));
+               end if;
+            end;
          end;
       end if;
-   end Get_Body_Field;
+   end Get_Field;
 
 
-   function Get_Body_Content (From : Request;
-                              Index : Positive := 1) return Contents is
+   --  Binary content
+
+   function Get_Content (From : Attachments;
+                         Index : Positive := 1) return Contents is
    begin
-      if From.Content = null then
-         return "";
+      if Value (From.Content) = null then
+         return Contents'(1 .. 0 => 0);
       else
          declare
-            Whole_Part : String renames Get_Whole_Body_Part (From, Index);
-            Start : constant Natural := Ada.Strings.Fixed.Index (Whole_Part,
-                                                                 CRLF & CRLF);
+            Part_Start : Positive;
+            Part_Finish : Natural;
          begin
-            --  strip the header fields (if any) & the CRLF delimiter
-            --  pair.
-            return Whole_Part (Start + 4 .. Whole_Part'Last);
+            Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
+            declare
+               Whole_Part : String
+                 renames Value (From.Content)(Part_Start .. Part_Finish);
+               Start : constant Natural :=
+                 Ada.Strings.Fixed.Index (Whole_Part,
+                                          CRLF & CRLF);
+            begin
+               --  Strip the header fields (if any) & the CRLF delimiter
+               --  pair.
+               declare
+                  subtype Str is String (Start + 4 .. Whole_Part'Last);
+                  subtype Arr is Contents (1 .. Str'Length);
+                  function Conv is new Ada.Unchecked_Conversion (Str, Arr);
+               begin
+                  return Conv (Whole_Part (Start + 4 .. Whole_Part'Last));
+               end;
+            end;
          end;
       end if;
-   end Get_Body_Content;
+   end Get_Content;
 
+
+   --  Text content
+
+   procedure Open (C : in out Cursor;
+                   From : Attachments;
+                   Index : Positive := 1) is
+   begin
+      if C.Open then
+         raise Status_Error;
+      end if;
+      C.Open := True;
+      C.Line_Ending := Unknown;
+      C.Data := From;
+      Locate_Whole_Body_Part (From, Index, C.Start, C.Finish);
+      --  Strip the header fields (if any) & the CRLF delimiter
+      --  pair.
+      C.Start := Ada.Strings.Fixed.Index
+        (Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
+        + 4;
+      C.Next := C.Start;
+   end Open;
+
+
+   procedure Close (C : in out Cursor) is
+   begin
+      if not C.Open then
+         raise Status_Error;
+      end if;
+      C.Open := False;
+      C.Data := (Head => Null_Pointer, Content => Null_Pointer);
+   end Close;
+
+
+   function At_End (C : Cursor) return Boolean is
+   begin
+      if not C.Open then
+         raise Status_Error;
+      end if;
+      return C.Next > C.Finish;
+   end At_End;
+
+
+   procedure Get_Line (C : in out Cursor;
+                       Line : out String;
+                       Last : out Natural) is
+   begin
+      if not C.Open then
+         raise Status_Error;
+      end if;
+      if C.Next > C.Finish then
+         raise End_Error;
+      end if;
+      declare
+         Text : String renames Value (C.Data.Content).all;
+         CR : constant String := (1 => ASCII.CR);
+         LF : constant String := (1 => ASCII.LF);
+         Terminator : Natural;
+      begin
+         case C.Line_Ending is
+            when Unknown =>
+               declare
+                  CR_Index : constant Natural :=
+                    Ada.Strings.Fixed.Index (Text, CR, C.Next);
+                  LF_Index : constant Natural :=
+                    Ada.Strings.Fixed.Index (Text, LF, C.Next);
+               begin
+                  if CR_Index = 0 and LF_Index = 0 then
+                     C.Line_Ending := Unterminated;
+                  elsif CR_Index = 0 then
+                     C.Line_Ending := Unix;
+                  elsif LF_Index = 0 then
+                     C.Line_Ending := Windows;
+                  elsif CR_Index < LF_Index then
+                     C.Line_Ending := Windows;
+                  else
+                     C.Line_Ending := Unix;
+                  end if;
+               end;
+               Get_Line (C, Line, Last);  -- now we know what we have
+               return;
+            when Unterminated =>
+               Terminator := 0;
+            when Unix =>
+               Terminator := Ada.Strings.Fixed.Index (Text, LF, C.Next);
+            when Windows =>
+               Terminator := Ada.Strings.Fixed.Index (Text, CR, C.Next);
+         end case;
+         if Terminator = 0 then
+            --  the whole of the rest of the string is available
+            Terminator := C.Finish + 1;
+         end if;
+         Last := Line'First - 1;
+         while C.Next < Terminator loop
+            exit when Last = Line'Last;
+            Last := Last + 1;
+            Line (Last) := Text (C.Next);
+            C.Next := C.Next + 1;
+         end loop;
+         --  skip the LF or CRLF
+         if C.Line_Ending = Unix then
+            C.Next := C.Next + 1;
+         elsif C.Line_Ending = Windows then
+            C.Next := C.Next + 2;
+         end if;
+      end;
+   end Get_Line;
+
+
+   ---------------------------
+   --  Response management  --
+   ---------------------------
 
    function Find (For_Request : access Request) return Response'Class is
    begin
@@ -303,21 +449,10 @@ package body EWS.HTTP is
    exception
       when E : others =>
          Put_Line ("failed in read/respond, "
-                  & Ada.Exceptions.Exception_Information (E));
+                     & Ada.Exceptions.Exception_Information (E));
          return Exception_Response (E, For_Request);
    end Find;
 
-
-   procedure Finalize (R : in out Request) is
-   begin
-      Free_String (R.Head);
-      Free_String (R.Content);
-   end Finalize;
-
-
-   ---------------------------
-   --  Response management  --
-   ---------------------------
 
    -------------------------------
    --  Default implementations  --
@@ -429,7 +564,7 @@ package body EWS.HTTP is
 
    type Exception_Response_T (To : Request_P)
    is new Response (To) with record
-      Info : Str.Bounded_String;
+         Info : Str.Bounded_String;
    end record;
 
    function Response_Kind (This : Exception_Response_T) return String;
@@ -592,14 +727,19 @@ package body EWS.HTTP is
    end Get_Content_Length;
 
 
-   function Get_Whole_Body_Part (From : Request;
-                                 Index : Positive := 1) return Contents is
+   procedure Locate_Whole_Body_Part (Within : Attachments;
+                                     Index : Positive := 1;
+                                     Start : out Positive;
+                                     Finish : out Natural) is
       Content_Type : constant String := Get_Field ("Content-Type",
-                                                   From => From);
+                                                   From => Request (Within));
+      Text : String renames Value (Within.Content).all;
    begin
       if Content_Type'Length = 0
         or else Ada.Strings.Fixed.Index (Content_Type, "multipart") = 0 then
-         return From.Content.all;
+         Start := Text'First;
+         Finish := Text'Last;
+         return;
       end if;
       declare
          Marker : constant String := "boundary=";
@@ -608,29 +748,31 @@ package body EWS.HTTP is
            Content_Type (Ada.Strings.Fixed.Index (Content_Type, Marker)
                            + Marker'Length .. Content_Type'Last);
          Part : Natural := 0;
-         Start : Positive := Boundary'Length + 1; -- not including the CRLF
-         Finish : Positive;
       begin
+         Start := Text'First + Boundary'Length + 1; -- past the CRLF
          loop
-            if Start > From.Content.all'Last - Boundary'Length then
+            if Start > Text'Last - Boundary'Length then
                --  Problem with Index on GNAT-GPL-2006; would have
                --  expected 0 even on the trailing boundary (should
                --  have trailing --) but got Constraint_Error.
-               return "";
+               raise Name_Error;
             end if;
             Finish :=
-              Ada.Strings.Fixed.Index (From.Content.all, Boundary, Start);
+              Ada.Strings.Fixed.Index (Text, Boundary, Start);
             if Finish < Start then
-               return "";
+               raise Name_Error;
             end if;
             Part := Part + 1;
             if Part = Index then
-               return From.Content.all (Start .. Finish - 2); -- the CRLF
+               --  Omit the trailing CRLF.
+               Finish := Finish - 3;
+               exit;
             end if;
-            Start := Finish + Boundary'Length;
+            --  Not done yet, on to the next part.
+            Start := Finish + Boundary'Length + 1;
          end loop;
       end;
-   end Get_Whole_Body_Part;
+   end Locate_Whole_Body_Part;
 
 
    -----------------------------
