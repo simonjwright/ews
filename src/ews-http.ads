@@ -25,7 +25,9 @@
 --  $Author$
 
 with Ada.Exceptions;
-with Ada.Finalization;
+with Ada.IO_Exceptions;
+with Ada.Streams;
+with BC.Support.Smart_Pointers;
 with GNAT.Sockets;
 
 package EWS.HTTP is
@@ -38,7 +40,6 @@ package EWS.HTTP is
    --------------------------
 
    type Request is limited private;
-
    type Request_P is access all Request;
 
    procedure Initialize (R : out Request;
@@ -63,11 +64,6 @@ package EWS.HTTP is
    --  The value of a header field (eg, in "Content-Length: 1024",
    --  "1024")
 
-   subtype Contents is String;
-   --  The body of a request, not including any request parameters of
-   --  header fields. In the case of a multipart message (as in file
-   --  upload), the content of a particular part of the request.
-
    function Get_Method (From : Request) return Method;
 
    function Get_Version (From : Request) return Version;
@@ -80,15 +76,69 @@ package EWS.HTTP is
    function Get_Field (Named : String; From : Request) return Property;
    --  Get the value of the named header field of the query.
 
-   function Get_Body_Field  (Named : String;
-                             From : Request;
-                             Index : Positive := 1) return Property;
-   --  Get the value of the named header field of the Index'th part of
-   --  the body of the request.
+   -------------------------------------
+   --  Content/attachment management  --
+   -------------------------------------
 
-   function Get_Body_Content (From : Request;
-                              Index : Positive := 1) return Contents;
-   --  Get the contents of the Index'th part of the body of the request.
+   type Attachments is private;
+   --  The indexable collection of parts of a request body. In the
+   --  case of a multipart message, as in file uploads, there will be
+   --  several parts, the first (or only) part being index 1.
+
+   function Get_Attachments (From : Request) return Attachments;
+
+   function Get_Field  (Named : String;
+                        From : Attachments;
+                        Index : Positive := 1) return Property;
+   --  Get the value of the named header field of the Index'th part of
+   --  the attachments.
+
+   --  Binary content
+
+   subtype Contents is Ada.Streams.Stream_Element_Array;
+   --  The body of an attachment, not including any request parameters
+   --  of header fields.
+
+   function Get_Content (From : Attachments;
+                         Index : Positive := 1) return Contents;
+   --  Get the contents of the Index'th part of the attachment.
+
+   --  Text content
+
+   --  Cursors are an analogue of Ada.Text_IO.File_Type, allowing
+   --  reading lines from attachments.
+
+   type Cursor is limited private;
+
+   --  The following exceptions are propagated when the appropriate
+   --  conditions occur.
+
+   Status_Error : exception renames Ada.IO_Exceptions.Status_Error;
+   Name_Error : exception renames Ada.IO_Exceptions.Name_Error;
+   End_Error : exception renames Ada.IO_Exceptions.End_Error;
+
+   procedure Open (C : in out Cursor;
+                   From : Attachments;
+                   Index : Positive := 1);
+   --  Open a Cursor on the Index'th part of the attachments.
+   --  Propagates Status_Error if the Cursor is already open.
+   --  Propagates Name_Error if Index doesn't denote a part of the
+   --  attachments.
+
+   procedure Close (C : in out Cursor);
+   --  Close a Cursor.
+   --  Propagates Status_Error if the Cursor is already closed.
+
+   function At_End (C : Cursor) return Boolean;
+   --  Return True if the Cursor has reached the end of its attachment.
+   --  Propagates Status_Error if the Cursor is closed.
+
+   procedure Get_Line (C : in out Cursor;
+                       Line : out String;
+                       Last : out Natural);
+   --  Obtain the next line from the Cursor's attachment.
+   --  Propagates Status_Error if the Cursor is closed.
+   --  Propagates End_Error if the Cursor is already at the end.
 
    ---------------------------
    --  Response management  --
@@ -138,13 +188,28 @@ package EWS.HTTP is
 private
 
    type String_P is access String;
+   package Smart_Strings
+   is new BC.Support.Smart_Pointers (String, String_P);
 
-   type Request is new Ada.Finalization.Limited_Controlled with record
-      Head : String_P;
-      Content : String_P;
+   type Request is record
+      Head : Smart_Strings.Pointer;
+      Content : Smart_Strings.Pointer;
    end record;
-   procedure Finalize (R : in out Request);
+   --  A Request isn't actually limited.
+
+   type Attachments is new Request;
 
    type Response (To : Request_P) is abstract tagged null record;
+
+   type Line_Ending_Style is (Unknown, Unterminated, Unix, Windows);
+
+   type Cursor is limited record
+      Open : Boolean := False;
+      Line_Ending : Line_Ending_Style;
+      Data : Attachments;
+      Start : Positive;
+      Finish : Natural;
+      Next : Positive;
+   end record;
 
 end EWS.HTTP;
