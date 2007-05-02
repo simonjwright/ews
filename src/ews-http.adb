@@ -25,11 +25,10 @@
 --  $Author$
 
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
+with Ada.Streams;
 with Ada.Strings.Bounded;
 with Ada.Strings.Fixed;
-with Ada.Strings.Maps;
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with GNAT.Regpat;
 
@@ -75,29 +74,34 @@ package body EWS.HTTP is
    --  Utility specs  --
    ---------------------
 
+   procedure Determine_Line_Style (Used_In : in out Cursor);
+
+   procedure Free_Stream
+   is new Ada.Unchecked_Deallocation (Ada.Streams.Root_Stream_Type'Class,
+                                      Stream_Access);
+
+   function Get_Content_Length (From : String) return Natural;
+
+   function Index
+     (Source : String;
+      Pattern : String;
+      From : Positive;
+      Going : Ada.Strings.Direction := Ada.Strings.Forward;
+      Mapping : Ada.Strings.Maps.Character_Mapping
+        := Ada.Strings.Maps.Identity)
+     return Natural;
+   --  A replacement for Ada05 Ada.Strings.Fixed.Index.
+
+   function Plus_To_Space (S : String) return String;
+
+   function Read_Request (From : Socket_Type) return String;
+
    function To_String
      (In_String : String;
       From : GNAT.Regpat.Match_Location) return String;
    pragma Inline (To_String);
 
    function Unescape (S : String) return String;
-
-   function Plus_To_Space (S : String) return String;
-
-   function Read_Request (From : Socket_Type) return String;
-
-   function Get_Content_Length (From : String) return Natural;
-
-   --  Find the bounds in the Contents of Within of the Index'th
-   --  part. The bounds include any leading properties.
-   procedure Locate_Whole_Body_Part (Within : Attachments;
-                                     Index : Positive := 1;
-                                     Start : out Positive;
-                                     Finish : out Natural);
-
-   procedure Free_Stream
-   is new Ada.Unchecked_Deallocation (Ada.Streams.Root_Stream_Type'Class,
-                                      Stream_Access);
 
 
    -------------------------
@@ -239,12 +243,32 @@ package body EWS.HTTP is
    end Get_Field;
 
 
+   --  Debug support
+
+   function Get_Head (From : Request) return String is
+   begin
+      return Value (From.Head).all;
+   end Get_Head;
+
+
+   function Get_Body (From : Request) return String is
+   begin
+      return Value (From.Content).all;
+   end Get_Body;
+
+
    --  Content/attachment management  --
 
    function Get_Attachments (From : Request) return Attachments is
    begin
       return Attachments (From);
    end Get_Attachments;
+
+
+   procedure Clear (The_Attachments : in out Attachments) is
+   begin
+      The_Attachments := (Head => Null_Pointer, Content => Null_Pointer);
+   end Clear;
 
 
    function Get_Field  (Named : String;
@@ -263,8 +287,7 @@ package body EWS.HTTP is
                Whole_Part : String
                  renames Value (From.Content)(Part_Start .. Part_Finish);
                Finish : constant Natural :=
-                 Ada.Strings.Fixed.Index (Whole_Part,
-                                          CRLF & CRLF);
+                 HTTP.Index (Whole_Part, CRLF & CRLF);
                Headers : String
                  renames Whole_Part (Whole_Part'First .. Finish);
                Field_Request : constant String
@@ -289,13 +312,15 @@ package body EWS.HTTP is
    end Get_Field;
 
 
-   --  Binary content
+   --  String content
+
+   Empty_String : aliased constant String := "";
 
    function Get_Content (From : Attachments;
                          Index : Positive := 1) return Contents is
    begin
       if Value (From.Content) = null then
-         return Contents'(1 .. 0 => 0);
+         return Empty_String'Access;
       else
          declare
             Part_Start : Positive;
@@ -306,18 +331,12 @@ package body EWS.HTTP is
                Whole_Part : String
                  renames Value (From.Content)(Part_Start .. Part_Finish);
                Start : constant Natural :=
-                 Ada.Strings.Fixed.Index (Whole_Part,
-                                          CRLF & CRLF);
+                 HTTP.Index (Whole_Part, CRLF & CRLF);
             begin
                --  Strip the header fields (if any) & the CRLF delimiter
                --  pair.
-               declare
-                  subtype Str is String (Start + 4 .. Whole_Part'Last);
-                  subtype Arr is Contents (1 .. Str'Length);
-                  function Conv is new Ada.Unchecked_Conversion (Str, Arr);
-               begin
-                  return Conv (Whole_Part (Start + 4 .. Whole_Part'Last));
-               end;
+               return new String'(Whole_Part (Start + 4 .. Whole_Part'Last));
+--                   'Unrestricted_Access;
             end;
          end;
       end if;
@@ -339,7 +358,7 @@ package body EWS.HTTP is
       Locate_Whole_Body_Part (From, Index, C.Start, C.Finish);
       --  Strip the header fields (if any) & the CRLF delimiter
       --  pair.
-      C.Start := Ada.Strings.Fixed.Index
+      C.Start := HTTP.Index
         (Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
         + 4;
       C.Next := C.Start;
@@ -352,17 +371,17 @@ package body EWS.HTTP is
          raise Status_Error;
       end if;
       C.Open := False;
-      C.Data := (Head => Null_Pointer, Content => Null_Pointer);
+      Clear (C.Data);
    end Close;
 
 
-   function At_End (C : Cursor) return Boolean is
+   function End_Of_File (C : Cursor) return Boolean is
    begin
       if not C.Open then
          raise Status_Error;
       end if;
       return C.Next > C.Finish;
-   end At_End;
+   end End_Of_File;
 
 
    procedure Get_Line (C : in out Cursor;
@@ -375,6 +394,7 @@ package body EWS.HTTP is
       if C.Next > C.Finish then
          raise End_Error;
       end if;
+      Determine_Line_Style (C);
       declare
          Text : String renames Value (C.Data.Content).all;
          CR : constant String := (1 => ASCII.CR);
@@ -383,32 +403,13 @@ package body EWS.HTTP is
       begin
          case C.Line_Ending is
             when Unknown =>
-               declare
-                  CR_Index : constant Natural :=
-                    Ada.Strings.Fixed.Index (Text, CR, C.Next);
-                  LF_Index : constant Natural :=
-                    Ada.Strings.Fixed.Index (Text, LF, C.Next);
-               begin
-                  if CR_Index = 0 and LF_Index = 0 then
-                     C.Line_Ending := Unterminated;
-                  elsif CR_Index = 0 then
-                     C.Line_Ending := Unix;
-                  elsif LF_Index = 0 then
-                     C.Line_Ending := Windows;
-                  elsif CR_Index < LF_Index then
-                     C.Line_Ending := Windows;
-                  else
-                     C.Line_Ending := Unix;
-                  end if;
-               end;
-               Get_Line (C, Line, Last);  -- now we know what we have
-               return;
+               raise Program_Error;
             when Unterminated =>
                Terminator := 0;
             when Unix =>
-               Terminator := Ada.Strings.Fixed.Index (Text, LF, C.Next);
+               Terminator := Index (Text, LF, C.Next);
             when Windows =>
-               Terminator := Ada.Strings.Fixed.Index (Text, CR, C.Next);
+               Terminator := Index (Text, CR, C.Next);
          end case;
          if Terminator = 0 then
             --  the whole of the rest of the string is available
@@ -430,6 +431,32 @@ package body EWS.HTTP is
       end;
    end Get_Line;
 
+
+   procedure Get (C : in out Cursor;
+                  Item : out Character) is
+      Text : String renames Value (C.Data.Content).all;
+   begin
+      if not C.Open then
+         raise Status_Error;
+      end if;
+      if C.Next > C.Finish then
+         raise End_Error;
+      end if;
+      Determine_Line_Style (C);
+      case C.Line_Ending is
+         when Unknown =>
+            raise Program_Error;
+         when Unterminated | Unix =>
+            Item := Text (C.Next);
+            C.Next := C.Next + 1;
+         when Windows =>
+            if Text (C.Next) = ASCII.CR then
+               C.Next := C.Next + 1;
+            end if;
+            Item := ASCII.LF;     -- we might be just past the EOF
+            C.Next := C.Next + 1;
+      end case;
+   end Get;
 
    ---------------------------
    --  Response management  --
@@ -588,69 +615,182 @@ package body EWS.HTTP is
       end if;
    end Exception_Response;
 
+
    ----------------------
    --  Utility bodies  --
    ----------------------
 
-   function To_String
-     (In_String : String;
-      From : GNAT.Regpat.Match_Location) return String is
+   procedure Determine_Line_Style (Used_In : in out Cursor) is
+      Text : String renames Value (Used_In.Data.Content).all;
+      CR : constant String := (1 => ASCII.CR);
+      LF : constant String := (1 => ASCII.LF);
    begin
-      return In_String (From.First .. From.Last);
-   end To_String;
-
-
-   function Unescape (S : String) return String is
-
-      function Hex (H : String) return Natural;
-      function Hex (H : String) return Natural is
-         Result : Natural := 0;
-      begin
-         for I in H'Range loop
-            declare
-               C : constant Character := H (I);
-               D : Natural;
-            begin
-               case C is
-                  when '0' .. '9' =>
-                     D := Character'Pos (C) - Character'Pos ('0');
-                  when 'a' .. 'f' =>
-                     D := Character'Pos (C) - Character'Pos ('a') + 16#A#;
-                  when 'A' .. 'F' =>
-                     D := Character'Pos (C) - Character'Pos ('A') + 16#A#;
-                  when others =>
-                     raise Constraint_Error;
-               end case;
-               Result := Result * 16#10# + D;
-            end;
-         end loop;
-         return Result;
-      end Hex;
-
-      Result : String (S'Range);
-      Next_In : Positive := S'First;
-      Next_Out : Positive := Next_In;
-
-   begin
-      if S'Length = 0 then
-         return S;
-      else
-         loop
-            if S (Next_In) /= '%' then
-               Result (Next_Out) := S (Next_In);
-               Next_In := Next_In + 1;
-               Next_Out := Next_Out + 1;
+      if Used_In.Line_Ending = Unknown then
+         declare
+            CR_Index : constant Natural := Index (Text, CR, Used_In.Next);
+            LF_Index : constant Natural := Index (Text, LF, Used_In.Next);
+         begin
+            if CR_Index = 0 and LF_Index = 0 then
+               Used_In.Line_Ending := Unterminated;
+            elsif CR_Index = 0 then
+               Used_In.Line_Ending := Unix;
+            elsif LF_Index = 0 then
+               Used_In.Line_Ending := Windows;
+            elsif CR_Index < LF_Index then
+               Used_In.Line_Ending := Windows;
             else
-               Result (Next_Out) :=
-                 Character'Val (Hex (S (Next_In + 1 .. Next_In + 2)));
-               Next_In := Next_In + 3;
-               Next_Out := Next_Out + 1;
+               Used_In.Line_Ending := Unix;
             end if;
-            exit when Next_In > S'Last;
-         end loop;
-         return Result (Result'First .. Next_Out - 1);
+         end;
       end if;
-   end Unescape;
+   end Determine_Line_Style;
+
+
+   function Get_Content_Length (From : String) return Natural is
+      Content_Length_Request : constant String :=
+        "Content-Length:\s([0-9]+)\r\n";
+      Content_Length_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
+        GNAT.Regpat.Compile (Content_Length_Request,
+                             Flags => GNAT.Regpat.Case_Insensitive);
+      Content_Length_Max_Parens : constant GNAT.Regpat.Match_Count :=
+        GNAT.Regpat.Paren_Count (Content_Length_Matcher);
+      Matches : GNAT.Regpat.Match_Array (0 .. Content_Length_Max_Parens);
+      use type GNAT.Regpat.Match_Location;
+   begin
+      GNAT.Regpat.Match (Content_Length_Matcher, From, Matches);
+      if Matches (0) = GNAT.Regpat.No_Match then
+         return 0;
+      else
+         return Natural'Value (To_String (From, Matches (1)));
+      end if;
+   end Get_Content_Length;
+
+
+   --  This is a reworking of the GNAT-GPL-2006
+   --  Ada.Strings.Search.Index which doesn't copy the whole Source
+   --  onto the stack.
+   function Index
+     (Source  : String;
+      Pattern : String;
+      Going   : Ada.Strings.Direction := Ada.Strings.Forward;
+      Mapping : Ada.Strings.Maps.Character_Mapping
+        := Ada.Strings.Maps.Identity) return Natural
+   is
+      Cur_Index       : Natural;
+      Potential_Match : Boolean;
+      use Ada.Strings;
+      use Ada.Strings.Maps;
+   begin
+      if Pattern = "" then
+         raise Pattern_Error;
+      end if;
+
+      --  Forwards case
+
+      if Going = Forward then
+         for J in 1 .. Source'Length - Pattern'Length + 1 loop
+            Cur_Index := Source'First + J - 1;
+            Potential_Match := True;
+            for K in Pattern'Range loop
+               if Pattern (K) /=
+                 Value (Mapping, Source (Cur_Index + K - 1)) then
+                  Potential_Match := False;
+                  exit;
+               end if;
+            end loop;
+            if Potential_Match then
+               return Cur_Index;
+            end if;
+         end loop;
+
+      --  Backwards case
+
+      else
+         for J in reverse 1 .. Source'Length - Pattern'Length + 1 loop
+            Cur_Index := Source'First + J - 1;
+            Potential_Match := True;
+            for K in Pattern'Range loop
+               if Pattern (K) /=
+                 Value (Mapping, Source (Cur_Index + K - 1)) then
+                  Potential_Match := False;
+                  exit;
+               end if;
+            end loop;
+            if Potential_Match then
+               return Cur_Index;
+            end if;
+         end loop;
+      end if;
+
+      --  Fall through if no match found. Note that the loops are skipped
+      --  completely in the case of the pattern being longer than the source.
+
+      return 0;
+   end Index;
+
+
+   function Index
+     (Source : String;
+      Pattern : String;
+      From : Positive;
+      Going : Ada.Strings.Direction := Ada.Strings.Forward;
+      Mapping : Ada.Strings.Maps.Character_Mapping
+        := Ada.Strings.Maps.Identity)
+     return Natural is
+      Candidate : String renames Source (From .. Source'Last);
+   begin
+      return Index (Source => Candidate,
+                    Pattern => Pattern,
+                    Going => Going,
+                    Mapping => Mapping);
+   end Index;
+
+
+   procedure Locate_Whole_Body_Part (Within : Attachments;
+                                     Index : Positive := 1;
+                                     Start : out Positive;
+                                     Finish : out Natural) is
+      Content_Type : constant String := Get_Field ("Content-Type",
+                                                   From => Request (Within));
+      Text : String renames Value (Within.Content).all;
+   begin
+      if Content_Type'Length = 0
+        or else HTTP.Index (Content_Type, "multipart") = 0 then
+         Start := Text'First;
+         Finish := Text'Last;
+         return;
+      end if;
+      declare
+         Marker : constant String := "boundary=";
+         Boundary : constant String :=
+           "--" &
+           Content_Type (HTTP.Index (Content_Type, Marker)
+                           + Marker'Length .. Content_Type'Last);
+         Part : Natural := 0;
+      begin
+         Start := Text'First + Boundary'Length + 1; -- past the CRLF
+         loop
+            if Start > Text'Last - Boundary'Length then
+               --  Problem with Index on GNAT-GPL-2006; would have
+               --  expected 0 even on the trailing boundary (should
+               --  have trailing --) but got Constraint_Error.
+               raise Name_Error;
+            end if;
+            Finish := HTTP.Index (Text, Boundary, Start);
+            if Finish < Start then
+               raise Name_Error;
+            end if;
+            Part := Part + 1;
+            if Part = Index then
+               --  Omit the trailing CRLF.
+               Finish := Finish - 3;
+               exit;
+            end if;
+            --  Not done yet, on to the next part.
+            Start := Finish + Boundary'Length + 1;
+         end loop;
+      end;
+   end Locate_Whole_Body_Part;
 
 
    function Plus_To_Space (S : String) return String is
@@ -707,72 +847,70 @@ package body EWS.HTTP is
    end Read_Request;
 
 
-   function Get_Content_Length (From : String) return Natural is
-      Content_Length_Request : constant String :=
-        "Content-Length:\s([0-9]+)\r\n";
-      Content_Length_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
-        GNAT.Regpat.Compile (Content_Length_Request,
-                             Flags => GNAT.Regpat.Case_Insensitive);
-      Content_Length_Max_Parens : constant GNAT.Regpat.Match_Count :=
-        GNAT.Regpat.Paren_Count (Content_Length_Matcher);
-      Matches : GNAT.Regpat.Match_Array (0 .. Content_Length_Max_Parens);
-      use type GNAT.Regpat.Match_Location;
+   function To_String
+     (In_String : String;
+      From : GNAT.Regpat.Match_Location) return String is
+      Last : Natural := From.Last;
    begin
-      GNAT.Regpat.Match (Content_Length_Matcher, From, Matches);
-      if Matches (0) = GNAT.Regpat.No_Match then
-         return 0;
-      else
-         return Natural'Value (To_String (From, Matches (1)));
-      end if;
-   end Get_Content_Length;
+      --  Konqueror has been known to append a \0
+      while Last >= From'First and then In_String (Last) = ASCII.NUL Loop
+         Last := Last - 1;
+      end loop;
+      return In_String (From.First .. Last);
+   end To_String;
 
 
-   procedure Locate_Whole_Body_Part (Within : Attachments;
-                                     Index : Positive := 1;
-                                     Start : out Positive;
-                                     Finish : out Natural) is
-      Content_Type : constant String := Get_Field ("Content-Type",
-                                                   From => Request (Within));
-      Text : String renames Value (Within.Content).all;
-   begin
-      if Content_Type'Length = 0
-        or else Ada.Strings.Fixed.Index (Content_Type, "multipart") = 0 then
-         Start := Text'First;
-         Finish := Text'Last;
-         return;
-      end if;
-      declare
-         Marker : constant String := "boundary=";
-         Boundary : constant String :=
-           "--" &
-           Content_Type (Ada.Strings.Fixed.Index (Content_Type, Marker)
-                           + Marker'Length .. Content_Type'Last);
-         Part : Natural := 0;
+   function Unescape (S : String) return String is
+
+      function Hex (H : String) return Natural;
+      function Hex (H : String) return Natural is
+         Result : Natural := 0;
       begin
-         Start := Text'First + Boundary'Length + 1; -- past the CRLF
-         loop
-            if Start > Text'Last - Boundary'Length then
-               --  Problem with Index on GNAT-GPL-2006; would have
-               --  expected 0 even on the trailing boundary (should
-               --  have trailing --) but got Constraint_Error.
-               raise Name_Error;
-            end if;
-            Finish :=
-              Ada.Strings.Fixed.Index (Text, Boundary, Start);
-            if Finish < Start then
-               raise Name_Error;
-            end if;
-            Part := Part + 1;
-            if Part = Index then
-               --  Omit the trailing CRLF.
-               Finish := Finish - 3;
-               exit;
-            end if;
-            --  Not done yet, on to the next part.
-            Start := Finish + Boundary'Length + 1;
+         for I in H'Range loop
+            declare
+               C : constant Character := H (I);
+               D : Natural;
+            begin
+               case C is
+                  when '0' .. '9' =>
+                     D := Character'Pos (C) - Character'Pos ('0');
+                  when 'a' .. 'f' =>
+                     D := Character'Pos (C) - Character'Pos ('a') + 16#A#;
+                  when 'A' .. 'F' =>
+                     D := Character'Pos (C) - Character'Pos ('A') + 16#A#;
+                  when others =>
+                     raise Constraint_Error;
+               end case;
+               Result := Result * 16#10# + D;
+            end;
          end loop;
-      end;
-   end Locate_Whole_Body_Part;
+         return Result;
+      end Hex;
+
+      Result : String (S'Range);
+      Next_In : Positive := S'First;
+      Next_Out : Positive := Next_In;
+
+   begin
+      if S'Length = 0 then
+         return S;
+      else
+         loop
+            if S (Next_In) /= '%' then
+               Result (Next_Out) := S (Next_In);
+               Next_In := Next_In + 1;
+               Next_Out := Next_Out + 1;
+            else
+               Result (Next_Out) :=
+                 Character'Val (Hex (S (Next_In + 1 .. Next_In + 2)));
+               Next_In := Next_In + 3;
+               Next_Out := Next_Out + 1;
+            end if;
+            exit when Next_In > S'Last;
+         end loop;
+         return Result (Result'First .. Next_Out - 1);
+      end if;
+   end Unescape;
 
 
    -----------------------------
