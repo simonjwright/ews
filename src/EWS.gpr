@@ -8,7 +8,8 @@ project EWS is
   for Source_Dirs use
     (
      ".",
-     external ("HOME") & "/bc"
+     external ("HOME") & "/bc",
+     external ("HOME") & "/xmlada/**"
     );
 
   for Object_Dir use ".build";
@@ -41,6 +42,7 @@ project EWS is
        (
         "-gnatqQafoy",
         "-gnatwaL",
+        "-gnat95",
         "-O2"
        );
 
