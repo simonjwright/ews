@@ -26,7 +26,7 @@
 
 with Ada.Exceptions;
 with Ada.IO_Exceptions;
-with Ada.Streams;
+with Ada.Strings.Maps;
 with BC.Support.Smart_Pointers;
 with GNAT.Sockets;
 
@@ -76,6 +76,13 @@ package EWS.HTTP is
    function Get_Field (Named : String; From : Request) return Property;
    --  Get the value of the named header field of the query.
 
+   ---------------------
+   --  Debug support  --
+   ---------------------
+
+   function Get_Head (From : Request) return String;
+   function Get_Body (From : Request) return String;
+
    -------------------------------------
    --  Content/attachment management  --
    -------------------------------------
@@ -87,15 +94,20 @@ package EWS.HTTP is
 
    function Get_Attachments (From : Request) return Attachments;
 
+   procedure Clear (The_Attachments : in out Attachments);
+   --  Attachments are organised using smart (reference counting)
+   --  pointers. Use Clear to null out this particular reference after
+   --  it's finished with.
+
    function Get_Field  (Named : String;
                         From : Attachments;
                         Index : Positive := 1) return Property;
    --  Get the value of the named header field of the Index'th part of
    --  the attachments.
 
-   --  Binary content
+   --  String content
 
-   subtype Contents is Ada.Streams.Stream_Element_Array;
+   type Contents is access constant String;
    --  The body of an attachment, not including any request parameters
    --  of header fields.
 
@@ -129,7 +141,7 @@ package EWS.HTTP is
    --  Close a Cursor.
    --  Propagates Status_Error if the Cursor is already closed.
 
-   function At_End (C : Cursor) return Boolean;
+   function End_Of_File (C : Cursor) return Boolean;
    --  Return True if the Cursor has reached the end of its attachment.
    --  Propagates Status_Error if the Cursor is closed.
 
@@ -137,6 +149,12 @@ package EWS.HTTP is
                        Line : out String;
                        Last : out Natural);
    --  Obtain the next line from the Cursor's attachment.
+   --  Propagates Status_Error if the Cursor is closed.
+   --  Propagates End_Error if the Cursor is already at the end.
+
+   procedure Get (C : in out Cursor;
+                  Item : out Character);
+   --  Obtain the next character from the Cursor's attachment.
    --  Propagates Status_Error if the Cursor is closed.
    --  Propagates End_Error if the Cursor is already at the end.
 
@@ -199,6 +217,13 @@ private
 
    type Attachments is new Request;
 
+   procedure Locate_Whole_Body_Part (Within : Attachments;
+                                     Index : Positive := 1;
+                                     Start : out Positive;
+                                     Finish : out Natural);
+   --  Find the bounds in the Contents of Within of the Index'th
+   --  part. The bounds include any leading properties.
+
    type Response (To : Request_P) is abstract tagged null record;
 
    type Line_Ending_Style is (Unknown, Unterminated, Unix, Windows);
@@ -211,5 +236,13 @@ private
       Finish : Natural;
       Next : Positive;
    end record;
+
+   function Index
+     (Source  : String;
+      Pattern : String;
+      Going   : Ada.Strings.Direction := Ada.Strings.Forward;
+      Mapping : Ada.Strings.Maps.Character_Mapping
+        := Ada.Strings.Maps.Identity) return Natural;
+   --  A replacement for the GNAT Ada05 Ada.Strings.Search.Index.
 
 end EWS.HTTP;
