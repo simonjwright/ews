@@ -63,6 +63,8 @@ ews-dynamic.ads \
 ews-htdocs.ads \
 ews-http.adb \
 ews-http.ads \
+ews-http-ews_attachments_friend.adb \
+ews-http-ews_attachments_friend.ads \
 ews-make_htdocs.adb \
 ews-server.adb \
 ews-server.ads \
@@ -71,6 +73,8 @@ ews-static.adb \
 ews-static.ads \
 ews-types.adb \
 ews-types.ads \
+input_sources-ews_attachments.adb \
+input_sources-ews_attachments.ads \
 HttpInteraction.js
 
 DISTRIBUTION_FILES = \
