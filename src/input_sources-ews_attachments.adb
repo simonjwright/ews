@@ -28,8 +28,6 @@ with Unicode.CES.Utf16;
 with Unicode.CES.Utf32;
 with Unicode.CES.Utf8;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 --  This package provides an Input_Source which can be used by XMLAda
 --  to populate a DOM from an XML section of an EWS.HTTP Attachment.
 
@@ -72,8 +70,6 @@ package body Input_Sources.EWS_Attachments is
             Set_Encoding (Input, Unicode.CES.Utf8.Utf8_Encoding);
       end case;
       Input.Index := Input.Buffer_First + Input.Prolog_Size;
-      Put_Line ("first" & Input.Buffer_First'Img & "; prolog_size" & Input.Prolog_Size'Img & "; first '" & Input.Buffer (Input.Index) & "'");
-      Put_Line ("input |" & Input.Buffer (Input.Buffer_First .. Input.Buffer_Last) & "|");
    end Open;
 
 
@@ -89,9 +85,7 @@ package body Input_Sources.EWS_Attachments is
      (From : in out Attachment_Input;
       C    : out Unicode.Unicode_Char) is
    begin
-      Put ("reading at" & From.Index'Img & " '" & From.Buffer (From.Index) & "' -- ");
       From.Es.Read (From.Buffer.all, From.Index, C);
-      Put_Line ("next '" & From.Buffer (From.Index) & "'");
       C := From.Cs.To_Unicode (C);
    end Next_Char;
 
