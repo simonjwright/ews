@@ -853,7 +853,7 @@ package body EWS.HTTP is
       Last : Natural := From.Last;
    begin
       --  Konqueror has been known to append a \0
-      while Last >= From'First and then In_String (Last) = ASCII.NUL Loop
+      while Last >= From.First and then In_String (Last) = ASCII.NUL loop
          Last := Last - 1;
       end loop;
       return In_String (From.First .. Last);
