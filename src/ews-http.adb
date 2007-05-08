@@ -28,6 +28,7 @@ with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 with Ada.Streams;
 with Ada.Strings.Bounded;
 with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with GNAT.Regpat;
@@ -188,7 +189,9 @@ package body EWS.HTTP is
       GNAT.Regpat.Match (URL_Matcher, Query_Input, Query_Matches);
       --  which has to succeed, we wouldn't get here with an illegal head
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
-      if To_String (Query_Input, Query_Matches (Method_Match)) = "GET"
+      if Ada.Strings.Fixed.Translate
+        (To_String (Query_Input, Query_Matches (Method_Match)),
+         Ada.Strings.Maps.Constants.Upper_Case_Map) = "GET"
         and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match then
          declare
             Property_Input : constant String :=
@@ -203,8 +206,10 @@ package body EWS.HTTP is
                  (Unescape (To_String (Property_Input, Property_Matches (2))));
             end if;
          end;
-      elsif To_String (Query_Input, Query_Matches (Method_Match))
-        = "POST" and then Value (From.Content) /= null then
+      elsif Ada.Strings.Fixed.Translate
+        (To_String (Query_Input, Query_Matches (Method_Match)),
+         Ada.Strings.Maps.Constants.Upper_Case_Map) = "POST"
+        and then Value (From.Content) /= null then
          declare
             Property_Input : String renames Value (From.Content).all;
          begin
@@ -358,9 +363,11 @@ package body EWS.HTTP is
       Locate_Whole_Body_Part (From, Index, C.Start, C.Finish);
       --  Strip the header fields (if any) & the CRLF delimiter
       --  pair.
-      C.Start := HTTP.Index
-        (Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
-        + 4;
+      if C.Finish >= C.Start then
+         C.Start := HTTP.Index
+           (Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
+           + 4;
+      end if;
       C.Next := C.Start;
    end Open;
 
@@ -752,9 +759,13 @@ package body EWS.HTTP is
                                      Finish : out Natural) is
       Content_Type : constant String := Get_Field ("Content-Type",
                                                    From => Request (Within));
-      Text : String renames Value (Within.Content).all;
+      Text : String_P renames Value (Within.Content);
    begin
-      if Content_Type'Length = 0
+      if Text = null then
+         Start := 1;
+         Finish := 0;
+         return;
+      elsif Content_Type'Length = 0
         or else HTTP.Index (Content_Type, "multipart") = 0 then
          Start := Text'First;
          Finish := Text'Last;
@@ -776,7 +787,7 @@ package body EWS.HTTP is
                --  have trailing --) but got Constraint_Error.
                raise Name_Error;
             end if;
-            Finish := HTTP.Index (Text, Boundary, Start);
+            Finish := HTTP.Index (Text.all, Boundary, Start);
             if Finish < Start then
                raise Name_Error;
             end if;
