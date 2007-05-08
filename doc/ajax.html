@@ -78,6 +78,29 @@ technology to display the current time (<span id="timeDisplay"
 style="background:yellow">here</span>) as seen at the server.
 
 <p>
+The display format is <form method="GET" name="fTimeFormat" id="fTimeFormat">
+  
+  <select name="format">
+    <option value="iso" selected="true">ISO</option>
+    <option value="us">US</option
+    <option value="european">European</option>
+    <option value="locale">Local</option>
+  </select>
+  
+</form>
+
+<p>
+<hr>
+
+<p>File upload.
+
+<form method="POST" enctype="multipart/form-data" name="fileInput" action="fileInput" target="iFrame">
+  <input type="file" name="datafile" size="40">
+  <input type="submit" name="send" value="Send">
+</form>
+<iframe name="iFrame" id="iFrame" src="about:blank" width="0" height="0">
+
+<p>
 <hr>
 <i>
 <address>
