@@ -20,9 +20,31 @@
  */
 
 /**
- * Create an HTTP interaction object which GETs 'ajaxTime' every
- * second. It expects a text/plain result, which it pastes into the
- * document at the element identified as 'timeDisplay'. 
+ * Retrieve the state of all widgets when the page is (re)loaded.
+ *
+ * Expects a text/xml result:
+ *
+ * state
+ *   time-format
+ */
+var stateRequest = new OneshotHttpInteraction 
+  ("state.xml",
+   null,
+   function (r) {
+    var x = r.responseXML;
+    var value = x.getElementsByTagName("time-format")[0].firstChild.nodeValue;
+    for (o = document.fTimeFormat.format.options, i = 0;
+	 i < o.length;
+	 i++) {
+      o[i].selected = (o[i].value == value);
+    }
+  });
+
+/**
+ * Get 'ajaxTime' every second.
+ *
+ * Expects a text/plain result, which it pastes into the document at
+ * the element identified as 'timeDisplay'.
  */
 var timeRequest = new CyclicHttpInteraction
   ("ajaxTime",
@@ -32,8 +54,37 @@ var timeRequest = new CyclicHttpInteraction
    1000);
 
 /**
+ * A generalised action request.
+ */
+var postChange = new OneshotHttpInteraction
+  ("aChange",
+   null,
+   function (r) { });
+
+/**
  * Assign event handlers and begin fetching.
  */
 window.onload = function () {
-  timeRequest.start();              
+  stateRequest.start();
+  timeRequest.start();
+  document.fTimeFormat.format.onchange = function() {
+    for (o = document.fTimeFormat.format.options, i = 0;
+	 i < o.length;
+	 i++) {
+      if (o[i].selected) {
+	postChange.start("format=" +  o[i].value);
+	break;
+      }
+    }
+  };
+  document.fileInput.send.onclick = function() {
+    alert("foo " + document.fileInput.datafile.value);
+    if (document.fileInput.datafile.value) {
+      alert("document.fileInput.datafile.value=" 
+	    + document.fileInput.datafile.value);
+      document.fileInput.submit();
+    } else {
+      return 0;
+    }
+  };
 };
