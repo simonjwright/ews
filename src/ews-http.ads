@@ -152,12 +152,6 @@ package EWS.HTTP is
    --  Propagates Status_Error if the Cursor is closed.
    --  Propagates End_Error if the Cursor is already at the end.
 
-   procedure Get (C : in out Cursor;
-                  Item : out Character);
-   --  Obtain the next character from the Cursor's attachment.
-   --  Propagates Status_Error if the Cursor is closed.
-   --  Propagates End_Error if the Cursor is already at the end.
-
    ---------------------------
    --  Response management  --
    ---------------------------

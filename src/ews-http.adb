@@ -439,32 +439,6 @@ package body EWS.HTTP is
    end Get_Line;
 
 
-   procedure Get (C : in out Cursor;
-                  Item : out Character) is
-      Text : String renames Value (C.Data.Content).all;
-   begin
-      if not C.Open then
-         raise Status_Error;
-      end if;
-      if C.Next > C.Finish then
-         raise End_Error;
-      end if;
-      Determine_Line_Style (C);
-      case C.Line_Ending is
-         when Unknown =>
-            raise Program_Error;
-         when Unterminated | Unix =>
-            Item := Text (C.Next);
-            C.Next := C.Next + 1;
-         when Windows =>
-            if Text (C.Next) = ASCII.CR then
-               C.Next := C.Next + 1;
-            end if;
-            Item := ASCII.LF;     -- we might be just past the EOF
-            C.Next := C.Next + 1;
-      end case;
-   end Get;
-
    ---------------------------
    --  Response management  --
    ---------------------------
