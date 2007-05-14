@@ -37,6 +37,7 @@ package EWS.Server is
 
    procedure Serve (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority := System.Default_Priority;
+                    With_Stack : Positive := 20_000;
                     Logging_Via : Logger := null;
                     Tracing : Boolean := False);
    --  Logging_Via tells where to send log messages (the default sends
