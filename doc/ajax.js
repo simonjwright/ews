@@ -78,10 +78,7 @@ window.onload = function () {
     }
   };
   document.fileInput.send.onclick = function() {
-    alert("foo " + document.fileInput.datafile.value);
     if (document.fileInput.datafile.value) {
-      alert("document.fileInput.datafile.value=" 
-	    + document.fileInput.datafile.value);
       document.fileInput.submit();
     } else {
       return 0;
