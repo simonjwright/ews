@@ -19,6 +19,8 @@
 
 with Ada.Calendar;
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
 with Ada.Text_IO; use Ada.Text_IO;
 with EWS.Dynamic;
 with EWS.HTTP;
@@ -28,6 +30,7 @@ with GNAT.Calendar.Time_IO;
 procedure EWS.Server.Test is
 
    --  Dynamic page
+
    function Dyn
      (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class;
 
@@ -109,6 +112,14 @@ procedure EWS.Server.Test is
       Result : Dynamic.Dynamic_Response (From_Request);
    begin
       Dynamic.Set_Content_Type (Result, To => Types.XML);
+      Dynamic.Append (Result, "<state>");
+      Dynamic.Append_Element
+        (Result,
+         "time-format",
+         Ada.Strings.Fixed.Translate
+           (Current_Date_Format'Img,
+            Ada.Strings.Maps.Constants.Lower_Case_Map));
+      Dynamic.Append (Result, "</state>");
       return Result;
    end AJAX_Status;
 
@@ -141,27 +152,41 @@ procedure EWS.Server.Test is
       N : Natural := 0;
       Line : String (1 .. 1024);
       Last : Natural;
+      Attachments : constant HTTP.Attachments
+        := HTTP.Get_Attachments (From_Request.all);
    begin
-      HTTP.Open (C, HTTP.Get_Attachments (From_Request.all));
-      while not HTTP.End_Of_File (C) loop
-         N := N + 1;
-         Put (N'Img & ": ");
-         HTTP.Get_Line (C, Line, Last);
-         Put_Line (Line (1 .. Last));
-      end loop;
-      HTTP.Close (C);
-      return Upload_Result
-        (From_Request, "Upload complete," & N'Img & " lines.");
-   exception
-      when E : others =>
+      if HTTP.Get_Content (Attachments)'Length /= 0 then
          begin
+            HTTP.Open (C, Attachments);
+            while not HTTP.End_Of_File (C) loop
+               N := N + 1;
+               Put (N'Img & ": ");
+               HTTP.Get_Line (C, Line, Last);
+               Put_Line (Line (1 .. Last));
+            end loop;
             HTTP.Close (C);
+            return Upload_Result
+              (From_Request, "Upload complete," & N'Img & " lines.");
          exception
-            when others => null;
+            when E : others =>
+               begin
+                  HTTP.Close (C);
+               exception
+                  when others => null;
+               end;
+               return Upload_Result
+                 (From_Request,
+                  "Upload failed: " & Ada.Exceptions.Exception_Message (E));
          end;
-         return Upload_Result
-           (From_Request,
-            "Upload failed: " & Ada.Exceptions.Exception_Information (E));
+      else
+         declare
+            Result : Dynamic.Dynamic_Response (From_Request);
+         begin
+            Dynamic.Set_Content_Type (Result, To => Types.Plain);
+            Dynamic.Set_Content (Result, "null");
+            return Result;
+         end;
+      end if;
    end File_Input;
 
    function Upload_Result
