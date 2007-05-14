@@ -32,7 +32,8 @@ with Interfaces.C.Strings;
 
 package body EWS.Server is
 
-   task type Server is
+   task type Server (With_Stack : Positive) is
+      pragma Storage_Size (With_Stack);
       entry Start (Using_Port : GNAT.Sockets.Port_Type;
                    At_Priority : System.Priority;
                    Logging_Via : Logger;
@@ -149,11 +150,12 @@ package body EWS.Server is
    procedure Serve
      (Using_Port : GNAT.Sockets.Port_Type;
       At_Priority : System.Priority := System.Default_Priority;
+      With_Stack : Positive := 20_000;
       Logging_Via : Logger := null;
       Tracing : Boolean := False) is
-      New_Server : constant Server_P := new Server;
+      EWS_Server : constant Server_P := new Server (With_Stack);
    begin
-      New_Server.Start (Using_Port, At_Priority, Logging_Via, Tracing);
+      EWS_Server.Start (Using_Port, At_Priority, Logging_Via, Tracing);
    end Serve;
 
 
