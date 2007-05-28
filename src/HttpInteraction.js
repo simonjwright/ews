@@ -33,6 +33,7 @@ function HttpInteraction(query, handler, interval) {
   this.query = query;
   this.handler = handler;
   this.interval = interval;
+  this.intervalTimer = null;
   this.request = null;
 }
 
@@ -62,12 +63,12 @@ HttpInteraction.prototype.start = function() {
     }
     object.request.onreadystatechange = function () {
       if (object.request.readyState == 4) {
-	if (object.request.status == 200) {
+	if (object.request.status >= 200 && object.request.status < 300) {
 	  if (object.handler) {
 	    object.handler(object.request);
 	  }
-	  if (object.interval) {
-	    setTimeout(object.run, object.interval);
+	  if (object.interval && !object.intervalTimer) {
+	    object.intervalTimer = setInterval(object.run, object.interval);
 	  }
 	} else {
 	  alert("An HttpInteraction error occurred: "
