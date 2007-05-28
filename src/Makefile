@@ -23,7 +23,7 @@ all::
 	@echo "   dist [SUBRELEASE=r (d=cvs)]"
 
 ews-server-test: ews-htdocs.adb .build
-	gnatmake -PEWS ews-server-test
+	gnatmake -PEWS -gnat95 ews-server-test
 clean::
 	rm -f ews-server-test
 
@@ -34,7 +34,7 @@ clean::
 	rm -f ews-htdocs.adb ../doc/HttpInteraction.js
 
 ews-make_htdocs: ews-make_htdocs.adb .build
-	gnatmake -PEWS ews-make_htdocs
+	gnatmake -PEWS -gnat95 ews-make_htdocs
 clean::
 	rm -f ews-make_htdocs
 
