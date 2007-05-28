@@ -42,7 +42,6 @@ project EWS is
        (
         "-gnatqQafoy",
         "-gnatwaL",
-        "-gnat95",
         "-O2"
        );
 
