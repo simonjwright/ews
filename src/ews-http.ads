@@ -50,7 +50,7 @@ package EWS.HTTP is
    --  GET or POST
 
    subtype Version is String;
-   --  The HTTP version in use1.1 etc
+   --  The HTTP version in use; 1.1 etc
 
    subtype URL is String;
    --  The file part of the request (eg, /index.html)
@@ -105,7 +105,9 @@ package EWS.HTTP is
    --  Get the value of the named header field of the Index'th part of
    --  the attachments.
 
+
    --  String content
+   ------------------
 
    type Contents is access constant String;
    --  The body of an attachment, not including any request parameters
@@ -115,7 +117,9 @@ package EWS.HTTP is
                          Index : Positive := 1) return Contents;
    --  Get the contents of the Index'th part of the attachment.
 
+
    --  Text content
+   ----------------
 
    --  Cursors are an analogue of Ada.Text_IO.File_Type, allowing
    --  reading lines from attachments.
@@ -151,6 +155,17 @@ package EWS.HTTP is
    --  Obtain the next line from the Cursor's attachment.
    --  Propagates Status_Error if the Cursor is closed.
    --  Propagates End_Error if the Cursor is already at the end.
+
+
+   --  XML content
+   ---------------
+
+   --  The unit Input_Sources.EWS_Attachments is provided for use with
+   --  XMLAda to process an attachment as XML.
+   --
+   --  In turn, it depends on the child unit
+   --  EWS.HTTP.EWS_Attachments_Friend.
+
 
    ---------------------------
    --  Response management  --
