@@ -73,6 +73,9 @@ HttpInteraction.prototype.start = function() {
 	} else {
 	  alert("An HttpInteraction error occurred: "
 		+ object.request.statusText);
+	  if (object.intervalTimer) {
+	    clearInterval(object.intervalTimer);
+	  }
 	}                    
       }
     };
