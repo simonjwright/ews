@@ -85,19 +85,40 @@ procedure EWS.Server.Test is
    type Date_Format is (ISO, US, European, Locale);
    Current_Date_Format : Date_Format := ISO;
 
+   Forward_Light_On : Boolean := False;
+   Aft_Light_On : Boolean := False;
 
    function AJAX_Change
      (From_Request : HTTP.Request_P)
      return Dynamic.Dynamic_Response'Class is
       Result : Dynamic.Dynamic_Response (From_Request);
    begin
+      Put_Line ("AJAX_Change called.");
       declare
-         Format_Property : constant String
+         Property : constant String
            := EWS.HTTP.Get_Property ("format", From_Request.all);
       begin
-         if Format_Property /= "" then
-            Put_Line ("saw format=" & Format_Property);
-            Current_Date_Format := Date_Format'Value (Format_Property);
+         if Property /= "" then
+            Put_Line ("saw format=" & Property);
+            Current_Date_Format := Date_Format'Value (Property);
+         end if;
+      end;
+      declare
+         Property : constant String
+           := EWS.HTTP.Get_Property ("forward-light", From_Request.all);
+      begin
+         if Property /= "" then
+            Put_Line ("saw forward-light=" & Property);
+            Forward_Light_On := Boolean'Value (Property);
+         end if;
+      end;
+      declare
+         Property : constant String
+           := EWS.HTTP.Get_Property ("aft-light", From_Request.all);
+      begin
+         if Property /= "" then
+            Put_Line ("saw aft-light=" & Property);
+            Aft_Light_On := Boolean'Value (Property);
          end if;
       end;
       Dynamic.Set_Content_Type (Result, To => Types.Plain);
@@ -118,6 +139,18 @@ procedure EWS.Server.Test is
          "time-format",
          Ada.Strings.Fixed.Translate
            (Current_Date_Format'Img,
+            Ada.Strings.Maps.Constants.Lower_Case_Map));
+      Dynamic.Append_Element
+        (Result,
+         "forward-light",
+         Ada.Strings.Fixed.Translate
+           (Forward_Light_On'Img,
+            Ada.Strings.Maps.Constants.Lower_Case_Map));
+      Dynamic.Append_Element
+        (Result,
+         "aft-light",
+         Ada.Strings.Fixed.Translate
+           (Aft_Light_On'Img,
             Ada.Strings.Maps.Constants.Lower_Case_Map));
       Dynamic.Append (Result, "</state>");
       return Result;
