@@ -8,6 +8,11 @@
 <script type="text/javascript"src="HttpInteraction.js"></script>
 <script type="text/javascript"src="ajax.js"></script>
 
+<style type="text/css">
+  table { margin : 0.2em 1em; font-size : 100%; border-collapse : collapse; }
+  th,td { padding : 0.2em; }
+</style>
+
 </head>
 
 <body bgcolor="white">
@@ -92,9 +97,57 @@ The display format is <form method="GET" name="fTimeFormat" id="fTimeFormat">
 <p>
 <hr>
 
+<p>Using radio buttons: 
+
+  <form method="GET" name="lights" id="lights">
+  
+    <table border="1">
+      <tr>
+	<td>Forward Light</td>
+	<td>
+	  <input 
+	     type="radio" 
+	     name="forward"
+	     value="false"
+	     checked="true">Off</input>
+	</td>
+	<td>
+	  <input 
+	     type="radio" 
+	     name="forward"
+	     value="true">On</input>
+	</td>
+      </tr>
+      <tr>
+	<td>Aft Light</td>
+	<td>
+	  <input 
+	     type="radio" 
+	     name="aft"
+	     value="false"
+	     checked="true">Off</input>
+	</td>
+	<td>
+	  <input 
+	     type="radio" 
+	     name="aft"
+	     value="true">On</input>
+	</td>
+      </tr>
+    </table>
+
+  </form>
+
+<p>
+<hr>
+
 <p>File upload.
 
-<form method="POST" enctype="multipart/form-data" name="fileInput" action="fileInput" target="iFrame">
+<form method="POST"
+      enctype="multipart/form-data"
+      name="fileInput"
+      action="fileInput"
+      target="iFrame">
   <input type="file" name="datafile" size="40">
   <input type="submit" name="send" value="Send">
 </form>

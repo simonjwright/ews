@@ -25,7 +25,9 @@
  * Expects a text/xml result:
  *
  * state
- *   time-format
+ *   time-format   (iso|us|european|locale)
+ *   forward-light (false|true)
+ *   aft-light     (false|true)
  */
 var stateRequest = new OneshotHttpInteraction 
   ("state.xml",
@@ -37,6 +39,18 @@ var stateRequest = new OneshotHttpInteraction
 	 i < o.length;
 	 i++) {
       o[i].selected = (o[i].value == value);
+    }
+    var value = x.getElementsByTagName("forward-light")[0].firstChild.nodeValue;
+    for (o = document.lights.forward, i = 0;
+	 i < o.length;
+	 i++) {
+      o[i].checked = (o[i].value == value);
+    }
+    var value = x.getElementsByTagName("aft-light")[0].firstChild.nodeValue;
+    for (o = document.lights.aft, i = 0;
+	 i < o.length;
+	 i++) {
+      o[i].checked = (o[i].value == value);
     }
   });
 
@@ -62,6 +76,21 @@ var postChange = new OneshotHttpInteraction
    function (r) { });
 
 /**
+ * Procedure to simplify setting up radiobuttons.
+ * @param buttons the set of buttons: eg, document.formName.sharedButtonName.
+ * @param name    the property name that is passed to postChange.
+ */
+function setUpRadioButtons(buttons, name) {
+  for (i = 0; i < buttons.length; i++) {
+    buttons[i].onclick = new Function("postChange.start('"
+				      + name 
+				      + "=" 
+				      + buttons[i].value 
+				      + "');");
+  };
+}
+
+/**
  * Assign event handlers and begin fetching.
  */
 window.onload = function () {
@@ -74,14 +103,16 @@ window.onload = function () {
       if (o[i].selected) {
 	postChange.start("format=" +  o[i].value);
 	break;
-      }
-    }
+      };
+    };
   };
+  setUpRadioButtons(document.lights.forward, "forward-light");
+  setUpRadioButtons(document.lights.aft, "aft-light");
   document.fileInput.send.onclick = function() {
     if (document.fileInput.datafile.value) {
       document.fileInput.submit();
     } else {
       return 0;
-    }
+    };
   };
 };
