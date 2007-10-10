@@ -71,11 +71,13 @@ HttpInteraction.prototype.start = function() {
 	    object.intervalTimer = setInterval(object.run, object.interval);
 	  }
 	} else {
-	  alert("An HttpInteraction error occurred: "
-		+ object.request.statusText);
 	  if (object.intervalTimer) {
 	    clearInterval(object.intervalTimer);
+	    object.intervalTimer = null;
 	  }
+	  alert("An HttpInteraction error occurred: "
+		+ object.request.statusText
+		+ "\nRefresh page to restart");
 	}                    
       }
     };
