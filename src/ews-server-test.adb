@@ -88,6 +88,8 @@ procedure EWS.Server.Test is
    Forward_Light_On : Boolean := False;
    Aft_Light_On : Boolean := False;
 
+   Lamps : array (0 .. 1) of Boolean := (others => True);
+
    function AJAX_Change
      (From_Request : HTTP.Request_P)
      return Dynamic.Dynamic_Response'Class is
@@ -121,6 +123,20 @@ procedure EWS.Server.Test is
             Aft_Light_On := Boolean'Value (Property);
          end if;
       end;
+      declare
+         Lamp : constant String
+           := EWS.HTTP.Get_Property ("lamp", From_Request.all);
+      begin
+         if Lamp /= "" then
+            declare
+               Checked : constant String
+                 := EWS.HTTP.Get_Property ("checked", From_Request.all);
+            begin
+               Put_Line ("saw lamp=" & Lamp & " checked=" & Checked);
+               Lamps (Natural'Value (Lamp)) := Boolean'Value (Checked);
+            end;
+         end if;
+      end;
       Dynamic.Set_Content_Type (Result, To => Types.Plain);
       Dynamic.Set_Content (Result, "OK");
       return Result;
@@ -152,6 +168,14 @@ procedure EWS.Server.Test is
          Ada.Strings.Fixed.Translate
            (Aft_Light_On'Img,
             Ada.Strings.Maps.Constants.Lower_Case_Map));
+      for L in Lamps'Range loop
+         Dynamic.Append_Element
+           (Result,
+            "lamp",
+            Ada.Strings.Fixed.Translate
+              (Lamps (L)'Img,
+               Ada.Strings.Maps.Constants.Lower_Case_Map));
+      end loop;
       Dynamic.Append (Result, "</state>");
       return Result;
    end AJAX_Status;
@@ -248,7 +272,8 @@ begin
    Dynamic.Register (AJAX_Status'Unrestricted_Access, "/state.xml");
    Dynamic.Register (AJAX_Time'Unrestricted_Access, "/ajaxTime");
    Dynamic.Register (File_Input'Unrestricted_Access, "/fileInput");
-   Serve (Using_Port => 8080, Tracing => True);
+   Serve (Using_Port => 8080, Tracing => False);
+
    delay 1_000_000.0;
 
 end EWS.Server.Test;
