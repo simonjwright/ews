@@ -76,113 +76,153 @@ will listen on port 8080 and respond with these pages.
 (<tt>ews-server-test</tt>), you can view a completely dynamic
 page <a href="/test">here</a>.
 
-<p>This page is
-using <a
-href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
-technology to display the current time (<span id="timeDisplay"
-style="background:yellow">here</span>) as seen at the server.
+<p>Below are demonstrations of
+various <a href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
+technologies:
 
-<p>
-The display format is <form method="GET" name="fTimeFormat" id="fTimeFormat">
-  
-  <select name="format">
-    <option value="iso" selected="true">ISO</option>
-    <option value="us">US</option
-    <option value="european">European</option>
-    <option value="locale">Local</option>
-  </select>
-  
-</form>
-
-<p>
-<hr>
-
-<p>Using radio buttons: 
-
-<form method="GET" name="lights" id="lights">
-
+<p align="center">
   <table border="1">
+
     <tr>
-      <td>Forward Light</td>
-      <td>
-	<input 
-	   type="radio" 
-	   name="forward"
-	   value="false"
-	   checked="true">Off</input>
+
+      <td colspan="2">
+	Displaying the current time
+	(<span id="timeDisplay" style="background:yellow">here</span>)
+	as seen at the server.
       </td>
-      <td>
-	<input 
-	   type="radio" 
-	   name="forward"
-	   value="true">On</input>
-      </td>
+
     </tr>
+
     <tr>
-      <td>Aft Light</td>
+
       <td>
-	<input 
-	   type="radio" 
-	   name="aft"
-	   value="false"
-	   checked="true">Off</input>
+	Using select/options
       </td>
+
       <td>
-	<input 
-	   type="radio" 
-	   name="aft"
-	   value="true">On</input>
+	<form method="GET" name="fTimeFormat" id="fTimeFormat">
+  
+	  <select name="format">
+	    <option value="iso" selected="true">ISO</option>
+	    <option value="us">US</option>
+	    <option value="european">European</option>
+	    <option value="locale">Local</option>
+	  </select>
+  
+	</form>
       </td>
+
     </tr>
+
+    <tr>
+
+      <td>
+	Using radio buttons
+      </td>
+
+      <td>
+	<form method="GET" name="lights" id="lights">
+	  
+	  <table border="1">
+	    <tr>
+	      <td>Forward Light</td>
+	      <td>
+		<input 
+		   type="radio" 
+		   name="forward"
+		   value="false"
+		   checked="true">Off</input>
+	      </td>
+	      <td>
+		<input 
+		   type="radio" 
+		   name="forward"
+		   value="true">On</input>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Aft Light</td>
+	      <td>
+		<input 
+		   type="radio" 
+		   name="aft"
+		   value="false"
+		   checked="true">Off</input>
+	      </td>
+	      <td>
+		<input 
+		   type="radio" 
+		   name="aft"
+		   value="true">On</input>
+	      </td>
+	    </tr>
+	  </table>
+	  
+	</form>
+      </td>
+   
+    </tr>
+
+    <tr>
+
+      <td>
+	Using checkboxes
+      </td>
+
+      <td>
+	<form method="GET" name="lamps" id="lamps">
+	  
+	  <table border="1">
+	    <tr>
+	      <td>Port Lamp</td>
+	      <td>
+		<input 
+		   type="checkbox" 
+		   name="lamp"
+		   value="port"/>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>Starboard Lamp</td>
+	      <td>
+		<input 
+		   type="checkbox" 
+		   name="lamp"
+		   value="starboard"/>
+	      </td>
+	    </tr>
+	  </table>
+	  
+	</form>
+      </td>
+      
+    </tr>
+    
+    <tr>
+      
+      <td>
+	File upload
+      </td>
+      
+      <td>
+	<form method="POST"
+	      enctype="multipart/form-data"
+	      name="fileInput"
+	      action="fileInput"
+	      target="iFrame">
+	  <input type="file" name="datafile" size="40">
+	  <input type="submit" name="send" value="Send">
+	</form>
+      </td>
+      
+    </tr>
+    
   </table>
+</p>
 
-</form>
-
-<p>
-<hr>
-
-<p>Using checkboxes:
-
-<form method="GET" name="lamps" id="lamps">
-
-  <table border="1">
-    <tr>
-      <td>Port Lamp</td>
-      <td>
-	<input 
-	   type="checkbox" 
-	   name="lamp"
-	   value="true"/>
-      </td>
-    </tr>
-    <tr>
-      <td>Starboard Lamp</td>
-      <td>
-	<input 
-	   type="checkbox" 
-	   name="lamp"
-	   value="true"/>
-      </td>
-    </tr>
-  </table>
-
-</form>
-
-<p>
-<hr>
-
-<p>File upload.
-
-<form method="POST"
-      enctype="multipart/form-data"
-      name="fileInput"
-      action="fileInput"
-      target="iFrame">
-  <input type="file" name="datafile" size="40">
-  <input type="submit" name="send" value="Send">
-</form>
 <iframe name="iFrame" id="iFrame" src="about:blank" width="0" height="0">
-
+</iframe>
+  
 <p>
 <hr>
 <i>
