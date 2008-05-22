@@ -40,6 +40,8 @@ package EWS.Server is
                     With_Stack : Positive := 20_000;
                     Logging_Via : Logger := null;
                     Tracing : Boolean := False);
+   --  At_Priority and With_Stack refer to the settings to be used for
+   --  the embedded task that deals with client requests.
    --  Logging_Via tells where to send log messages (the default sends
    --  output to standard error).
    --  Tracing tells the server to report requests.
