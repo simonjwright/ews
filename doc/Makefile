@@ -2,11 +2,11 @@
 #
 # Makefile for EWS documentation.
 
-SF = simonjwright@shell.sourceforge.net
-PRJ = /home/groups/e/em/embed-web-srvr
+USER = simonjwright
+PRJ = embed-web-srvr
 FILES = index.html
 
 all::
 
 upload: $(FILES)
-	scp $(FILES) $(SF):$(PRJ)/htdocs/
+	rsync -av $(FILES) $(USER),$(PRJ)@web.sourceforge.net:htdocs/
