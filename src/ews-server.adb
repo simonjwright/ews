@@ -126,8 +126,7 @@ package body EWS.Server is
                   end if;
                end;
             else
-               Logging_Via (
-                            "server: Check_Selector returned " & Status'Img,
+               Logging_Via ("server: Check_Selector returned " & Status'Img,
                             Error);
             end if;
             GNAT.Sockets.Empty (Read_Sockets);
