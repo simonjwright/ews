@@ -134,7 +134,7 @@ window.onload = function () {
     // either name them individually (could cause grief on retrieving
     // state from server) or, as in old-style input processing, put
     // the name-to-be-passed in .value.
-    c[i].onclick = new Function(
+    c[i].onclick = new Function (
       "postChange.start('lamp="
 	+ i
 	+ "&checked=' + document.lamps.lamp["
