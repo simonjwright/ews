@@ -19,11 +19,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile$
---  $Revision$
---  $Date$
---  $Author$
-
 with Unicode.CES.Utf16;
 with Unicode.CES.Utf32;
 with Unicode.CES.Utf8;

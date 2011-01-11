@@ -1,5 +1,3 @@
---  $Id$
-
 project EWS is
 
   for Main use ("ews-server-test", "ews_pages", "ews-make_htdocs");
@@ -8,7 +6,7 @@ project EWS is
   for Source_Dirs use
     (
      ".",
-     external ("HOME") & "/bc",
+     external ("HOME") & "/bc/src",
      external ("HOME") & "/xmlada/**"
     );
 

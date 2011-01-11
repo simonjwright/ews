@@ -14,11 +14,6 @@
  * distributed with this package; see file COPYING.  If not, write to
  * the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA.
- *
- * $RCSfile$
- * $Revision$
- * $Date$
- * $Author$
  */
 
 /**
@@ -46,7 +41,7 @@ HttpInteraction.prototype.start = function() {
   }
   /* the actual work is done in a nested function with the actual
    * HttpInteraction object in its closure, because when we get called
-   * after the timeout 'this' is the Window */ 
+   * after the timeout 'this' is the Window */
   object.run = function () {
     if (!object.request) {
       /* try to create the HttpRequest, coping with various
@@ -78,7 +73,7 @@ HttpInteraction.prototype.start = function() {
 	  alert("An HttpInteraction error occurred: "
 		+ object.request.statusText
 		+ "\nRefresh page to restart");
-	}                    
+	}
       }
     };
     object.open();
