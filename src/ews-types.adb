@@ -19,11 +19,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile$
---  $Revision$
---  $Date$
---  $Author$
-
 package body EWS.Types is
 
    function Content_Type (For_Format : Format) return String is

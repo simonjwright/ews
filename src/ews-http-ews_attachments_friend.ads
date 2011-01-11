@@ -19,11 +19,6 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
---  $RCSfile$
---  $Revision$
---  $Date$
---  $Author$
-
 --  This package cooperates with Input_Sources.EWS_Attachments to
 --  allow XMLAda to populate a DOM from an XML section of an EWS.HTTP
 --  Attachment.

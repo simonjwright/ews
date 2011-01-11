@@ -1,0 +1,10 @@
+syntax: glob
+
+*~
+*.exe
+*.orig
+doc/HttpInteraction.js
+src/.build
+src/ews-htdocs.adb
+src/ews-make_htdocs
+src/ews-server-test

@@ -10,13 +10,8 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * This script is used in the AJAX demo for EWS.
- * 
- * It relies on the utility HttpInteraction.js and is a demo for it.
  *
- * $RCSfile$
- * $Revision$
- * $Date$
- * $Author$
+ * It relies on the utility HttpInteraction.js and is a demo for it.
  */
 
 /**
@@ -31,7 +26,7 @@
  *   lamp          (starboard: false|true)
  *   lamp          (port: false|true)
  */
-var stateRequest = new OneshotHttpInteraction 
+var stateRequest = new OneshotHttpInteraction
   ("state.xml",
    null,
    function (r) {
@@ -89,9 +84,9 @@ var postChange = new OneshotHttpInteraction
 function setUpRadioButtons(buttons, name) {
   for (var i = 0; i < buttons.length; i++) {
     buttons[i].onclick = new Function("postChange.start('"
-				      + name 
-				      + "=" 
-				      + buttons[i].value 
+				      + name
+				      + "="
+				      + buttons[i].value
 				      + "');");
   };
 }
