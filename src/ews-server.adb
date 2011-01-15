@@ -146,7 +146,8 @@ package body EWS.Server is
       At_Priority : System.Priority := System.Default_Priority;
       With_Stack : Positive := 20_000;
       Logging_Via : Logger := null;
-      Tracing : Boolean := False) is
+      Tracing : Boolean := False)
+   is
       EWS_Server : constant Server_P := new Server (With_Stack);
    begin
       EWS_Server.Start (Using_Port, At_Priority, Logging_Via, Tracing);
@@ -156,9 +157,20 @@ package body EWS.Server is
    procedure Respond (To : GNAT.Sockets.Socket_Type;
                       In_Sockets : in out GNAT.Sockets.Socket_Set_Type;
                       Logging_Via : Logger;
-                      Tracing : Boolean) is
+                      Tracing : Boolean)
+   is
+
+      procedure Close;
+      procedure Close
+      is
+      begin
+         GNAT.Sockets.Clear (In_Sockets, To);
+         GNAT.Sockets.Close_Socket (To);
+      end Close;
+
       Request : aliased HTTP.Request;
       Terminated : Boolean;
+
    begin
 
       begin
@@ -168,15 +180,12 @@ package body EWS.Server is
             Log (Logging_Via,
                  "failed reading request",
                  With_Exception => E);
-            GNAT.Sockets.Clear (In_Sockets, To);
-            GNAT.Sockets.Close_Socket (To);
             return;
       end;
 
       if Terminated then
          Trace (Logging_Via, "connection terminated", Tracing);
-         GNAT.Sockets.Clear (In_Sockets, To);
-         GNAT.Sockets.Close_Socket (To);
+         Close;
          return;
       end if;
 
@@ -197,8 +206,7 @@ package body EWS.Server is
             --  Going to assume that a socket error occurs because of
             --  some browser behaviour (they've closed the socket
             --  without waiting for the response).
-            GNAT.Sockets.Clear (In_Sockets, To);
-            GNAT.Sockets.Close_Socket (To);
+            Close;
             return;
          when E : others =>
             Log (Logging_Via, "failed in respond", With_Exception => E);
@@ -209,20 +217,19 @@ package body EWS.Server is
             exception
                when others => null;
             end;
-            GNAT.Sockets.Clear (In_Sockets, To);
-            GNAT.Sockets.Close_Socket (To);
+            Close;
             return;
       end;
 
-      if HTTP.Get_Version (Request) = "1.0" then
-         GNAT.Sockets.Clear (In_Sockets, To);
-         GNAT.Sockets.Close_Socket (To);
+      if not HTTP.Keep_Alive_After_Response (Request) then
+         Close;
       end if;
 
    end Respond;
 
 
-   procedure Default_Logger (Message : String; Level : Error_Level) is
+   procedure Default_Logger (Message : String; Level : Error_Level)
+   is
    begin
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error, "EWS: " & Level'Img & ": " & Message);
@@ -231,7 +238,8 @@ package body EWS.Server is
 
    procedure Log (Logging_Via : Logger;
                   Message : String;
-                  With_Exception : Ada.Exceptions.Exception_Occurrence) is
+                  With_Exception : Ada.Exceptions.Exception_Occurrence)
+   is
       use Ada.Exceptions;
    begin
       if Exception_Identity (With_Exception)
@@ -259,7 +267,8 @@ package body EWS.Server is
 
 
    function Resolve_Exception
-     (Occurrence : Ada.Exceptions.Exception_Occurrence) return String is
+     (Occurrence : Ada.Exceptions.Exception_Occurrence) return String
+   is
       --  Fragmentarily copied from GNAT.Sockets function of the same
       --  name.
       Error : constant GNAT.Sockets.Error_Type
@@ -319,7 +328,8 @@ package body EWS.Server is
    procedure Trace (Logging_Via : Logger;
                     Message : String;
                     Skt : GNAT.Sockets.Socket_Type;
-                    Tracing : Boolean) is
+                    Tracing : Boolean)
+   is
    begin
       if Tracing then
          Logging_Via
@@ -342,7 +352,8 @@ package body EWS.Server is
 
    procedure Trace (Logging_Via : Logger;
                     Message : String;
-                    Tracing : Boolean) is
+                    Tracing : Boolean)
+   is
    begin
       if Tracing then
          Logging_Via (Message, Trace);

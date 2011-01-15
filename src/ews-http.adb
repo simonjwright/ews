@@ -243,6 +243,17 @@ package body EWS.HTTP is
    end Get_Field;
 
 
+   function Keep_Alive_After_Response (The_Request : Request) return Boolean
+   is
+   begin
+      if Get_Version (The_Request) = "1.0" then
+         return Get_Field ("Connection", From => The_Request) = "Keep-Alive";
+      else
+         return Get_Field ("Connection", From => The_Request) = "close";
+      end if;
+   end Keep_Alive_After_Response;
+
+
    --  Debug support
 
    function Get_Head (From : Request) return String is
@@ -515,9 +526,11 @@ package body EWS.HTTP is
            (S,
             "HTTP/1.0 " & Response_Kind (This) & CRLF &
               "Server: EWS" & CRLF &
-              "Connection: close" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
+         if Keep_Alive_After_Response (This.To.all) then
+            String'Write (S, "Connection: Keep-Alive" & CRLF);
+         end if;
       else
          String'Write
            (S,
@@ -525,6 +538,9 @@ package body EWS.HTTP is
               "Server: EWS" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
+         if not Keep_Alive_After_Response (This.To.all) then
+            String'Write (S, "Connection: close" & CRLF);
+         end if;
       end if;
       if not Cacheable (This) then
          String'Write (S, "Cache-Control: no-cache" & CRLF);

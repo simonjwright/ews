@@ -71,6 +71,10 @@ package EWS.HTTP is
    function Get_Field (Named : String; From : Request) return Property;
    --  Get the value of the named header field of the query.
 
+   function Keep_Alive_After_Response (The_Request : Request) return Boolean;
+   --  Returns True if the connection is to be left open after a
+   --  normal completion (it's always closed after error).
+
    ---------------------
    --  Debug support  --
    ---------------------
