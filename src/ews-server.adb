@@ -67,7 +67,11 @@ package body EWS.Server is
       Write_Sockets : GNAT.Sockets.Socket_Set_Type; -- never used
       Selector : GNAT.Sockets.Selector_Type;
    begin
+      pragma Warnings (Off, "call to obsolescent procedure *");
+      pragma Warnings (Off, "explicit initialization is no longer required");
       GNAT.Sockets.Initialize;
+      pragma Warnings (On, "call to obsolescent procedure *");
+      pragma Warnings (On, "explicit initialization is no longer required");
       accept Start (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority;
                     Logging_Via : Logger;
@@ -221,7 +225,7 @@ package body EWS.Server is
             return;
       end;
 
-      if not HTTP.Keep_Alive_After_Response (Request) then
+      if not HTTP.Keep_Alive_After_Responding (Request) then
          Close;
       end if;
 
