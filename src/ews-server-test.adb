@@ -21,6 +21,7 @@ with EWS.Dynamic;
 with EWS.HTTP;
 with EWS.Types;
 with GNAT.Calendar.Time_IO;
+with GNAT.Command_Line;
 
 procedure EWS.Server.Test is
 
@@ -260,14 +261,36 @@ procedure EWS.Server.Test is
       return Result;
    end Upload_Result;
 
+   Verbose : Boolean := False;
+
 begin
+
+   begin
+      loop
+         case GNAT.Command_Line.Getopt ("v") is
+            when 'v' =>
+               Verbose := True;
+            when ASCII.NUL =>
+               exit;
+            when others =>
+               null;  -- never taken
+         end case;
+      end loop;
+   exception
+      when GNAT.Command_Line.Invalid_Switch =>
+         Put_Line (Standard_Error,
+                   "invalid switch -" & GNAT.Command_Line.Full_Switch);
+         return;
+   end;
 
    Dynamic.Register (Dyn'Unrestricted_Access, "/test");
    Dynamic.Register (AJAX_Change'Unrestricted_Access, "/aChange");
    Dynamic.Register (AJAX_Status'Unrestricted_Access, "/state.xml");
    Dynamic.Register (AJAX_Time'Unrestricted_Access, "/ajaxTime");
    Dynamic.Register (File_Input'Unrestricted_Access, "/fileInput");
-   Serve (Using_Port => 8080, Tracing => False);
+   Serve (Using_Port => 8080,
+          With_Stack => 40_000,
+          Tracing => Verbose);
 
    delay 1_000_000.0;
 
