@@ -40,21 +40,25 @@ package body EWS.Static is
                             To : GNAT.Sockets.Socket_Type);
 
 
-   function Content_Type (This : Static_Response) return String is
+   function Content_Type (This : Static_Response) return String
+   is
    begin
       return Types.Content_Type (This.Form);
    end Content_Type;
 
 
-   function Content_Length (This : Static_Response) return Integer is
+   function Content_Length (This : Static_Response) return Integer
+   is
    begin
       return This.Content'Length;
    end Content_Length;
 
 
    procedure Write_Content (This : Static_Response;
-                            To : GNAT.Sockets.Socket_Type) is
+                            To : GNAT.Sockets.Socket_Type)
+   is
       Last : Ada.Streams.Stream_Element_Offset;
+      pragma Unreferenced (Last);
    begin
       Send_Socket (To,
                    Item => This.Content.all,
@@ -63,7 +67,8 @@ package body EWS.Static is
 
 
    function Find
-     (For_Request : access HTTP.Request) return HTTP.Response'Class is
+     (For_Request : access HTTP.Request) return HTTP.Response'Class
+   is
       subtype Index is Natural range 0 .. Htdocs.Static_Urls'Last;
       function Find (For_URL : String) return Index;
       function Find (For_URL : String) return Index is
