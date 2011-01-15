@@ -1,10 +1,13 @@
 syntax: glob
 
 *~
+*.ali
 *.exe
+*.o
 *.orig
 doc/HttpInteraction.js
 src/.build
 src/ews-htdocs.adb
 src/ews-make_htdocs
+src/ews_pages
 src/ews-server-test
