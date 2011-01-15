@@ -106,7 +106,8 @@ package body EWS.HTTP is
 
    procedure Initialize (R : out Request;
                          From : GNAT.Sockets.Socket_Type;
-                         Terminated : out Boolean) is
+                         Terminated : out Boolean)
+   is
       S : Stream_Access := Stream (From);
    begin
       R.Head := Create (new String'(Read_Request (From)));
@@ -129,7 +130,8 @@ package body EWS.HTTP is
    end Initialize;
 
 
-   function Get_Method (From : Request) return Method is
+   function Get_Method (From : Request) return Method
+   is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
@@ -143,7 +145,8 @@ package body EWS.HTTP is
    end Get_Method;
 
 
-   function Get_Version (From : Request) return Version is
+   function Get_Version (From : Request) return Version
+   is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
@@ -157,7 +160,8 @@ package body EWS.HTTP is
    end Get_Version;
 
 
-   function Get_URL (From : Request) return URL is
+   function Get_URL (From : Request) return URL
+   is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Input : String renames Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
@@ -172,7 +176,8 @@ package body EWS.HTTP is
 
 
    function Get_Property (Named : String;
-                          From : Request) return Property is
+                          From : Request) return Property
+   is
       Query_Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Query_Input : String renames Value (From.Head).all;
       Property_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
@@ -223,7 +228,8 @@ package body EWS.HTTP is
    end Get_Property;
 
 
-   function Get_Field (Named : String; From : Request) return Property is
+   function Get_Field (Named : String; From : Request) return Property
+   is
       Field_Request : constant String
         := Named & ":\s*([[:^cntrl:]]+(\r\n\s[[:^cntrl:]]+)*)";
       Field_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
@@ -243,26 +249,28 @@ package body EWS.HTTP is
    end Get_Field;
 
 
-   function Keep_Alive_After_Response (The_Request : Request) return Boolean
+   function Keep_Alive_After_Responding (The_Request : Request) return Boolean
    is
    begin
       if Get_Version (The_Request) = "1.0" then
          return Get_Field ("Connection", From => The_Request) = "Keep-Alive";
       else
-         return Get_Field ("Connection", From => The_Request) = "close";
+         return Get_Field ("Connection", From => The_Request) /= "close";
       end if;
-   end Keep_Alive_After_Response;
+   end Keep_Alive_After_Responding;
 
 
    --  Debug support
 
-   function Get_Head (From : Request) return String is
+   function Get_Head (From : Request) return String
+   is
    begin
       return Value (From.Head).all;
    end Get_Head;
 
 
-   function Get_Body (From : Request) return String is
+   function Get_Body (From : Request) return String
+   is
    begin
       return Value (From.Content).all;
    end Get_Body;
@@ -270,13 +278,15 @@ package body EWS.HTTP is
 
    --  Content/attachment management  --
 
-   function Get_Attachments (From : Request) return Attachments is
+   function Get_Attachments (From : Request) return Attachments
+   is
    begin
       return Attachments (From);
    end Get_Attachments;
 
 
-   procedure Clear (The_Attachments : in out Attachments) is
+   procedure Clear (The_Attachments : in out Attachments)
+   is
    begin
       The_Attachments := (Head => Null_Pointer, Content => Null_Pointer);
    end Clear;
@@ -284,7 +294,8 @@ package body EWS.HTTP is
 
    function Get_Field  (Named : String;
                         From : Attachments;
-                        Index : Positive := 1) return Property is
+                        Index : Positive := 1) return Property
+   is
    begin
       if Value (From.Content) = null then
          return "";
@@ -328,7 +339,8 @@ package body EWS.HTTP is
    Empty_String : aliased constant String := "";
 
    function Get_Content (From : Attachments;
-                         Index : Positive := 1) return Contents is
+                         Index : Positive := 1) return Contents
+   is
    begin
       if Value (From.Content) = null then
          return Empty_String'Access;
@@ -358,7 +370,8 @@ package body EWS.HTTP is
 
    procedure Open (C : in out Cursor;
                    From : Attachments;
-                   Index : Positive := 1) is
+                   Index : Positive := 1)
+   is
    begin
       if C.Open then
          raise Status_Error;
@@ -378,7 +391,8 @@ package body EWS.HTTP is
    end Open;
 
 
-   procedure Close (C : in out Cursor) is
+   procedure Close (C : in out Cursor)
+   is
    begin
       if not C.Open then
          raise Status_Error;
@@ -388,7 +402,8 @@ package body EWS.HTTP is
    end Close;
 
 
-   function End_Of_File (C : Cursor) return Boolean is
+   function End_Of_File (C : Cursor) return Boolean
+   is
    begin
       if not C.Open then
          raise Status_Error;
@@ -399,7 +414,8 @@ package body EWS.HTTP is
 
    procedure Get_Line (C : in out Cursor;
                        Line : out String;
-                       Last : out Natural) is
+                       Last : out Natural)
+   is
    begin
       if not C.Open then
          raise Status_Error;
@@ -449,7 +465,8 @@ package body EWS.HTTP is
    --  Response management  --
    ---------------------------
 
-   function Find (For_Request : access Request) return Response'Class is
+   function Find (For_Request : access Request) return Response'Class
+   is
    begin
       declare
          R : constant Response'Class
@@ -472,35 +489,40 @@ package body EWS.HTTP is
    --  Default implementations  --
    -------------------------------
 
-   function Response_Kind (This : Response) return String is
+   function Response_Kind (This : Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "200 OK";
    end Response_Kind;
 
 
-   function Cacheable (This : Response) return Boolean is
+   function Cacheable (This : Response) return Boolean
+   is
       pragma Unreferenced (This);
    begin
       return True;
    end Cacheable;
 
 
-   function Content_Type (This : Response) return String is
+   function Content_Type (This : Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "text/plain";
    end Content_Type;
 
 
-   function Content_Length (This : Response) return Integer is
+   function Content_Length (This : Response) return Integer
+   is
    begin
       return Content (Response'Class (This))'Length;
       --  NB the dispatching call.
    end Content_Length;
 
 
-   function Content (This : Response) return String is
+   function Content (This : Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "";
@@ -508,7 +530,8 @@ package body EWS.HTTP is
 
 
    procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Socket_Type) is
+                            To : GNAT.Sockets.Socket_Type)
+   is
       S : Stream_Access := Stream (To);
    begin
       String'Write (Stream (To), Content (Response'Class (This)));
@@ -518,7 +541,8 @@ package body EWS.HTTP is
 
 
    procedure Respond (This : Response'Class;
-                      To : GNAT.Sockets.Socket_Type) is
+                      To : GNAT.Sockets.Socket_Type)
+   is
       S : Stream_Access := Stream (To);
    begin
       if Get_Version (This.To.all) = "1.0" then
@@ -528,7 +552,7 @@ package body EWS.HTTP is
               "Server: EWS" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
-         if Keep_Alive_After_Response (This.To.all) then
+         if Keep_Alive_After_Responding (This.To.all) then
             String'Write (S, "Connection: Keep-Alive" & CRLF);
          end if;
       else
@@ -538,7 +562,7 @@ package body EWS.HTTP is
               "Server: EWS" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
-         if not Keep_Alive_After_Response (This.To.all) then
+         if not Keep_Alive_After_Responding (This.To.all) then
             String'Write (S, "Connection: close" & CRLF);
          end if;
       end if;
@@ -591,7 +615,8 @@ package body EWS.HTTP is
 
    function Exception_Response
      (E : Ada.Exceptions.Exception_Occurrence;
-      R : access Request) return Response'Class is
+      R : access Request) return Response'Class
+   is
       Info : constant String := Ada.Exceptions.Exception_Information (E);
    begin
       if Info'Length > Str.Max_Length then
@@ -612,7 +637,8 @@ package body EWS.HTTP is
    --  Utility bodies  --
    ----------------------
 
-   procedure Determine_Line_Style (Used_In : in out Cursor) is
+   procedure Determine_Line_Style (Used_In : in out Cursor)
+   is
       Text : String renames Value (Used_In.Data.Content).all;
       CR : constant String := (1 => ASCII.CR);
       LF : constant String := (1 => ASCII.LF);
@@ -638,7 +664,8 @@ package body EWS.HTTP is
    end Determine_Line_Style;
 
 
-   function Get_Content_Length (From : String) return Natural is
+   function Get_Content_Length (From : String) return Natural
+   is
       Content_Length_Request : constant String :=
         "Content-Length:\s([0-9]+)\r\n";
       Content_Length_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
@@ -728,7 +755,8 @@ package body EWS.HTTP is
       Going : Ada.Strings.Direction := Ada.Strings.Forward;
       Mapping : Ada.Strings.Maps.Character_Mapping
         := Ada.Strings.Maps.Identity)
-     return Natural is
+     return Natural
+   is
       Candidate : String renames Source (From .. Source'Last);
    begin
       return Index (Source => Candidate,
@@ -741,7 +769,8 @@ package body EWS.HTTP is
    procedure Locate_Whole_Body_Part (Within : Attachments;
                                      Index : Positive := 1;
                                      Start : out Positive;
-                                     Finish : out Natural) is
+                                     Finish : out Natural)
+   is
       Content_Type : constant String := Get_Field ("Content-Type",
                                                    From => Request (Within));
       Text : String_P renames Value (Within.Content);
@@ -789,7 +818,8 @@ package body EWS.HTTP is
    end Locate_Whole_Body_Part;
 
 
-   function Plus_To_Space (S : String) return String is
+   function Plus_To_Space (S : String) return String
+   is
       Mapping : constant Ada.Strings.Maps.Character_Mapping
         := Ada.Strings.Maps.To_Mapping (From => "+",
                                         To => " ");
@@ -798,7 +828,8 @@ package body EWS.HTTP is
    end Plus_To_Space;
 
 
-   function Read_Request (From : Socket_Type) return String is
+   function Read_Request (From : Socket_Type) return String
+   is
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
       Tmp : Ada.Streams.Stream_Element_Array (1 .. 2048);
@@ -845,7 +876,8 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From : GNAT.Regpat.Match_Location) return String is
+      From : GNAT.Regpat.Match_Location) return String
+   is
       Last : Natural := From.Last;
    begin
       --  Konqueror has been known to append a \0
@@ -856,10 +888,12 @@ package body EWS.HTTP is
    end To_String;
 
 
-   function Unescape (S : String) return String is
+   function Unescape (S : String) return String
+   is
 
       function Hex (H : String) return Natural;
-      function Hex (H : String) return Natural is
+      function Hex (H : String) return Natural
+      is
          Result : Natural := 0;
       begin
          for I in H'Range loop
@@ -913,33 +947,38 @@ package body EWS.HTTP is
    --  Error response bodies  --
    -----------------------------
 
-   function Response_Kind (This : Not_Found_Response) return String is
+   function Response_Kind (This : Not_Found_Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "404 Not Found";
    end Response_Kind;
 
-   function Content (This : Not_Found_Response) return String is
+   function Content (This : Not_Found_Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "Not found.";
    end Content;
 
 
-   function Response_Kind (This : Not_Implemented_Response) return String is
+   function Response_Kind (This : Not_Implemented_Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "501 Not implemented";
    end Response_Kind;
 
-   function Content (This : Not_Implemented_Response) return String is
+   function Content (This : Not_Implemented_Response) return String
+   is
       pragma Unreferenced (This);
    begin
       return "Not implemented.";
    end Content;
 
 
-   function Response_Kind (This : Exception_Response_T) return String is
+   function Response_Kind (This : Exception_Response_T) return String
+   is
       pragma Unreferenced (This);
    begin
       return "500 Internal server error";
