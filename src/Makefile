@@ -45,7 +45,7 @@ clean::
 # Distribution construction
 
 # Create the current date, in the form yyyymmdd. This works fine in Linux.
-SUBRELEASE ?= cvs
+SUBRELEASE ?= hg
 DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
 
 DOCS = \
