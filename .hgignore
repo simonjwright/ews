@@ -6,7 +6,8 @@ syntax: glob
 *.o
 *.orig
 doc/HttpInteraction.js
-src/.build
+src/.build/
+src/dist/
 src/ews-htdocs.adb
 src/ews-make_htdocs
 src/ews_pages
