@@ -30,7 +30,6 @@ procedure EWS.Make_Htdocs is
    procedure Scan_Directory (Named : Dir_Name_Str) is
       Wd : Dir_Type;
    begin
-      Put_Line (Standard_Error, "scan_directory(" & Named & ")");
       Open (Dir => Wd,
             Dir_Name => Named);
       declare
