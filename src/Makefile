@@ -27,7 +27,7 @@ clean::
 
 ews-htdocs.adb: ews-make_htdocs force
 	cp HttpInteraction.js ../doc/
-	(cd ../doc && ../src/ews-make_htdocs >../src/$@)
+	./ews-make_htdocs ../doc/ >$@
 clean::
 	rm -f ews-htdocs.adb ../doc/HttpInteraction.js
 
