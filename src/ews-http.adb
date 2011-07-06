@@ -359,7 +359,6 @@ package body EWS.HTTP is
                --  Strip the header fields (if any) & the CRLF delimiter
                --  pair.
                return new String'(Whole_Part (Start + 4 .. Whole_Part'Last));
---                   'Unrestricted_Access;
             end;
          end;
       end if;
