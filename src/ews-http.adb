@@ -529,13 +529,11 @@ package body EWS.HTTP is
 
 
    procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Socket_Type)
+                            To : GNAT.Sockets.Stream_Access)
    is
-      S : Stream_Access := Stream (To);
    begin
-      String'Write (Stream (To), Content (Response'Class (This)));
+      String'Write (To, Content (Response'Class (This)));
       --  NB the dispatching call.
-      Free_Stream (S);
    end Write_Content;
 
 
@@ -569,7 +567,7 @@ package body EWS.HTTP is
          String'Write (S, "Cache-Control: no-cache" & CRLF);
       end if;
       String'Write (S, CRLF);
-      Write_Content (This, To);
+      Write_Content (This, S);
       Free_Stream (S);
    end Respond;
 
