@@ -191,7 +191,7 @@ package EWS.HTTP is
    --  default "".
 
    procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Socket_Type);
+                            To : GNAT.Sockets.Stream_Access);
 
    procedure Respond (This : Response'Class;
                       To : GNAT.Sockets.Socket_Type);

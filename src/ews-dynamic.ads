@@ -20,6 +20,7 @@
 --  executable file might be covered by the GNU Public License.
 
 with Ada.Finalization;
+with Ada.Streams;
 with BC.Support.Smart_Pointers;
 with EWS.HTTP;
 with EWS.Types;
@@ -52,7 +53,7 @@ package EWS.Dynamic is
    procedure Append (This : in out Dynamic_Response;
                      Adding : String);
 
-   --  Utility for XML,for adding a single element with text
+   --  Utility for HTML/XML, for adding a single element with text
    --  content. Add elements containing other elements "by hand".
    procedure Append_Element (This : in out Dynamic_Response;
                              Element : String;
@@ -71,6 +72,11 @@ private
    procedure Finalize (U : in out Unbounded_String);
    procedure Append (To : in out Unbounded_String; S : String);
 
+   procedure Write (To : access Ada.Streams.Root_Stream_Type'Class;
+                    U : Unbounded_String);
+   for Unbounded_String'Write use Write;
+   --  No need for a Read operation.
+
    type Unbounded_String_P is access Unbounded_String;
 
    package Unbounded_String_Pointers is new BC.Support.Smart_Pointers
@@ -86,6 +92,6 @@ private
    function Content_Type (This : Dynamic_Response) return String;
    function Content_Length (This : Dynamic_Response) return Integer;
    procedure Write_Content (This : Dynamic_Response;
-                            To : GNAT.Sockets.Socket_Type);
+                            To : GNAT.Sockets.Stream_Access);
 
 end EWS.Dynamic;

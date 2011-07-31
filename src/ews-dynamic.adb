@@ -20,6 +20,7 @@
 --  executable file might be covered by the GNU Public License.
 
 with Ada.Streams; use Ada.Streams;
+with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
 package body EWS.Dynamic is
@@ -43,10 +44,6 @@ package body EWS.Dynamic is
    procedure Free
    is new Ada.Unchecked_Deallocation (String,
                                       String_P);
-
-   procedure Free
-   is new Ada.Unchecked_Deallocation (Root_Stream_Type'Class,
-                                      GNAT.Sockets.Stream_Access);
 
 
    procedure Append (This : in out Dynamic_Response;
@@ -175,23 +172,26 @@ package body EWS.Dynamic is
    end Set_Content_Type;
 
 
+   procedure Write (To : access Ada.Streams.Root_Stream_Type'Class;
+                    U : Unbounded_String)
+   is
+      subtype Input is String (1 .. U.Last);
+      subtype Output is Ada.Streams.Stream_Element_Array
+        (1 .. Stream_Element_Offset (U.Last));
+      function Convert is new Ada.Unchecked_Conversion (Input, Output);
+   begin
+      Ada.Streams.Write (To.all, Convert (U.Buf (1 .. U.Last)));
+   end Write;
+
+
    procedure Write_Content (This : Dynamic_Response;
-                            To : GNAT.Sockets.Socket_Type) is
+                            To : GNAT.Sockets.Stream_Access) is
       use type Unbounded_String_Pointers.Pointer;
    begin
       if This.Content /= Unbounded_String_Pointers.Null_Pointer then
-         declare
-            --  We need to send only the contents, _without_ any
-            --  bounds. So, we create a (sub)type with the correct
-            --  bounds and use its 'Write.
-            Content : Unbounded_String
-              renames Unbounded_String_Pointers.Value (This.Content).all;
-            subtype This_String is String (1 .. Content.Last);
-            S : GNAT.Sockets.Stream_Access := GNAT.Sockets.Stream (To);
-         begin
-            This_String'Write (S, Content.Buf (1 .. Content.Last));
-            Free (S);
-         end;
+         Unbounded_String'Write
+           (To,
+            Unbounded_String_Pointers.Value (This.Content).all);
       end if;
    end Write_Content;
 

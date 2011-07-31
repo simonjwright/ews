@@ -37,7 +37,7 @@ package body EWS.Static is
    function Content_Type (This : Static_Response) return String;
    function Content_Length (This : Static_Response) return Integer;
    procedure Write_Content (This : Static_Response;
-                            To : GNAT.Sockets.Socket_Type);
+                            To : GNAT.Sockets.Stream_Access);
 
 
    function Content_Type (This : Static_Response) return String
@@ -55,14 +55,11 @@ package body EWS.Static is
 
 
    procedure Write_Content (This : Static_Response;
-                            To : GNAT.Sockets.Socket_Type)
+                            To : GNAT.Sockets.Stream_Access)
    is
-      Last : Ada.Streams.Stream_Element_Offset;
-      pragma Unreferenced (Last);
    begin
-      Send_Socket (To,
-                   Item => This.Content.all,
-                   Last => Last);
+      Ada.Streams.Write (Stream => To.all,
+                         Item => This.Content.all);
    end Write_Content;
 
 
