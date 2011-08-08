@@ -19,25 +19,9 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
-with Ada.Streams;
-with GNAT.Sockets; use GNAT.Sockets;
-
 with EWS.Htdocs;
-with EWS.Types;
 
 package body EWS.Static is
-
-
-   type Static_Response (R : HTTP.Request_P)
-   is new HTTP.Response (R) with record
-      Form : Types.Format;
-      Content : Types.Stream_Element_Array_P;
-   end record;
-
-   function Content_Type (This : Static_Response) return String;
-   function Content_Length (This : Static_Response) return Integer;
-   procedure Write_Content (This : Static_Response;
-                            To : GNAT.Sockets.Stream_Access);
 
 
    function Content_Type (This : Static_Response) return String
@@ -54,8 +38,8 @@ package body EWS.Static is
    end Content_Length;
 
 
-   procedure Write_Content (This : Static_Response;
-                            To : GNAT.Sockets.Stream_Access)
+   procedure Write_Content (This :        Static_Response;
+                            To   : access Ada.Streams.Root_Stream_Type'Class)
    is
    begin
       Ada.Streams.Write (Stream => To.all,

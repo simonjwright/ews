@@ -68,10 +68,8 @@ package body EWS.Server is
       Selector : GNAT.Sockets.Selector_Type;
    begin
       pragma Warnings (Off, "call to obsolescent procedure *");
-      pragma Warnings (Off, "explicit initialization is no longer required");
       GNAT.Sockets.Initialize;
       pragma Warnings (On, "call to obsolescent procedure *");
-      pragma Warnings (On, "explicit initialization is no longer required");
       accept Start (Using_Port : GNAT.Sockets.Port_Type;
                     At_Priority : System.Priority;
                     Logging_Via : Logger;

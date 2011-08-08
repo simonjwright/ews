@@ -20,7 +20,6 @@
 --  executable file might be covered by the GNU Public License.
 
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Streams;
 with Ada.Strings.Bounded;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
@@ -33,12 +32,11 @@ with EWS.Static;
 
 package body EWS.HTTP is
 
-
    package Str is new Ada.Strings.Bounded.Generic_Bounded_Length (1024);
 
 
    use GNAT.Sockets;
-   use Smart_Strings;
+   package SS renames Smart_Strings;
 
 
    URL_Request : constant String :=
@@ -79,10 +77,10 @@ package body EWS.HTTP is
    function Get_Content_Length (From : String) return Natural;
 
    function Index
-     (Source : String;
+     (Source  : String;
       Pattern : String;
-      From : Positive;
-      Going : Ada.Strings.Direction := Ada.Strings.Forward;
+      From    : Positive;
+      Going   : Ada.Strings.Direction              := Ada.Strings.Forward;
       Mapping : Ada.Strings.Maps.Character_Mapping
         := Ada.Strings.Maps.Identity)
      return Natural;
@@ -94,7 +92,7 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From : GNAT.Regpat.Match_Location) return String;
+      From      : GNAT.Regpat.Match_Location) return String;
    pragma Inline (To_String);
 
    function Unescape (S : String) return String;
@@ -104,24 +102,24 @@ package body EWS.HTTP is
    --  Public operations  --
    -------------------------
 
-   procedure Initialize (R : out Request;
-                         From : GNAT.Sockets.Socket_Type;
+   procedure Initialize (R          : out Request;
+                         From       :     GNAT.Sockets.Socket_Type;
                          Terminated : out Boolean)
    is
       S : Stream_Access := Stream (From);
    begin
-      R.Head := Create (new String'(Read_Request (From)));
+      R.Head := SS.Create (new String'(Read_Request (From)));
       declare
          Content_Length : constant Natural
-           := Get_Content_Length (Value (R.Head).all);
+           := Get_Content_Length (SS.Value (R.Head).all);
       begin
          if Content_Length > 0 then
-            R.Content := Create (new String (1 .. Content_Length));
-            String'Read (S, Value (R.Content).all);
+            R.Content := SS.Create (new String (1 .. Content_Length));
+            String'Read (S, SS.Value (R.Content).all);
          end if;
       end;
       Free_Stream (S);
-      Terminated := Value (R.Head).all'Length = 0;
+      Terminated := SS.Value (R.Head)'Length = 0;
    exception
       when GNAT.Sockets.Socket_Error =>
          --  This is what happens on VxWorks when the peer closes the
@@ -133,7 +131,7 @@ package body EWS.HTTP is
    function Get_Method (From : Request) return Method
    is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames Value (From.Head).all;
+      Input : String renames SS.Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -148,7 +146,7 @@ package body EWS.HTTP is
    function Get_Version (From : Request) return Version
    is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames Value (From.Head).all;
+      Input : String renames SS.Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -163,7 +161,7 @@ package body EWS.HTTP is
    function Get_URL (From : Request) return URL
    is
       Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Input : String renames Value (From.Head).all;
+      Input : String renames SS.Value (From.Head).all;
       use type GNAT.Regpat.Match_Location;
    begin
       GNAT.Regpat.Match (URL_Matcher, Input, Matches);
@@ -176,10 +174,10 @@ package body EWS.HTTP is
 
 
    function Get_Property (Named : String;
-                          From : Request) return Property
+                          From  : Request) return Property
    is
       Query_Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
-      Query_Input : String renames Value (From.Head).all;
+      Query_Input : String renames SS.Value (From.Head).all;
       Property_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
         GNAT.Regpat.Compile ("(^|&)" & Named & "=([^&]*)",
                              Flags => GNAT.Regpat.Case_Insensitive);
@@ -209,9 +207,9 @@ package body EWS.HTTP is
       elsif Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
          Ada.Strings.Maps.Constants.Upper_Case_Map) = "POST"
-        and then Value (From.Content) /= null then
+        and then SS.Value (From.Content) /= null then
          declare
-            Property_Input : String renames Value (From.Content).all;
+            Property_Input : String renames SS.Value (From.Content).all;
          begin
             GNAT.Regpat.Match
               (Property_Matcher, Property_Input, Property_Matches);
@@ -240,11 +238,11 @@ package body EWS.HTTP is
       Matches : GNAT.Regpat.Match_Array (0 .. Field_Max_Parens);
       use type GNAT.Regpat.Match_Location;
    begin
-      GNAT.Regpat.Match (Field_Matcher, Value (From.Head).all, Matches);
+      GNAT.Regpat.Match (Field_Matcher, SS.Value (From.Head).all, Matches);
       if Matches (0) = GNAT.Regpat.No_Match then
          return "";
       else
-         return To_String (Value (From.Head).all, Matches (1));
+         return To_String (SS.Value (From.Head).all, Matches (1));
       end if;
    end Get_Field;
 
@@ -265,14 +263,14 @@ package body EWS.HTTP is
    function Get_Head (From : Request) return String
    is
    begin
-      return Value (From.Head).all;
+      return SS.Value (From.Head).all;
    end Get_Head;
 
 
    function Get_Body (From : Request) return String
    is
    begin
-      return Value (From.Content).all;
+      return SS.Value (From.Content).all;
    end Get_Body;
 
 
@@ -288,16 +286,16 @@ package body EWS.HTTP is
    procedure Clear (The_Attachments : in out Attachments)
    is
    begin
-      The_Attachments := (Head => Null_Pointer, Content => Null_Pointer);
+      The_Attachments := (Head => SS.Null_Pointer, Content => SS.Null_Pointer);
    end Clear;
 
 
-   function Get_Field  (Named : String;
-                        From : Attachments;
-                        Index : Positive := 1) return Property
+   function Get_Field (Named : String;
+                       From  : Attachments;
+                       Index : Positive    := 1) return Property
    is
    begin
-      if Value (From.Content) = null then
+      if SS.Value (From.Content) = null then
          return "";
       else
          declare
@@ -307,7 +305,7 @@ package body EWS.HTTP is
             Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
             declare
                Whole_Part : String
-                 renames Value (From.Content)(Part_Start .. Part_Finish);
+                 renames SS.Value (From.Content)(Part_Start .. Part_Finish);
                Finish : constant Natural :=
                  HTTP.Index (Whole_Part, CRLF & CRLF);
                Headers : String
@@ -338,11 +336,11 @@ package body EWS.HTTP is
 
    Empty_String : aliased constant String := "";
 
-   function Get_Content (From : Attachments;
-                         Index : Positive := 1) return Contents
+   function Get_Content (From  : Attachments;
+                         Index : Positive    := 1) return Contents
    is
    begin
-      if Value (From.Content) = null then
+      if SS.Value (From.Content) = null then
          return Empty_String'Access;
       else
          declare
@@ -352,7 +350,7 @@ package body EWS.HTTP is
             Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
             declare
                Whole_Part : String
-                 renames Value (From.Content)(Part_Start .. Part_Finish);
+                 renames SS.Value (From.Content)(Part_Start .. Part_Finish);
                Start : constant Natural :=
                  HTTP.Index (Whole_Part, CRLF & CRLF);
             begin
@@ -367,9 +365,9 @@ package body EWS.HTTP is
 
    --  Text content
 
-   procedure Open (C : in out Cursor;
-                   From : Attachments;
-                   Index : Positive := 1)
+   procedure Open (C     : in out Cursor;
+                   From  :        Attachments;
+                   Index :        Positive    := 1)
    is
    begin
       if C.Open then
@@ -383,7 +381,7 @@ package body EWS.HTTP is
       --  pair.
       if C.Finish >= C.Start then
          C.Start := HTTP.Index
-           (Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
+           (SS.Value (From.Content)(C.Start .. C.Finish), CRLF & CRLF)
            + 4;
       end if;
       C.Next := C.Start;
@@ -411,9 +409,9 @@ package body EWS.HTTP is
    end End_Of_File;
 
 
-   procedure Get_Line (C : in out Cursor;
-                       Line : out String;
-                       Last : out Natural)
+   procedure Get_Line (C    : in out Cursor;
+                       Line :    out String;
+                       Last :    out Natural)
    is
    begin
       if not C.Open then
@@ -424,7 +422,7 @@ package body EWS.HTTP is
       end if;
       Determine_Line_Style (C);
       declare
-         Text : String renames Value (C.Data.Content).all;
+         Text : String renames SS.Value (C.Data.Content).all;
          CR : constant String := (1 => ASCII.CR);
          LF : constant String := (1 => ASCII.LF);
          Terminator : Natural;
@@ -528,8 +526,8 @@ package body EWS.HTTP is
    end Content;
 
 
-   procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Stream_Access)
+   procedure Write_Content (This :        Response;
+                            To   : access Ada.Streams.Root_Stream_Type'Class)
    is
    begin
       String'Write (To, Content (Response'Class (This)));
@@ -538,37 +536,37 @@ package body EWS.HTTP is
 
 
    procedure Respond (This : Response'Class;
-                      To : GNAT.Sockets.Socket_Type)
+                      To   : GNAT.Sockets.Socket_Type)
    is
-      S : Stream_Access := Stream (To);
+      U : aliased Unbounded_Memory_Stream;
    begin
       if Get_Version (This.To.all) = "1.0" then
          String'Write
-           (S,
+           (U'Access,
             "HTTP/1.0 " & Response_Kind (This) & CRLF &
               "Server: EWS" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
          if Keep_Alive_After_Responding (This.To.all) then
-            String'Write (S, "Connection: Keep-Alive" & CRLF);
+            String'Write (U'Access, "Connection: Keep-Alive" & CRLF);
          end if;
       else
          String'Write
-           (S,
+           (U'Access,
             "HTTP/1.1 " & Response_Kind (This) & CRLF &
               "Server: EWS" & CRLF &
               "Content-Type: " & Content_Type (This) & CRLF &
               "Content-Length: " & Content_Length (This)'Img & CRLF);
          if not Keep_Alive_After_Responding (This.To.all) then
-            String'Write (S, "Connection: close" & CRLF);
+            String'Write (U'Access, "Connection: close" & CRLF);
          end if;
       end if;
       if not Cacheable (This) then
-         String'Write (S, "Cache-Control: no-cache" & CRLF);
+         String'Write (U'Access, "Cache-Control: no-cache" & CRLF);
       end if;
-      String'Write (S, CRLF);
-      Write_Content (This, S);
-      Free_Stream (S);
+      String'Write (U'Access, CRLF);
+      Write_Content (This, U'Access);
+      Copy (U, To);
    end Respond;
 
 
@@ -636,7 +634,7 @@ package body EWS.HTTP is
 
    procedure Determine_Line_Style (Used_In : in out Cursor)
    is
-      Text : String renames Value (Used_In.Data.Content).all;
+      Text : String renames SS.Value (Used_In.Data.Content).all;
       CR : constant String := (1 => ASCII.CR);
       LF : constant String := (1 => ASCII.LF);
    begin
@@ -690,7 +688,8 @@ package body EWS.HTTP is
       Pattern : String;
       Going   : Ada.Strings.Direction := Ada.Strings.Forward;
       Mapping : Ada.Strings.Maps.Character_Mapping
-        := Ada.Strings.Maps.Identity) return Natural
+        := Ada.Strings.Maps.Identity)
+     return Natural
    is
       Cur_Index       : Natural;
       Potential_Match : Boolean;
@@ -763,14 +762,14 @@ package body EWS.HTTP is
    end Index;
 
 
-   procedure Locate_Whole_Body_Part (Within : Attachments;
-                                     Index : Positive := 1;
-                                     Start : out Positive;
+   procedure Locate_Whole_Body_Part (Within :     Attachments;
+                                     Index  :     Positive    := 1;
+                                     Start  : out Positive;
                                      Finish : out Natural)
    is
       Content_Type : constant String := Get_Field ("Content-Type",
                                                    From => Request (Within));
-      Text : String_P renames Value (Within.Content);
+      Text : String_P renames SS.Value (Within.Content);
    begin
       if Text = null then
          Start := 1;
@@ -873,7 +872,7 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From : GNAT.Regpat.Match_Location) return String
+      From      : GNAT.Regpat.Match_Location) return String
    is
       Last : Natural := From.Last;
    begin
@@ -985,6 +984,139 @@ package body EWS.HTTP is
    begin
       return "Exception: " & Str.To_String (This.Info);
    end Content;
+
+
+   ---------------------------------------
+   --  Unbounded Memory Streams bodies  --
+   ---------------------------------------
+
+
+   procedure Free
+   is new Ada.Unchecked_Deallocation (Stream_Chunk, Stream_Chunk_P);
+
+
+   procedure Finalize (UMSF : in out Unbounded_Memory_Stream_Finalizer)
+   is
+      Current : Stream_Chunk_P := UMSF.UMS.Head;
+   begin
+      while Current /= null loop
+         declare
+            Next : constant Stream_Chunk_P := Current.Next;
+         begin
+            Free (Current);
+            Current := Next;
+         end;
+      end loop;
+   end Finalize;
+
+
+   procedure Copy  (Stream : Unbounded_Memory_Stream;
+                    To     : GNAT.Sockets.Socket_Type)
+   is
+      Chunks : Natural := 0;
+   begin
+      declare
+         Chunk : Stream_Chunk_P := Stream.Head;
+      begin
+         while Chunk /= null loop
+            Chunks := Chunks + 1;
+            Chunk := Chunk.Next;
+         end loop;
+      end;
+      declare
+         use Ada.Streams;
+         Vector : GNAT.Sockets.Vector_Type (1 .. Chunks);
+         Chunk : Stream_Chunk_P := Stream.Head;
+         Index : Positive := Vector'First;
+         Bytes_To_Send : Stream_Element_Count := Stream.Length;
+         Bytes_Sent : Stream_Element_Count;
+      begin
+         while Chunk /= null loop
+            Vector (Index) :=
+              (Base => Chunk.Elements (Chunk.Elements'First)'Access,
+               Length => Stream_Element_Count'Min
+                 (Bytes_To_Send, Stream_Chunk_Elements'Length));
+            Bytes_To_Send := Bytes_To_Send - Vector (Index).Length;
+            Chunk := Chunk.Next;
+            Index := Index + 1;
+         end loop;
+         GNAT.Sockets.Send_Vector (Socket => To,
+                                   Vector => Vector,
+                                   Count  => Bytes_Sent);
+         pragma Assert (Bytes_Sent = Stream.Length,
+                        "byte count mismatch in Copy");
+      end;
+   end Copy;
+
+
+   --  Read isn't meant to be called; output contents via Copy.
+   procedure Read  (Stream : in out Unbounded_Memory_Stream;
+                    Item   :    out Ada.Streams.Stream_Element_Array;
+                    Last   :    out Ada.Streams.Stream_Element_Offset)
+   is
+   begin
+      raise Program_Error;
+   end Read;
+
+
+   procedure Write (Stream : in out Unbounded_Memory_Stream;
+                    Item   :        Ada.Streams.Stream_Element_Array)
+   is
+      use Ada.Streams;
+      First_Byte_In_Item : Stream_Element_Offset := Item'First;
+      Bytes_To_Write : Stream_Element_Offset := Item'Length;
+   begin
+      loop
+         exit when Bytes_To_Write = 0;
+         declare
+            Bytes_Remaining_In_Chunk : constant Stream_Element_Count :=
+              Stream_Chunk_Elements'Length
+              - Stream.Length mod Stream_Chunk_Elements'Length;
+            --  NB! If Stream.Length (the number of bytes written so
+            --  far) is a multiple of Stream_Chunk_Elements'Length,
+            --  there will be no space left in the Tail chunk (if
+            --  there is one, there won't be at the first Write) BUT
+            --  the Bytes_Remaining_In_Chunk will be
+            --  Stream_Chunk_Elements'Length. In any other case, the
+            --  count will be correct.
+         begin
+            if Bytes_Remaining_In_Chunk = Stream_Chunk_Elements'Length then
+               --  The Tail chunk, if any, is full; allocate another.
+               declare
+                  New_Chunk : constant Stream_Chunk_P := new Stream_Chunk;
+               begin
+                  if Stream.Head = null then
+                     --  If this is the first Write, both Head and
+                     --  Tail will be null;
+                     Stream.Head := New_Chunk;
+                     Stream.Tail := New_Chunk;
+                  else
+                     --  otherwise, tack the new chunk on at Tail.
+                     Stream.Tail.Next := New_Chunk;
+                     Stream.Tail := New_Chunk;
+                  end if;
+               end;
+            end if;
+            declare
+               First_Byte_In_Chunk : constant Stream_Element_Count
+                 := Stream_Chunk_Elements'Last - Bytes_Remaining_In_Chunk + 1;
+               Bytes_To_Write_Now : constant Stream_Element_Count
+                 := Stream_Element_Count'Min (Bytes_To_Write,
+                                              Bytes_Remaining_In_Chunk);
+            begin
+               Stream.Tail.Elements
+                 (First_Byte_In_Chunk ..
+                    First_Byte_In_Chunk + Bytes_To_Write_Now - 1)
+                 := Item
+                 (First_Byte_In_Item ..
+                    First_Byte_In_Item + Bytes_To_Write_Now - 1);
+               Bytes_To_Write := Bytes_To_Write - Bytes_To_Write_Now;
+               Stream.Length := Stream.Length + Bytes_To_Write_Now;
+               First_Byte_In_Item := First_Byte_In_Item + Bytes_To_Write_Now;
+            end;
+         end;
+      end loop;
+   end Write;
 
 
 end EWS.HTTP;

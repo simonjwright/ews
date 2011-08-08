@@ -20,7 +20,9 @@
 --  executable file might be covered by the GNU Public License.
 
 with Ada.Exceptions;
+with Ada.Finalization;
 with Ada.IO_Exceptions;
+with Ada.Streams;
 with Ada.Strings.Maps;
 with BC.Support.Smart_Pointers;
 with GNAT.Sockets;
@@ -37,8 +39,8 @@ package EWS.HTTP is
    type Request is limited private;
    type Request_P is access all Request;
 
-   procedure Initialize (R : out Request;
-                         From : GNAT.Sockets.Socket_Type;
+   procedure Initialize (R          : out Request;
+                         From       :     GNAT.Sockets.Socket_Type;
                          Terminated : out Boolean);
 
    subtype Method is String;
@@ -98,9 +100,9 @@ package EWS.HTTP is
    --  pointers. Use Clear to null out this particular reference after
    --  it's finished with.
 
-   function Get_Field  (Named : String;
-                        From : Attachments;
-                        Index : Positive := 1) return Property;
+   function Get_Field (Named : String;
+                       From  : Attachments;
+                       Index : Positive    := 1) return Property;
    --  Get the value of the named header field of the Index'th part of
    --  the attachments.
 
@@ -112,8 +114,8 @@ package EWS.HTTP is
    --  The body of an attachment, not including any request parameters
    --  of header fields.
 
-   function Get_Content (From : Attachments;
-                         Index : Positive := 1) return Contents;
+   function Get_Content (From  : Attachments;
+                         Index : Positive    := 1) return Contents;
    --  Get the contents of the Index'th part of the attachment.
 
 
@@ -148,9 +150,9 @@ package EWS.HTTP is
    --  Return True if the Cursor has reached the end of its attachment.
    --  Propagates Status_Error if the Cursor is closed.
 
-   procedure Get_Line (C : in out Cursor;
-                       Line : out String;
-                       Last : out Natural);
+   procedure Get_Line (C    : in out Cursor;
+                       Line :    out String;
+                       Last :    out Natural);
    --  Obtain the next line from the Cursor's attachment.
    --  Propagates Status_Error if the Cursor is closed.
    --  Propagates End_Error if the Cursor is already at the end.
@@ -190,11 +192,11 @@ package EWS.HTTP is
    function Content (This : Response) return String;
    --  default "".
 
-   procedure Write_Content (This : Response;
-                            To : GNAT.Sockets.Stream_Access);
+   procedure Write_Content (This :        Response;
+                            To   : access Ada.Streams.Root_Stream_Type'Class);
 
    procedure Respond (This : Response'Class;
-                      To : GNAT.Sockets.Socket_Type);
+                      To   : GNAT.Sockets.Socket_Type);
 
    --  Factory function to create a Response
 
@@ -213,21 +215,23 @@ package EWS.HTTP is
 
 private
 
+   --  Finalizable containment for strings used to hold a Request's
+   --  head and content.
    type String_P is access String;
    package Smart_Strings
    is new BC.Support.Smart_Pointers (String, String_P);
 
+   --  A Request isn't actually limited.
    type Request is record
-      Head : Smart_Strings.Pointer;
+      Head    : Smart_Strings.Pointer;
       Content : Smart_Strings.Pointer;
    end record;
-   --  A Request isn't actually limited.
 
    type Attachments is new Request;
 
-   procedure Locate_Whole_Body_Part (Within : Attachments;
-                                     Index : Positive := 1;
-                                     Start : out Positive;
+   procedure Locate_Whole_Body_Part (Within :     Attachments;
+                                     Index  :     Positive    := 1;
+                                     Start  : out Positive;
                                      Finish : out Natural);
    --  Find the bounds in the Contents of Within of the Index'th
    --  part. The bounds include any leading properties.
@@ -237,20 +241,72 @@ private
    type Line_Ending_Style is (Unknown, Unterminated, Unix, Windows);
 
    type Cursor is limited record
-      Open : Boolean := False;
+      Open        : Boolean           := False;
       Line_Ending : Line_Ending_Style;
-      Data : Attachments;
-      Start : Positive;
-      Finish : Natural;
-      Next : Positive;
+      Data        : Attachments;
+      Start       : Positive;
+      Finish      : Natural;
+      Next        : Positive;
    end record;
 
    function Index
      (Source  : String;
       Pattern : String;
-      Going   : Ada.Strings.Direction := Ada.Strings.Forward;
+      Going   : Ada.Strings.Direction              := Ada.Strings.Forward;
       Mapping : Ada.Strings.Maps.Character_Mapping
-        := Ada.Strings.Maps.Identity) return Natural;
+        := Ada.Strings.Maps.Identity)
+     return Natural;
    --  A replacement for the GNAT Ada05 Ada.Strings.Search.Index.
+
+   --------------------------------
+   --  Unbounded Memory Streams  --
+   --------------------------------
+
+   --  These are Streams held in memory.
+   --
+   --  The stream contents are held in chunks, allocated as required
+   --  on Write.
+   --
+   --  There has to be a Read procedure, of course, but it's not
+   --  intended to be used and will propagate Program_Error if called.
+   --
+   --  A Copy procedure is provided to copy the contents of the stream
+   --  to a socket. Copy uses GNAT.Sockets.Send_Vector to send all the
+   --  chunks to the socket in one call.
+   --
+   --  The chunks are freed when the Stream is finalized.
+
+   subtype Stream_Chunk_Elements
+   is Ada.Streams.Stream_Element_Array (0 .. 511);
+   type Stream_Chunk;
+   type Stream_Chunk_P is access Stream_Chunk;
+   type Stream_Chunk is record
+      Next     : Stream_Chunk_P;
+      Elements : aliased Stream_Chunk_Elements;
+   end record;
+
+   type Unbounded_Memory_Stream;
+   type Unbounded_Memory_Stream_Finalizer
+     (UMS : access Unbounded_Memory_Stream)
+   is new Ada.Finalization.Limited_Controlled with null record;
+   procedure Finalize (UMSF : in out Unbounded_Memory_Stream_Finalizer);
+
+   type Unbounded_Memory_Stream
+   is new Ada.Streams.Root_Stream_Type with record
+      Finalizer : Unbounded_Memory_Stream_Finalizer
+        (Unbounded_Memory_Stream'Access);
+      Length    : Ada.Streams.Stream_Element_Offset := 0;
+      Head      : Stream_Chunk_P;
+      Tail      : Stream_Chunk_P;
+   end record;
+   procedure Copy  (Stream : Unbounded_Memory_Stream;
+                    To     : GNAT.Sockets.Socket_Type);
+   --  Read isn't meant to be called; output contents via Copy.
+   procedure Read  (Stream : in out Unbounded_Memory_Stream;
+                    Item   :    out Ada.Streams.Stream_Element_Array;
+                    Last   :    out Ada.Streams.Stream_Element_Offset);
+   procedure Write (Stream : in out Unbounded_Memory_Stream;
+                    Item   :        Ada.Streams.Stream_Element_Array);
+
 
 end EWS.HTTP;
