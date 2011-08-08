@@ -184,8 +184,9 @@ package body EWS.Dynamic is
    end Write;
 
 
-   procedure Write_Content (This : Dynamic_Response;
-                            To : GNAT.Sockets.Stream_Access) is
+   procedure Write_Content (This :        Dynamic_Response;
+                            To   : access Ada.Streams.Root_Stream_Type'Class)
+   is
       use type Unbounded_String_Pointers.Pointer;
    begin
       if This.Content /= Unbounded_String_Pointers.Null_Pointer then

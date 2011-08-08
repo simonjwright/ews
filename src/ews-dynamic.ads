@@ -24,7 +24,6 @@ with Ada.Streams;
 with BC.Support.Smart_Pointers;
 with EWS.HTTP;
 with EWS.Types;
-with GNAT.Sockets;
 
 package EWS.Dynamic is
 
@@ -47,23 +46,37 @@ package EWS.Dynamic is
 
    --  Operations callable by Creator functions.
    procedure Set_Content_Type (This : in out Dynamic_Response;
-                               To : Types.Format);
+                               To   :        Types.Format);
    procedure Set_Content (This : in out Dynamic_Response;
-                          To : String);
-   procedure Append (This : in out Dynamic_Response;
-                     Adding : String);
+                          To   :        String);
+   procedure Append (This   : in out Dynamic_Response;
+                     Adding :        String);
 
    --  Utility for HTML/XML, for adding a single element with text
    --  content. Add elements containing other elements "by hand".
-   procedure Append_Element (This : in out Dynamic_Response;
-                             Element : String;
-                             Content : String);
+   procedure Append_Element (This    : in out Dynamic_Response;
+                             Element :        String;
+                             Content :        String);
 
 private
 
-   type String_P is access String;
+   --  Construct an Unbounded String implementation which can be used
+   --  to hold the successively-appended parts of a Response.
+   --
+   --  In a quest for efficiency, the content holder
+   --  (Unbounded_String.Buf ) is initialized to a standard size (256
+   --  bytes, see body) and is doubled by reallocation whenever it
+   --  overflows.
+   --
+   --  Unbounded_Strings are limited; they're held in a
+   --  Dynamic_Response via a reference-counted pointer, using the
+   --  Booch Components' Smart_Pointers package. When the last copy of
+   --  a Dynamic_Response goes out of scope, the Unbounded_String it
+   --  contains is freed, and finalization frees all its buffer
+   --  memory.
 
-   type Unbounded_String is new Ada.Finalization.Controlled with record
+   type String_P is access String;
+   type Unbounded_String is new Ada.Finalization.Limited_Controlled with record
       Last : Natural := 0;
       Buf : String_P;
    end record;
@@ -73,7 +86,7 @@ private
    procedure Append (To : in out Unbounded_String; S : String);
 
    procedure Write (To : access Ada.Streams.Root_Stream_Type'Class;
-                    U : Unbounded_String);
+                    U  :        Unbounded_String);
    for Unbounded_String'Write use Write;
    --  No need for a Read operation.
 
@@ -91,7 +104,7 @@ private
    function Cacheable (This : Dynamic_Response) return Boolean;
    function Content_Type (This : Dynamic_Response) return String;
    function Content_Length (This : Dynamic_Response) return Integer;
-   procedure Write_Content (This : Dynamic_Response;
-                            To : GNAT.Sockets.Stream_Access);
+   procedure Write_Content (This :        Dynamic_Response;
+                            To   : access Ada.Streams.Root_Stream_Type'Class);
 
 end EWS.Dynamic;
