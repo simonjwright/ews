@@ -17,7 +17,7 @@ with "xmlada";
 
 project EWS is
 
-  for Main use ("ews-server-test", "ews_pages", "ews-make_htdocs");
+  for Main use ("ews-server-test", "ews-make_htdocs");
   for Exec_Dir use ".";
 
   for Source_Dirs use (".");
