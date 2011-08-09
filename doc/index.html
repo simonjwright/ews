@@ -34,26 +34,24 @@ the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
 <p>Documentation will be forthcoming.
 
 <p>For the moment, and provided you are running on a Linux or Mac OS X
-system (other Unix systems should work as described, and the software
-runs on Windows but the makefile doesn't)
+system, or on Windows with Cygwin (other Unix systems should work as
+described, and the software runs on Windows but the makefile doesn't),
 
 <ul>
 
-<li>Install GNAT
+<li>Install GNAT and XML/Ada;
 
 <li>Download
-the <a
-href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
-95 Booch Components</a>, unpack, place a symbolic link in your home
-directory:<br/>
-<tt>   $ ln -s <i>/where/ever</i>/bc-<i>yyyymmdd</i> ~/bc</tt>
+the <a href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
+95 Booch Components</a>, unpack, install according to the directions
+in the <tt>INSTALL</tt> file.
 
 </ul>
 
 <p>Then, in the EWS distribution's source directory
 (<tt>ews-<i>yyyymmdd</i>/src</tt>),
 <pre>
-   $ make ews-server-test
+   $ make demo
 </pre>
 
 will create a server (<tt>ews-server-test</tt>), which when executed
