@@ -1,3 +1,5 @@
+#  -*- Makefile -*-
+
 #  Copyright (C) Simon Wright <simon@pushface.org>
 
 #  This package is free software; you can redistribute it and/or
@@ -17,27 +19,34 @@
 # No default.
 all::
 	@echo "valid make targets are:"
-	@echo "   ews-server-test (or demo)"
+	@echo "   demo (ews-server-test)"
 	@echo "   ews-htdocs.adb"
-	@echo "   ews-make_htdocs"
+	@echo "   generator (ews-make_htdocs)"
 
-demo: ews-server-test
+ifneq (, $(findstring CYGWIN, $(sys)))
+  EXE = .exe
+else
+  EXE =
+endif
 
-ews-server-test: ews-htdocs.adb .build force
+demo: ews-server-test${exe}
+generator: ews-make_htdocs${exe}
+
+ews-server-test${exe}: ews-htdocs.adb .build force
 	gnatmake -PEWS ews-server-test
 clean::
-	rm -f ews-server-test
+	rm -f ews-server-test${exe}
 
-ews-htdocs.adb: ews-make_htdocs force
+ews-htdocs.adb: ews-make_htdocs${exe} force
 	cp HttpInteraction.js html/
-	(cd html && ../ews-make_htdocs >../$@)
+	./ews-make_htdocs html/ >$@
 clean::
 	rm -f html/HttpInteraction.js
 
-ews-make_htdocs: ews-make_htdocs.adb .build force
+ews-make_htdocs${exe}: ews-make_htdocs.adb .build force
 	gnatmake -PEWS ews-make_htdocs
 clean::
-	rm -f ews-make_htdocs
+	rm -f ews-make_htdocs${exe}
 
 .build:
 	mkdir .build
@@ -46,7 +55,3 @@ clean::
 
 .PHONY: all clean demo force
 
-#;; for emacs:
-#;; Local Variables:
-#;; mode: makefile
-#;; End:
