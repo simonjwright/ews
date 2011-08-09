@@ -13,12 +13,11 @@
 </style>
 
 </head>
-
 <body bgcolor="white">
 
 <table width="100%">
 <tr>
-<td><h1>EWS: AJAX demonstration</h1></td>
+<td><h1>Embedded Web Server: AJAX demonstration</h1></td>
 <td align="right">
 <a href="http://sourceforge.net"> <img
 src="http://sourceforge.net/sflogo.php?group_id=95861&amp;type=1"
@@ -27,10 +26,13 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 </tr>
 </table>
 
-EWS is a web server construction kit, designed for embedded
+<p>EWS is a web server construction kit, designed for embedded
 applications using the <a
 href="http://libre.adacore.com/">GNAT</a> Ada
 compiler.
+
+<p>Other Ada web-related software is
+linked <a href="http://www.adaworld.com/internetmain.html">here</a>.
 
 <p>The project is hosted on SourceForge. You can see
 the <a
@@ -43,26 +45,24 @@ the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
 <p>Documentation will be forthcoming.
 
 <p>For the moment, and provided you are running on a Linux or Mac OS X
-system (other Unix systems should work as described, and the software
-runs on Windows but the makefile doesn't)
+system, or on Windows with Cygwin (other Unix systems should work as
+described, and the software runs on Windows but the makefile doesn't),
 
 <ul>
 
-<li>Install GNAT
+<li>Install GNAT and XML/Ada;
 
 <li>Download
-the <a
-href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
-95 Booch Components</a>, unpack, place a symbolic link in your home
-directory:<br/>
-<tt>   $ ln -s <i>/where/ever</i>/bc-<i>yyyymmdd</i> ~/bc</tt>
+the <a href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
+95 Booch Components</a>, unpack, install according to the directions
+in the <tt>INSTALL</tt> file.
 
 </ul>
 
 <p>Then, in the EWS distribution's source directory
 (<tt>ews-<i>yyyymmdd</i>/src</tt>),
 <pre>
-   $ make ews-server-test
+   $ make demo
 </pre>
 
 will create a server (<tt>ews-server-test</tt>), which when executed
@@ -229,6 +229,5 @@ technologies:
 <a href="mailto:simon@pushface.org">Simon Wright</a>
 </address>
 </i>
-
 </body>
 </html>
