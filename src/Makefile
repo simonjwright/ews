@@ -15,26 +15,35 @@
 # No default.
 all::
 	@echo "valid make targets are:"
-	@echo "   ews-server-test (the demo)"
+	@echo "   demo (ews-server-test)"
 	@echo "   ews-htdocs.adb"
-	@echo "   ews-make_htdocs"
-	@echo "   dist [SUBRELEASE=r (d=cvs)]"
+	@echo "   generator (ews-make_htdocs)"
+	@echo "   dist [SUBRELEASE=r (d=hg)]"
 
-ews-server-test: ews-htdocs.adb .build
+ifneq (, $(findstring CYGWIN, $(sys)))
+  EXE = .exe
+else
+  EXE =
+endif
+
+demo: ews-server-test${exe}
+generator: ews-make_htdocs${exe}
+
+ews-server-test${exe}: ews-htdocs.adb .build
 	gnatmake -PEWS -gnat95 ews-server-test
 clean::
-	rm -f ews-server-test
+	rm -f ews-server-test${exe}
 
-ews-htdocs.adb: ews-make_htdocs force
+ews-htdocs.adb: ews-make_htdocs${exe} force
 	cp HttpInteraction.js ../doc/
 	./ews-make_htdocs ../doc/ >$@
 clean::
 	rm -f ews-htdocs.adb ../doc/HttpInteraction.js
 
-ews-make_htdocs: ews-make_htdocs.adb .build
+ews-make_htdocs${exe}: ews-make_htdocs.adb .build
 	gnatmake -PEWS -gnat95 ews-make_htdocs
 clean::
-	rm -f ews-make_htdocs
+	rm -f ews-make_htdocs${exe}
 
 .build:
 	mkdir .build
@@ -48,35 +57,36 @@ clean::
 SUBRELEASE ?= hg
 DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
 
-DOCS = \
-../doc/index.html \
-../doc/ajax.html \
-../doc/ajax.js
+DOCS =						\
+../doc/index.html				\
+../doc/ajax.html				\
+../doc/ajax.js					\
+../doc/favicon.ico
 
-SRC = \
-EWS.gpr \
-ews.ads \
-ews-dynamic.adb \
-ews-dynamic.ads \
-ews-htdocs.ads \
-ews-http.adb \
-ews-http.ads \
-ews-http-ews_attachments_friend.adb \
-ews-http-ews_attachments_friend.ads \
-ews-make_htdocs.adb \
-ews-server.adb \
-ews-server.ads \
-ews-server-test.adb \
-ews-static.adb \
-ews-static.ads \
-ews-types.adb \
-ews-types.ads \
-input_sources-ews_attachments.adb \
-input_sources-ews_attachments.ads \
+SRC =						\
+EWS.gpr						\
+ews.ads						\
+ews-dynamic.adb					\
+ews-dynamic.ads					\
+ews-htdocs.ads					\
+ews-http.adb					\
+ews-http.ads					\
+ews-http-ews_attachments_friend.adb		\
+ews-http-ews_attachments_friend.ads		\
+ews-make_htdocs.adb				\
+ews-server.adb					\
+ews-server.ads					\
+ews-server-test.adb				\
+ews-static.adb					\
+ews-static.ads					\
+ews-types.adb					\
+ews-types.ads					\
+input_sources-ews_attachments.adb		\
+input_sources-ews_attachments.ads		\
 HttpInteraction.js
 
-DISTRIBUTION_FILES = \
-ews-$(DATE).tgz \
+DISTRIBUTION_FILES =				\
+ews-$(DATE).tgz					\
 ews-$(DATE).zip
 
 dist: ews-$(DATE) $(DISTRIBUTION_FILES) COPYING $(DOCS)
