@@ -101,31 +101,51 @@ package body EWS.Server is
             Status : GNAT.Sockets.Selector_Status;
             use type GNAT.Sockets.Selector_Status;
          begin
+            --  Initialize Read_Sockets with the sockets in use
+            --  (Write_Sockets remains empty, we don't care if a
+            --  socket becomes writable; we'll just block in that
+            --  case).
             GNAT.Sockets.Copy (Sockets, Read_Sockets);
+            --  Wait until something happens on one of the sockets.
             GNAT.Sockets.Check_Selector
               (Selector, Read_Sockets, Write_Sockets, Status);
             if Status = GNAT.Sockets.Completed then
+               --  This was a successful completion. Find out which
+               --  socket woke us up and deal with it. If there was
+               --  more than one, we'll find out next time round the
+               --  loop.
                declare
                   Socket : GNAT.Sockets.Socket_Type;
                   use type GNAT.Sockets.Socket_Type;
                begin
+                  --  Which socket?
                   GNAT.Sockets.Get (Read_Sockets, Socket);
                   if Socket = Server_Socket then
+                     --  It was the server; a new client has called
+                     --  connect(). Accept the connection ...
                      GNAT.Sockets.Accept_Socket
                        (Server_Socket, Socket, Address);
                      Trace (Logging_Via, "connection", Socket, Tracing);
+                     --  ... and add the new connected socket to the
+                     --  set of sockets in use.
                      GNAT.Sockets.Set (Sockets, Socket);
                   elsif Socket = GNAT.Sockets.No_Socket then
+                     --  None of our sockets has data/connection
+                     --  available; don't care why.
                      Logging_Via ("server got No_Socket", Error);
                   else
+                     --  There's an HTTP request to be read on one of
+                     --  our connected clients' sockets; deal with it.
                      Trace (Logging_Via, "request", Socket, Tracing);
                      Respond (Socket, Sockets, Logging_Via, Tracing);
                   end if;
                end;
             else
+               --  Unexpected, non-fatal error.
                Logging_Via ("server: Check_Selector returned " & Status'Img,
                             Error);
             end if;
+            --  Clean up.
             GNAT.Sockets.Empty (Read_Sockets);
          exception
             when E : others =>
@@ -137,7 +157,7 @@ package body EWS.Server is
    exception
       when E : others =>
          Log (Logging_Via,
-              "server failed in outer loop",
+              "server task failed",
               With_Exception => E);
          GNAT.Sockets.Close_Socket (Server_Socket);
    end Server;
