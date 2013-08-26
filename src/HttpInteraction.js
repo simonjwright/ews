@@ -14,17 +14,37 @@
  * distributed with this package; see file COPYING.  If not, write to
  * the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
  * MA 02111-1307, USA.
+ *
+ * As a special exception, if you link this unit with other files to
+ * produce an executable, this unit does not by itself cause the
+ * resulting executable to be covered by the GNU General Public
+ * License.  This exception does not however invalidate any other
+ * reasons why the executable file might be covered by the GNU Public
+ * License.
  */
 
 /**
- * When you call an HttpInteraction's start(), it sends the 'query'
- * using GET; when the response arrives, calls 'handler'(request) --
+ * Abstract base class to manage HTTP interactions for AJAX.
+ *
+ * When you call an HttpInteraction's start(), it sets up the request
+ * and calls the overridden open(), whose task is to open the request
+ * and initiate it by calling send() (if there is a query,
+ * send(query); when the response arrives, calls 'handler'(request) --
  * you can get its responseText or responseXML as appropriate. If
- * 'interval' is non-zero, repeats every 'interval' milliseconds.
- * @class This is an abstract base class for HTTP interactioons.
- * @constructor
+ * 'interval' is non-null, repeats every 'interval' milliseconds.
+ *
+ * @param url      The URL to which the request is to be sent.
+ * @param query    The query which is to be sent, if any.
+ * @param handler  The handler to be called when the response arrives,
+ *                 with parameter the completed request.
+ * @param interval If non-null, the interval in milliseconds between
+ *                 repeat requests.
+ * @class          This is an abstract base class for HTTP interactions.
+ * @constructor.
+ * @returns        A new HttpInteraction.
  */
-function HttpInteraction(query, handler, interval) {
+function HttpInteraction(url, query, handler, interval) {
+  this.url = url;
   this.query = query;
   this.handler = handler;
   this.interval = interval;
@@ -32,19 +52,30 @@ function HttpInteraction(query, handler, interval) {
   this.request = null;
 }
 
+/**
+ * Initiate the transaction.
+ *
+ * Preserves the current object and creates a nested function run() to
+ * do the work of the transaction. run() uses the preserved object
+ * instead of 'this' because, if we get called after the timeout,
+ * 'this' is the Window.
+ *
+ * @param   overriding query (optional).
+ * @returns void.
+ */
 HttpInteraction.prototype.start = function() {
-  /* preserve the current object in the closure for the nested function */
+  /* Preserve the current object in the closure for the nested function */
   var object = this;
-  /* override the query, if any was supplied */
+  /* Override the query, if any was supplied */
   if (arguments.length > 0) {
     object.query = arguments[0];
   }
-  /* the actual work is done in a nested function with the actual
+  /* The actual work is done in this nested function with the actual
    * HttpInteraction object in its closure, because when we get called
    * after the timeout 'this' is the Window */
   object.run = function () {
     if (!object.request) {
-      /* try to create the HttpRequest, coping with various
+      /* Try to create the HttpRequest, coping with various
        * browsers/versions */
       if (window.XMLHttpRequest) {
 	object.request = new XMLHttpRequest();
@@ -76,16 +107,34 @@ HttpInteraction.prototype.start = function() {
 	}
       }
     };
+    /* open() is to be overridden by concrete extensions, and is
+     * required to open the request (using "post" or "get" as
+     * appropriate) and send the query (or null, if none). */
     object.open();
   }
   object.run();
 }
 
+HttpInteraction.prototype.open = function() {
+    alert("HttpInteraction.open() not overridden.");
+}
+
 
 /**
- * @class OneshotHttpInteraction
- * @extends HttpInteraction
- * @constructor
+ * Creates a new HttpInteraction which sends the request once.
+ *
+ * This class is to be used to perform updates, and therefore uses
+ * POST. You can use a single URL and encode the actual update in the
+ * query, or for some use cases ("quit", perhaps) you could use a null
+ * query.
+ *
+ * @param url      The URL to which the request is to be sent.
+ * @param query    The query which is to be sent, if any.
+ * @param handler  The handler to be called when the response arrives,
+ *                 with parameter the completed request.
+ * @class OneshotHttpInteraction.
+ * @extends HttpInteraction.
+ * @constructor.
  * @returns A new OneShotHttpInteraction.
  */
 function OneshotHttpInteraction(url, query, handler) {
@@ -105,13 +154,24 @@ OneshotHttpInteraction.prototype.open = function () {
 
 
 /**
- * @class CyclicHttpInteraction
- * @extends HttpInteraction
- * @constructor
+ * Creates a new HttpInteraction which sends the request repeatedly.
+ *
+ * This class is to be used to perform status requests, and therefore
+ * uses GET. It doesn't allow you to pass a separate query - where
+ * would it come from?
+ *
+ * @param url      The URL to which the request is to be sent.
+ * @param handler  The handler to be called when the response arrives,
+ *                 with parameter the completed request.
+ * @param interval The interval in milliseconds between repeat requests.
+ * @class CyclicHttpInteraction.
+ * @extends HttpInteraction.
+ * @constructor.
  * @returns A new CyclicHttpInteraction.
  */
   function CyclicHttpInteraction(url, handler, interval) {
   this.url = url;
+  this.query = null;
   this.handler = handler;
   this.interval = interval;
   this.request = null;
