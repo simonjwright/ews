@@ -13,57 +13,77 @@
 --  330, Boston, MA 02111-1307, USA.
 
 with Ada.Command_Line;
-with Ada.Streams.Stream_IO; use Ada.Streams; use Ada.Streams.Stream_IO;
+with Ada.Streams.Stream_IO;
 with Ada.Text_IO; use Ada.Text_IO;
-with EWS.Types; use EWS.Types;
-with GNAT.Directory_Operations; use GNAT.Directory_Operations;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
-with GNAT.Regpat; use GNAT.Regpat;
+with EWS.Types;
+with GNAT.Directory_Operations;
+with GNAT.OS_Lib;
+with GNAT.Regpat;
 
 procedure EWS.Make_Htdocs is
 
-   procedure Scan_Directory (Named : Dir_Name_Str);
+   procedure Scan_Directory (Named : GNAT.Directory_Operations.Dir_Name_Str);
    procedure Save_File (Named : String);
    procedure Output (Base_Dir : String);
    procedure Output_Contents (Of_File : String);
 
-   procedure Scan_Directory (Named : Dir_Name_Str) is
-      Wd : Dir_Type;
+   --  These two procedures are in a package because they need to keep
+   --  the actual open file that's associated with standard output
+   --  available so that it can be closed; and no one else should be
+   --  able to see the file.
+   package Output_Management is
+      procedure Set_Standard_Output (To_File_Named : String);
+      procedure Reset_Standard_Output;
+   end Output_Management;
+
+   procedure Scan_Directory (Named : GNAT.Directory_Operations.Dir_Name_Str) is
+      Wd : GNAT.Directory_Operations.Dir_Type;
    begin
-      Open (Dir => Wd,
-            Dir_Name => Named);
+      GNAT.Directory_Operations.Open (Dir => Wd,
+                                      Dir_Name => Named);
       declare
          Str : String (1 .. 1024);
          Last : Natural;
       begin
          loop
-            Read (Dir => Wd,
-                  Str => Str,
-                  Last => Last);
+            GNAT.Directory_Operations.Read (Dir => Wd,
+                                            Str => Str,
+                                            Last => Last);
             exit when Last = 0;
             if Str (1 .. Last) /= "." and Str (1 .. Last) /= ".." then
-               if Is_Directory (Named & Str (1 .. Last)) then
+               if GNAT.OS_Lib.Is_Directory (Named & Str (1 .. Last)) then
                   Scan_Directory
-                    (Named & Str (1 .. Last) & Directory_Separator);
+                    (Named & Str (1 .. Last)
+                       & GNAT.OS_Lib.Directory_Separator);
                else
                   Save_File (Named & Str (1 .. Last));
                end if;
             end if;
          end loop;
       end;
-      Close (Dir => Wd);
+      GNAT.Directory_Operations.Close (Dir => Wd);
    end Scan_Directory;
 
-   CSS_File : constant Pattern_Matcher := Compile ("\.css$");
-   GIF_File : constant Pattern_Matcher := Compile ("\.gif$");
-   HTML_File : constant Pattern_Matcher := Compile ("\.(html|htm)$");
-   ICO_File : constant Pattern_Matcher := Compile ("\.ico$");
-   JPEG_File : constant Pattern_Matcher := Compile ("\.(jpeg|jpg)$");
-   JavaScript_File : constant Pattern_Matcher := Compile ("\.js$");
-   Java_File : constant Pattern_Matcher := Compile ("\.(class|jar)$");
-   PNG_File : constant Pattern_Matcher := Compile ("\.png$");
-   XML_File : constant Pattern_Matcher := Compile ("\.xml$");
-   XSL_File : constant Pattern_Matcher := Compile ("\.xsl$");
+   CSS_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.css$");
+   GIF_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.gif$");
+   HTML_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.(html|htm)$");
+   ICO_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.ico$");
+   JPEG_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.(jpeg|jpg)$");
+   JavaScript_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.js$");
+   Java_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.(class|jar)$");
+   PNG_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.png$");
+   XML_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.xml$");
+   XSL_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.xsl$");
 
    type String_P is access constant String;
    subtype Content_Type is Types.Format;
@@ -94,26 +114,26 @@ procedure EWS.Make_Htdocs is
          end if;
       end Add_File;
    begin
-      if Match (CSS_File, Named) >= Named'First then
-         Add_File (CSS);
-      elsif Match (GIF_File, Named) >= Named'First then
-         Add_File (GIF);
-      elsif Match (HTML_File, Named) >= Named'First then
-         Add_File (HTML);
-      elsif Match (ICO_File, Named) >= Named'First then
-         Add_File (ICO);
-      elsif Match (Java_File, Named) >= Named'First then
-         Add_File (Octet_Stream);
-      elsif Match (JPEG_File, Named) >= Named'First then
-         Add_File (JPEG);
-      elsif Match (JavaScript_File, Named) >= Named'First then
-         Add_File (JavaScript);
-      elsif Match (PNG_File, Named) >= Named'First then
-         Add_File (PNG);
-      elsif Match (XML_File, Named) >= Named'First then
-         Add_File (XML);
-      elsif Match (XSL_File, Named) >= Named'First then
-         Add_File (XSL);
+      if GNAT.Regpat.Match (CSS_File, Named) >= Named'First then
+         Add_File (EWS.Types.CSS);
+      elsif GNAT.Regpat.Match (GIF_File, Named) >= Named'First then
+         Add_File (EWS.Types.GIF);
+      elsif GNAT.Regpat.Match (HTML_File, Named) >= Named'First then
+         Add_File (EWS.Types.HTML);
+      elsif GNAT.Regpat.Match (ICO_File, Named) >= Named'First then
+         Add_File (EWS.Types.ICO);
+      elsif GNAT.Regpat.Match (Java_File, Named) >= Named'First then
+         Add_File (EWS.Types.Octet_Stream);
+      elsif GNAT.Regpat.Match (JPEG_File, Named) >= Named'First then
+         Add_File (EWS.Types.JPEG);
+      elsif GNAT.Regpat.Match (JavaScript_File, Named) >= Named'First then
+         Add_File (EWS.Types.JavaScript);
+      elsif GNAT.Regpat.Match (PNG_File, Named) >= Named'First then
+         Add_File (EWS.Types.PNG);
+      elsif GNAT.Regpat.Match (XML_File, Named) >= Named'First then
+         Add_File (EWS.Types.XML);
+      elsif GNAT.Regpat.Match (XSL_File, Named) >= Named'First then
+         Add_File (EWS.Types.XSL);
       end if;
    end Save_File;
 
@@ -180,41 +200,42 @@ procedure EWS.Make_Htdocs is
    end Output;
 
    procedure Output_Contents (Of_File : String) is
-      File : Stream_IO.File_Type;
-      Line : Stream_Element_Array (1 .. 12);
-      Last : Stream_Element_Offset;
-   begin
-      Open (File, Mode => In_File, Name => Of_File);
-      Read (File, Line, Last);
-      if Last >= 1 then
-         --  we have something to output
-         Put_Line (" :=");
-         Put_Line ("     (");
+      procedure Output_Line;
+      File : Ada.Streams.Stream_IO.File_Type;
+      Line : Ada.Streams.Stream_Element_Array (1 .. 12);
+      Last : Ada.Streams.Stream_Element_Offset;
+      use type Ada.Streams.Stream_Element_Offset;
+      procedure Output_Line is
+         --  Output the bytes of Line (1 .. Last), comma-separated,
+         --  and with a trailing comma if there's more to come.
+      begin
          Put ("     ");
          for C in 1 .. Last - 1 loop
             Put (Line (C)'Img);
             Put (",");
          end loop;
          Put (Line (Last)'Img);
-         if not End_Of_File (File) then
+         if not Ada.Streams.Stream_IO.End_Of_File (File) then
             Put (",");
          end if;
          New_Line;
+      end Output_Line;
+   begin
+      Ada.Streams.Stream_IO.Open (File,
+                                  Mode => Ada.Streams.Stream_IO.In_File,
+                                  Name => Of_File);
+      Ada.Streams.Stream_IO.Read (File, Line, Last);
+      if Last >= 1 then
+         --  we have something to output
+         Put_Line (" :=");
+         Put_Line ("     (");
+         Output_Line;
          loop
-            exit when End_Of_File (File);
-            Read (File, Line, Last);
+            exit when Ada.Streams.Stream_IO.End_Of_File (File);
+            Ada.Streams.Stream_IO.Read (File, Line, Last);
             if Last >= 1 then
                --  we have something to output
-               Put ("     ");
-               for C in 1 .. Last - 1 loop
-                  Put (Line (C)'Img);
-                  Put (",");
-               end loop;
-               Put (Line (Last)'Img);
-               if not End_Of_File (File) then
-                  Put (",");
-               end if;
-               New_Line;
+               Output_Line;
             end if;
          end loop;
          Put_Line ("     );");
@@ -222,8 +243,37 @@ procedure EWS.Make_Htdocs is
          --  we need an empty array
          Put_Line (" := (0 => 0);");
       end if;
-      Close (File);
+      Ada.Streams.Stream_IO.Close (File);
    end Output_Contents;
+
+   package body Output_Management is
+
+      File : File_Type;
+
+      procedure Set_Standard_Output (To_File_Named : String)
+      is
+      begin
+         Open (File => File,
+               Mode => Out_File,
+               Name => To_File_Named);
+         Set_Output (File);
+      exception
+         when Name_Error =>
+            Create (File => File,
+                    Name => To_File_Named);
+            Set_Output (File);
+      end Set_Standard_Output;
+
+      procedure Reset_Standard_Output is
+      begin
+         Close (File);
+         Set_Output (Standard_Output);
+      end Reset_Standard_Output;
+
+   end Output_Management;
+
+   Starting_Dir : constant GNAT.Directory_Operations.Dir_Name_Str
+     := GNAT.Directory_Operations.Get_Current_Dir;
 
 begin
 
@@ -232,9 +282,10 @@ begin
          null;
       when 1 =>
          begin
-            Change_Dir (Ada.Command_Line.Argument (1));
+            GNAT.Directory_Operations.Change_Dir
+              (Ada.Command_Line.Argument (1));
          exception
-            when Directory_Error =>
+            when GNAT.Directory_Operations.Directory_Error =>
                Put_Line (Standard_Error,
                          "unable to open " & Ada.Command_Line.Argument (1));
                Ada.Command_Line.Set_Exit_Status
@@ -249,20 +300,29 @@ begin
          return;
    end case;
 
+   Output_Management.Set_Standard_Output (Starting_Dir & "ews_htdocs.ads");
+   Put_Line ("--  Generated by ews-make_htdocs");
+   Put_Line ("--  Source: " & GNAT.Directory_Operations.Get_Current_Dir);
+   Put_Line ("package EWS_Htdocs is");
+   Put_Line ("   pragma Elaborate_Body;");
+   Put_Line ("end EWS_Htdocs;");
+   Output_Management.Reset_Standard_Output;
+
+   Output_Management.Set_Standard_Output (Starting_Dir & "ews_htdocs.adb");
    Put_Line ("pragma Style_Checks (Off);");
    Put_Line ("--  Generated by ews-make_htdocs");
-   Put_Line ("--  Source: " & Get_Current_Dir);
+   Put_Line ("--  Source: " & GNAT.Directory_Operations.Get_Current_Dir);
    Put_Line ("with Ada.Streams; use Ada.Streams;");
+   Put_Line ("with EWS.Static; use EWS.Static;");
    Put_Line ("with EWS.Types; use EWS.Types;");
-   Put_Line ("package body EWS.Htdocs is");
+   Put_Line ("package body EWS_Htdocs is");
 
-   Scan_Directory (Get_Current_Dir);
-   Output (Get_Current_Dir);
+   Scan_Directory (GNAT.Directory_Operations.Get_Current_Dir);
+   Output (GNAT.Directory_Operations.Get_Current_Dir);
 
-   Put_Line ("   function Static_Urls return Url_Info_Array_P is");
-   Put_Line ("   begin");
-   Put_Line ("      return Documents'Access;");
-   Put_Line ("   end Static_Urls;");
-   Put_Line ("end EWS.Htdocs;");
+   Put_Line ("begin");
+   Put_Line ("   Register (Documents'Access);");
+   Put_Line ("end EWS_Htdocs;");
+   Output_Management.Reset_Standard_Output;
 
 end EWS.Make_Htdocs;

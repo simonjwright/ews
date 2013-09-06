@@ -19,9 +19,16 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
-with EWS.Htdocs;
-
 package body EWS.Static is
+
+
+   Pages : URL_Info_Array_P;
+
+   procedure Register (Pages : URL_Info_Array_P)
+   is
+   begin
+      Static.Pages := Register.Pages;
+   end Register;
 
 
    function Content_Type (This : Static_Response) return String
@@ -50,63 +57,70 @@ package body EWS.Static is
    function Find
      (For_Request : access HTTP.Request) return HTTP.Response'Class
    is
-      subtype Index is Natural range 0 .. Htdocs.Static_Urls'Last;
-      function Find (For_URL : String) return Index;
-      function Find (For_URL : String) return Index is
-      begin
-         for I in Htdocs.Static_Urls'Range loop
-            if Htdocs.Static_Urls (I).URL.all = For_URL then
-               return I;
-            end if;
-         end loop;
-         return 0;
-      end Find;
-      For_URL : constant HTTP.URL := HTTP.Get_URL (For_Request.all);
-      Location : Index;
    begin
-      if For_URL'Length = 0 or else For_URL (For_URL'Last) = '/' then
-         Location := Find (For_URL & "index.html");
-         if Location > 0 then
-            return Static_Response'
-              (HTTP.Response with
-               R => HTTP.Request_P (For_Request),
-               Form => Htdocs.Static_Urls (Location).Form,
-               Content => Htdocs.Static_Urls (Location).Doc);
-         end if;
-         Location := Find (For_URL & "index.htm");
-         if Location > 0 then
-            return Static_Response'
-              (HTTP.Response with
-               R => HTTP.Request_P (For_Request),
-               Form => Htdocs.Static_Urls (Location).Form,
-               Content => Htdocs.Static_Urls (Location).Doc);
-         end if;
-         Location := Find (For_URL & "default.html");
-         if Location > 0 then
-            return Static_Response'
-              (HTTP.Response with
-               R => HTTP.Request_P (For_Request),
-               Form => Htdocs.Static_Urls (Location).Form,
-               Content => Htdocs.Static_Urls (Location).Doc);
-         end if;
-         Location := Find (For_URL & "default.htm");
-         if Location > 0 then
-            return Static_Response'
-              (HTTP.Response with
-               R => HTTP.Request_P (For_Request),
-               Form => Htdocs.Static_Urls (Location).Form,
-               Content => Htdocs.Static_Urls (Location).Doc);
-         end if;
+      if Pages = null then
+         return HTTP.Not_Found (For_Request);
+      else
+         declare
+            subtype Index is Natural range 0 .. Pages'Last;
+            function Find (For_URL : String) return Index;
+            function Find (For_URL : String) return Index is
+            begin
+               for I in Pages'Range loop
+                  if Pages (I).URL.all = For_URL then
+                     return I;
+                  end if;
+               end loop;
+               return 0;
+            end Find;
+            For_URL : constant HTTP.URL := HTTP.Get_URL (For_Request.all);
+            Location : Index;
+         begin
+            if For_URL'Length = 0 or else For_URL (For_URL'Last) = '/' then
+               Location := Find (For_URL & "index.html");
+               if Location > 0 then
+                  return Static_Response'
+                    (HTTP.Response with
+                       R => HTTP.Request_P (For_Request),
+                     Form => Pages (Location).Form,
+                     Content => Pages (Location).Doc);
+               end if;
+               Location := Find (For_URL & "index.htm");
+               if Location > 0 then
+                  return Static_Response'
+                    (HTTP.Response with
+                       R => HTTP.Request_P (For_Request),
+                     Form => Pages (Location).Form,
+                     Content => Pages (Location).Doc);
+               end if;
+               Location := Find (For_URL & "default.html");
+               if Location > 0 then
+                  return Static_Response'
+                    (HTTP.Response with
+                       R => HTTP.Request_P (For_Request),
+                     Form => Pages (Location).Form,
+                     Content => Pages (Location).Doc);
+               end if;
+               Location := Find (For_URL & "default.htm");
+               if Location > 0 then
+                  return Static_Response'
+                    (HTTP.Response with
+                       R => HTTP.Request_P (For_Request),
+                     Form => Pages (Location).Form,
+                     Content => Pages (Location).Doc);
+               end if;
+            end if;
+            Location := Find (For_URL);
+            if Location > 0 then
+               return Static_Response'
+                 (HTTP.Response with
+                    R => HTTP.Request_P (For_Request),
+                  Form => Pages (Location).Form,
+                  Content => Pages (Location).Doc);
+            end if;
+            return HTTP.Not_Found (For_Request);
+         end;
       end if;
-      Location := Find (For_URL);
-      if Location > 0 then
-         return Static_Response'
-           (HTTP.Response with
-            R => HTTP.Request_P (For_Request),
-            Form => Htdocs.Static_Urls (Location).Form,
-            Content => Htdocs.Static_Urls (Location).Doc);
-      end if;
-      return HTTP.Not_Found (For_Request);
    end Find;
 
 
