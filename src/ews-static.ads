@@ -30,8 +30,20 @@ package EWS.Static is
    function Find
      (For_Request : access HTTP.Request) return HTTP.Response'Class;
 
-private
+   --  These are used by ews-make_htdocs to encode the pages.
+   type URL_Info is record
+      URL : Types.String_P;
+      Doc : Types.Stream_Element_Array_P;
+      Form : Types.Format;
+   end record;
+   type URL_Info_Array is array (Positive range <>) of URL_Info;
+   type URL_Info_Array_P is access constant URL_Info_Array;
 
+   --  This is called when the package that holds the encoded pages
+   --  is initialized.
+   procedure Register (Pages : URL_Info_Array_P);
+
+private
 
    type Static_Response (R : HTTP.Request_P)
    is new HTTP.Response (R) with record

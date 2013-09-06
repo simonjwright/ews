@@ -16,7 +16,7 @@
 all::
 	@echo "valid make targets are:"
 	@echo "   demo (ews-server-test)"
-	@echo "   ews-htdocs.adb"
+	@echo "   ews_htdocs"
 	@echo "   generator (ews-make_htdocs)"
 	@echo "   dist [SUBRELEASE=r (d=hg)]"
 
@@ -29,16 +29,16 @@ endif
 demo: ews-server-test${exe}
 generator: ews-make_htdocs${exe}
 
-ews-server-test${exe}: ews-htdocs.adb .build
+ews-server-test${exe}: ews_htdocs .build
 	gnatmake -PEWS -gnat95 ews-server-test
 clean::
 	rm -f ews-server-test${exe}
 
-ews-htdocs.adb: ews-make_htdocs${exe} force
+ews_htdocs: ews-make_htdocs${exe} force
 	cp HttpInteraction.js ../doc/
-	./ews-make_htdocs ../doc/ >$@
+	./ews-make_htdocs ../doc/
 clean::
-	rm -f ews-htdocs.adb ../doc/HttpInteraction.js
+	rm -f ews_htdocs.ad[bs] ../doc/HttpInteraction.js
 
 ews-make_htdocs${exe}: ews-make_htdocs.adb .build
 	gnatmake -PEWS -gnat95 ews-make_htdocs
@@ -68,7 +68,6 @@ EWS.gpr						\
 ews.ads						\
 ews-dynamic.adb					\
 ews-dynamic.ads					\
-ews-htdocs.ads					\
 ews-http.adb					\
 ews-http.ads					\
 ews-http-ews_attachments_friend.adb		\
@@ -111,4 +110,4 @@ ews-$(DATE).zip: ews-$(DATE)
 	-rm $@
 	zip -r $@ $</*
 
-.PHONY: force
+.PHONY: ews_htdocs force clean

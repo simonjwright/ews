@@ -23,6 +23,9 @@ with EWS.Types;
 with GNAT.Calendar.Time_IO;
 with GNAT.Command_Line;
 
+with EWS_Htdocs;
+pragma Unreferenced (EWS_Htdocs);
+
 procedure EWS.Server.Test is
 
    --  Dynamic page
