@@ -34,7 +34,8 @@ package body EWS.HTTP.EWS_Attachments_Friend is
                           Index : Positive := 1;
                           Item : out String_P;
                           First : out Positive;
-                          Last : out Natural) is
+                          Last : out Natural)
+   is
       CRLF2 : constant String := (ASCII.CR, ASCII.LF, ASCII.CR, ASCII.LF);
       use type Smart_Strings.Pointer;
    begin

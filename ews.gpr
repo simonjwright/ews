@@ -1,0 +1,92 @@
+--  Copyright (C) Simon Wright <simon@pushface.org>
+
+--  This package is free software; you can redistribute it and/or
+--  modify it under terms of the GNU General Public License as
+--  published by the Free Software Foundation; either version 2, or
+--  (at your option) any later version. This package is distributed in
+--  the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+--  even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+--  PARTICULAR PURPOSE. See the GNU General Public License for more
+--  details. You should have received a copy of the GNU General Public
+--  License distributed with this package; see file COPYING.  If not,
+--  write to the Free Software Foundation, 59 Temple Place - Suite
+--  330, Boston, MA 02111-1307, USA.
+
+with "xmlada";
+
+project EWS is
+
+   Source_Units :=
+     (
+      "EWS.Dynamic",
+      "EWS.HTTP.EWS_Attachments_Friend",
+      "EWS.HTTP",
+      "EWS.Reference_Counted_Pointers_G",
+      "EWS.Server",
+      "EWS.Static",
+      "EWS.Types",
+      "EWS",
+      "Input_Sources.EWS_Attachments"
+     );
+
+   Sources :=
+     (
+      "ews-dynamic.adb",
+      "ews-dynamic.ads",
+      "ews-http-ews_attachments_friend.adb",
+      "ews-http-ews_attachments_friend.ads",
+      "ews-http.adb",
+      "ews-http.ads",
+      "ews-reference_counted_pointers_g.adb",
+      "ews-reference_counted_pointers_g.ads",
+      "ews-server.adb",
+      "ews-server.ads",
+      "ews-static.adb",
+      "ews-static.ads",
+      "ews-types.adb",
+      "ews-types.ads",
+      "ews.ads",
+      "input_sources-ews_attachments.adb",
+      "input_sources-ews_attachments.ads"
+     );
+
+   type Library_T is ("static", "relocatable");
+   Library_Type : Library_T := external ("LIBRARY_TYPE", "static");
+
+   for Library_Name use "ews";
+   for Library_Kind use Library_Type;
+   for Library_Dir use "./lib-" & Library_Type;
+   case Library_Type is
+      when "relocatable" =>
+         for Library_Src_Dir use "./include";
+         for Library_Interface use Source_Units;
+      when "static" =>
+         --  Neither gnatmake nor gprbuild handles this case
+         --  properly. Rely on the relocatable build to copy the
+         --  required interface units to ./include.
+         null;
+   end case;
+   for Library_Options use external_as_list ("LDFLAGS", " ");
+
+   for Languages use ("ada");
+
+   for Source_Dirs use ("src");
+   for Source_Files use Sources;
+
+   for Object_Dir use ".build-" & Library_Type;
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        (
+         "-g",            --  for debug symbols
+         "-O2",           --  standard optimisation
+         "-fstack-check", --  ARM semantics
+         "-gnat12",       --  Ada2012
+         "-gnatqQ",       --  to keep ALI files even if compilation fails
+         "-gnatafo",      --  assertions, full reports, integer overflow
+         "-gnaty",        --  standard style checks
+         "-gnatwaL"       --  all standard warnings except for elaboration
+        );
+   end Compiler;
+
+end EWS;

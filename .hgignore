@@ -1,15 +1,18 @@
 syntax: glob
 
+.build-*
+bin
+include
+lib-relocatable
+lib-static
+
+ews-[0-9]*
+
 *~
 *.ali
 *.exe
 *.o
 *.orig
+*-stamp
+
 doc/HttpInteraction.js
-src/.build/
-src/dist/
-src/ews-[0-9]*/
-src/ews-htdocs.adb
-src/ews-make_htdocs
-src/ews_pages
-src/ews-server-test

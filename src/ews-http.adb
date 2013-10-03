@@ -92,8 +92,8 @@ package body EWS.HTTP is
 
    function To_String
      (In_String : String;
-      From      : GNAT.Regpat.Match_Location) return String;
-   pragma Inline (To_String);
+      From      : GNAT.Regpat.Match_Location) return String
+     with Inline;
 
    function Unescape (S : String) return String;
 
@@ -305,7 +305,7 @@ package body EWS.HTTP is
             Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
             declare
                Whole_Part : String
-                 renames SS.Value (From.Content)(Part_Start .. Part_Finish);
+                 renames SS.Value (From.Content) (Part_Start .. Part_Finish);
                Finish : constant Natural :=
                  HTTP.Index (Whole_Part, CRLF & CRLF);
                Headers : String
@@ -350,7 +350,7 @@ package body EWS.HTTP is
             Locate_Whole_Body_Part (From, Index, Part_Start, Part_Finish);
             declare
                Whole_Part : String
-                 renames SS.Value (From.Content)(Part_Start .. Part_Finish);
+                 renames SS.Value (From.Content) (Part_Start .. Part_Finish);
                Start : constant Natural :=
                  HTTP.Index (Whole_Part, CRLF & CRLF);
             begin
@@ -860,8 +860,7 @@ package body EWS.HTTP is
       Free_Stream (S);
 
       declare
-         Result : String (1 .. Natural (Last));
-         pragma Import (Ada, Result);
+         Result : String (1 .. Natural (Last)) with Import, Convention => Ada;
          for Result'Address use Tmp'Address;
       begin
          return Result;
