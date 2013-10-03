@@ -19,25 +19,24 @@
 --  exception does not however invalidate any other reasons why the
 --  executable file might be covered by the GNU Public License.
 
-with Ada.Finalization;
 with Ada.Streams;
-with BC.Support.Smart_Pointers;
 with EWS.HTTP;
 with EWS.Types;
 
-package EWS.Dynamic is
+private with Ada.Finalization;
+private with EWS.Reference_Counted_Pointers_G;
 
-   pragma Elaborate_Body;
+package EWS.Dynamic with Elaborate_Body is
 
    function Find
      (For_Request : access HTTP.Request) return HTTP.Response'Class;
 
    type Dynamic_Response (R : HTTP.Request_P)
-      is new HTTP.Response with private;
+   is new HTTP.Response with private;
 
    type Creator
-      is access function (From_Request : HTTP.Request_P)
-                         return Dynamic_Response'Class;
+   is access function (From_Request : HTTP.Request_P)
+                      return Dynamic_Response'Class;
 
    --  The server will call the given Creator when the given URL is
    --  requested.
@@ -92,7 +91,7 @@ private
 
    type Unbounded_String_P is access Unbounded_String;
 
-   package Unbounded_String_Pointers is new BC.Support.Smart_Pointers
+   package Unbounded_String_Pointers is new Reference_Counted_Pointers_G
      (Unbounded_String, Unbounded_String_P);
 
    type Dynamic_Response (R : HTTP.Request_P)

@@ -22,8 +22,10 @@
 --  This package provides an Input_Source which can be used by XMLAda
 --  to populate a DOM from an XML section of an EWS.HTTP Attachment.
 
-with EWS.HTTP.EWS_Attachments_Friend;
+with EWS.HTTP;
 with Unicode;
+
+private with EWS.HTTP.EWS_Attachments_Friend;
 
 package Input_Sources.EWS_Attachments is
 

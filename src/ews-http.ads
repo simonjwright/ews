@@ -20,12 +20,13 @@
 --  executable file might be covered by the GNU Public License.
 
 with Ada.Exceptions;
-with Ada.Finalization;
 with Ada.IO_Exceptions;
 with Ada.Streams;
-with Ada.Strings.Maps;
-with BC.Support.Smart_Pointers;
 with GNAT.Sockets;
+
+private with Ada.Finalization;
+private with Ada.Strings.Maps;
+private with EWS.Reference_Counted_Pointers_G;
 
 package EWS.HTTP is
 
@@ -219,7 +220,7 @@ private
    --  head and content.
    type String_P is access String;
    package Smart_Strings
-   is new BC.Support.Smart_Pointers (String, String_P);
+   is new Reference_Counted_Pointers_G (String, String_P);
 
    --  A Request isn't actually limited.
    type Request is record

@@ -22,9 +22,7 @@
 with GNAT.Sockets;
 with System;
 
-package EWS.Server is
-
-   pragma Elaborate_Body;
+package EWS.Server with Elaborate_Body is
 
    type Error_Level is (Trace, Info, Error);
 

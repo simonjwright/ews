@@ -1,70 +1,21 @@
 #  Copyright (C) Simon Wright <simon@pushface.org>
 
-#  This package is free software; you can redistribute it and/or
-#  modify it under terms of the GNU General Public License as
-#  published by the Free Software Foundation; either version 2, or
-#  (at your option) any later version. This package is distributed in
-#  the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-#  even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-#  PARTICULAR PURPOSE. See the GNU General Public License for more
-#  details. You should have received a copy of the GNU General Public
-#  License distributed with this package; see file COPYING.  If not,
-#  write to the Free Software Foundation, 59 Temple Place - Suite
-#  330, Boston, MA 02111-1307, USA.
+# EWS is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3, or (at your option) any later
+# version.  It is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-# No default.
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING3.  If not, see
+# <http://www.gnu.org/licenses/>.
+
+# Makefile for EWS source.
+
 all::
-	@echo "valid make targets are:"
-	@echo "   demo (ews-server-test)"
-	@echo "   ews_htdocs"
-	@echo "   generator (ews-make_htdocs)"
-	@echo "   dist [SUBRELEASE=r (d=hg)]"
-
-ifneq (, $(findstring CYGWIN, $(sys)))
-  EXE = .exe
-else
-  EXE =
-endif
-
-demo: ews-server-test${exe}
-generator: ews-make_htdocs${exe}
-
-ews-server-test${exe}: ews_htdocs .build
-	gnatmake -PEWS -gnat95 ews-server-test
-clean::
-	rm -f ews-server-test${exe}
-
-ews_htdocs: ews-make_htdocs${exe} force
-	cp HttpInteraction.js ../doc/
-	./ews-make_htdocs ../doc/
-clean::
-	rm -f ews_htdocs.ad[bs] ../doc/HttpInteraction.js
-
-ews-make_htdocs${exe}: ews-make_htdocs.adb .build
-	gnatmake -PEWS -gnat95 ews-make_htdocs
-clean::
-	rm -f ews-make_htdocs${exe}
-
-.build:
-	mkdir .build
-clean::
-	rm -rf .build
-
-############################
-# Distribution construction
-
-# Create the current date, in the form yyyymmdd. This works fine in Linux.
-SUBRELEASE ?= hg
-DATE = $(shell date +%Y%m%d)$(SUBRELEASE)
-
-DOCS =						\
-../doc/index.html				\
-../doc/ajax.html				\
-../doc/ajax.js					\
-../doc/favicon.ico
 
 SRC =						\
-EWS.gpr						\
 ews.ads						\
 ews-dynamic.adb					\
 ews-dynamic.ads					\
@@ -75,7 +26,6 @@ ews-http-ews_attachments_friend.ads		\
 ews-make_htdocs.adb				\
 ews-server.adb					\
 ews-server.ads					\
-ews-server-test.adb				\
 ews-static.adb					\
 ews-static.ads					\
 ews-types.adb					\
@@ -84,30 +34,7 @@ input_sources-ews_attachments.adb		\
 input_sources-ews_attachments.ads		\
 HttpInteraction.js
 
-DISTRIBUTION_FILES =				\
-ews-$(DATE).tgz					\
-ews-$(DATE).zip
-
-dist: ews-$(DATE) $(DISTRIBUTION_FILES) COPYING $(DOCS)
-	-@rm -rf dist
-	mkdir -p dist/download
-	cp -p COPYING $(DOCS) dist/
-	cp $(DISTRIBUTION_FILES) dist/download/
-
-ews-$(DATE): $(DOCS) $(SRC) Makefile-dist force
-	-rm -rf $@
-	mkdir -p $@
-	cp -p $(SRC) $@/
-	cp -p Makefile-dist $@/Makefile
-	mkdir $@/html
-	cp -p $(DOCS) $@/html/
-
-ews-$(DATE).tgz: ews-$(DATE)
-	-rm $@
-	tar zcvf $@ $</
-
-ews-$(DATE).zip: ews-$(DATE)
-	-rm $@
-	zip -r $@ $</*
-
-.PHONY: ews_htdocs force clean
+dist:
+	mkdir $(DIST)/src
+	cp $(SRC) $(DIST)/src/
+.PHONY: dist

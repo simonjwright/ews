@@ -81,7 +81,7 @@ package body EWS.Static is
                if Location > 0 then
                   return Static_Response'
                     (HTTP.Response with
-                       R => HTTP.Request_P (For_Request),
+                     R => HTTP.Request_P (For_Request),
                      Form => Pages (Location).Form,
                      Content => Pages (Location).Doc);
                end if;
@@ -89,7 +89,7 @@ package body EWS.Static is
                if Location > 0 then
                   return Static_Response'
                     (HTTP.Response with
-                       R => HTTP.Request_P (For_Request),
+                     R => HTTP.Request_P (For_Request),
                      Form => Pages (Location).Form,
                      Content => Pages (Location).Doc);
                end if;
@@ -97,7 +97,7 @@ package body EWS.Static is
                if Location > 0 then
                   return Static_Response'
                     (HTTP.Response with
-                       R => HTTP.Request_P (For_Request),
+                     R => HTTP.Request_P (For_Request),
                      Form => Pages (Location).Form,
                      Content => Pages (Location).Doc);
                end if;
@@ -105,7 +105,7 @@ package body EWS.Static is
                if Location > 0 then
                   return Static_Response'
                     (HTTP.Response with
-                       R => HTTP.Request_P (For_Request),
+                     R => HTTP.Request_P (For_Request),
                      Form => Pages (Location).Form,
                      Content => Pages (Location).Doc);
                end if;
@@ -114,7 +114,7 @@ package body EWS.Static is
             if Location > 0 then
                return Static_Response'
                  (HTTP.Response with
-                    R => HTTP.Request_P (For_Request),
+                  R => HTTP.Request_P (For_Request),
                   Form => Pages (Location).Form,
                   Content => Pages (Location).Doc);
             end if;

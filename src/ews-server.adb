@@ -360,7 +360,7 @@ package body EWS.Server is
               & GNAT.Sockets.Image (Skt)
               & " from "
               & GNAT.Sockets.Image (GNAT.Sockets.Get_Peer_Name (Skt)),
-           Trace);
+            Trace);
       end if;
    exception
       --  Only seen on Mandrake 10 on browser close. Leave it to
