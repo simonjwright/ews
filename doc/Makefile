@@ -13,22 +13,49 @@
 
 # Makefile for EWS documentation.
 
+NUWEB ?= ~/nuweb.py/nuweb.py
+PDFLATEX ?= pdflatex
+
 all::
 
-DOCS =						\
-../doc/index.html				\
-../doc/ajax.html				\
-../doc/ajax.js					\
-../doc/favicon.ico
+NUWEB_GENERATED = ews.pdf ews_demo.gpr ews_demo.adb ajax.html ajax.js
+
+EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
+
+$(EWS_GENERATED): index.html ajax.html ajax.js HttpInteraction.js favicon.ico
+	../bin/ews-make_htdocs
+
+HttpInteraction.js: ../lib/HttpInteraction.js
+	cp $< $@
+
+favicon.ico: ../lib/favicon.ico
+	cp $< $@
+
+# We have to do this twice to get cross-references correct.
+$(NUWEB_GENERATED): ews.w
+	$(NUWEB) -r ews
+	$(PDFLATEX) ews
+	$(NUWEB) -r ews
+	$(PDFLATEX) ews
+
+ews_demo: ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
+	gnatmake -p -P ews_demo
 
 dist:
 	mkdir $(DIST)/doc
-	cp $(DOCS) $(DIST)/doc/
+	cp $(FILES) $(DIST)/doc/
 .PHONY: dist
 
 USER = simonjwright
 PRJ = embed-web-srvr
 FILES = index.html
 
-upload: $(FILES)
-	rsync -av $(FILES) $(USER),$(PRJ)@web.sourceforge.net:htdocs/
+upload: index.html ews.pdf
+	rsync -av $< $(USER),$(PRJ)@web.sourceforge.net:htdocs/
+.PHONY: upload
+
+clean:
+	-rm -rf .build
+	-rm ews.{aux,lof,log,out,pdf,tex,toc}
+	-rm ews_demo* ews_htdocs.*
+.PHONY: clean

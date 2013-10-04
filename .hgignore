@@ -1,13 +1,6 @@
 syntax: glob
 
-.build-*
-bin
-include
-lib-relocatable
-lib-static
-
-ews-[0-9]*
-
+# general
 *~
 *.ali
 *.exe
@@ -15,4 +8,27 @@ ews-[0-9]*
 *.orig
 *-stamp
 
+# Ada build stuff
+.build*
+bin
+include
+lib-relocatable
+lib-static
+
+# distributions
+ews-[0-9]*
+
+# doc/
+doc/*.aux
+doc/*.lof
+doc/*.log
+doc/*.out
+doc/*.tex
+doc/*.toc
 doc/HttpInteraction.js
+doc/favicon.ico
+doc/ews.pdf
+doc/ajax.html
+doc/ajax.js
+doc/ews_demo*
+doc/ews_htdocs.*
