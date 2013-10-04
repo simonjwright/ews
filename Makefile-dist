@@ -1,3 +1,5 @@
+# -*- Makefile -*-
+
 # Copyright Simon Wright <simon@pushface.org>
 
 # This file is part ofthe embedded web server EWS, hosted at Sourceforge
@@ -102,26 +104,6 @@ clean:
 
 # Distribution.
 
-# Create the current date, in the form yyyymmdd.
-RELEASE ?= $(shell date +%Y%m%d)
-
-# Files to copy to the distribution (Makefile-dist done specially)
-FILES = COPYING3 COPYING.RUNTIME README ews.gpr make_htdocs.gpr
-
-# Distribution directory - eg ews-20130705
-DISTDIR = ews-$(RELEASE)
-
-dist: $(DISTDIR).tar.gz
+dist:
+	$(error Can only build distribution from an Hg checkout.)
 .PHONY: dist
-
-$(DISTDIR).tar.gz: $(DISTDIR)
-	tar zcvf $@ $<
-
-$(DISTDIR):
-	-rm -rf $@
-	mkdir $@
-	cp $(FILES) $@/
-	cp Makefile-dist $@/Makefile
-	for s in $(SUBDIRS); do \
-	  $(MAKE) DIST=$(PWD)/$@ -C $$s dist; \
-	done
