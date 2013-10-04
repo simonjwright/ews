@@ -13,10 +13,16 @@
 
 # Makefile for EWS documentation.
 
+all::
+
 NUWEB ?= ~/nuweb.py/nuweb.py
 PDFLATEX ?= pdflatex
+ifneq (,$(findstring mingw,$(shell gcc -dumpmachine)))
+  EXE = .exe
+endif
 
-all::
+demo: ews_demo$(EXE)
+.PHONY: demo
 
 NUWEB_GENERATED = ews.pdf ews_demo.gpr ews_demo.adb ajax.html ajax.js
 
@@ -38,20 +44,22 @@ $(NUWEB_GENERATED): ews.w
 	$(NUWEB) -r ews
 	$(PDFLATEX) ews
 
-ews_demo: ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
+ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
 	gnatmake -p -P ews_demo
 
-dist:
+dist:: index.html $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
 	mkdir $(DIST)/doc
-	cp $(FILES) $(DIST)/doc/
+	cp $^ $(DIST)/doc/
+dist:: Makefile-dist
+	[ -d $(DIST)/doc ] || mkdir $(DIST)/doc
+	cp $< $(DIST)/doc/Makefile
 .PHONY: dist
 
 USER = simonjwright
 PRJ = embed-web-srvr
-FILES = index.html
 
 upload: index.html ews.pdf
-	rsync -av $< $(USER),$(PRJ)@web.sourceforge.net:htdocs/
+	rsync -av $^ $(USER),$(PRJ)@web.sourceforge.net:htdocs/
 .PHONY: upload
 
 clean:

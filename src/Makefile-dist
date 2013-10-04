@@ -1,57 +1,25 @@
-#  -*- Makefile -*-
+# -*- Makefile -*-
 
 #  Copyright (C) Simon Wright <simon@pushface.org>
 
-#  This package is free software; you can redistribute it and/or
-#  modify it under terms of the GNU General Public License as
-#  published by the Free Software Foundation; either version 2, or
-#  (at your option) any later version. This package is distributed in
-#  the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-#  even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-#  PARTICULAR PURPOSE. See the GNU General Public License for more
-#  details. You should have received a copy of the GNU General Public
-#  License distributed with this package; see file COPYING.  If not,
-#  write to the Free Software Foundation, 59 Temple Place - Suite
-#  330, Boston, MA 02111-1307, USA.
+# EWS is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 3, or (at your option) any later
+# version.  It is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-# This is just a simple make file to build the demo and tools.
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING3.  If not, see
+# <http://www.gnu.org/licenses/>.
 
-# No default.
+# Makefile for EWS source.
+
 all::
-	@echo "valid make targets are:"
-	@echo "   demo (ews-server-test)"
-	@echo "   ews-htdocs.adb"
-	@echo "   generator (ews-make_htdocs)"
+.PHONY: all
 
-ifneq (, $(findstring CYGWIN, $(sys)))
-  EXE = .exe
-else
-  EXE =
-endif
+demo:
+.PHONY: demo
 
-demo: ews-server-test${exe}
-generator: ews-make_htdocs${exe}
-
-ews-server-test${exe}: ews-htdocs.adb .build force
-	gnatmake -PEWS ews-server-test
-clean::
-	rm -f ews-server-test${exe}
-
-ews-htdocs.adb: ews-make_htdocs${exe} force
-	cp HttpInteraction.js html/
-	./ews-make_htdocs html/ >$@
-clean::
-	rm -f html/HttpInteraction.js
-
-ews-make_htdocs${exe}: ews-make_htdocs.adb .build force
-	gnatmake -PEWS ews-make_htdocs
-clean::
-	rm -f ews-make_htdocs${exe}
-
-.build:
-	mkdir .build
-clean::
-	rm -rf .build
-
-.PHONY: all clean demo force
-
+dist:
+.PHONY: dist

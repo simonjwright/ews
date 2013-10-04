@@ -1,3 +1,5 @@
+# -*- Makefile -*-
+
 #  Copyright (C) Simon Wright <simon@pushface.org>
 
 # EWS is free software; you can redistribute it and/or modify it under
@@ -11,36 +13,30 @@
 # along with this program; see the file COPYING3.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-# Makefile for EWS source.
+# Makefile for EWS demonstration.
 
 all::
 .PHONY: all
 
-demo:
+ifneq (,$(findstring mingw,$(shell gcc -dumpmachine)))
+  EXE = .exe
+endif
+
+demo: ews_demo$(EXE)
 .PHONY: demo
 
-SRC =						\
-ews.ads						\
-ews-dynamic.adb					\
-ews-dynamic.ads					\
-ews-http.adb					\
-ews-http.ads					\
-ews-http-ews_attachments_friend.adb		\
-ews-http-ews_attachments_friend.ads		\
-ews-reference_counted_pointers_g.adb		\
-ews-reference_counted_pointers_g.ads		\
-ews-make_htdocs.adb				\
-ews-server.adb					\
-ews-server.ads					\
-ews-static.adb					\
-ews-static.ads					\
-ews-types.adb					\
-ews-types.ads					\
-input_sources-ews_attachments.adb		\
-input_sources-ews_attachments.ads
+EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
+
+$(EWS_GENERATED): index.html ajax.html ajax.js HttpInteraction.js favicon.ico
+	../bin/ews-make_htdocs
+
+ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
+	gnatmake -p -P ews_demo
 
 dist:
-	mkdir $(DIST)/src
-	cp $(SRC) $(DIST)/src/
-	cp Makefile-dist $(DIST)/src/Makefile
 .PHONY: dist
+
+clean:
+	-rm -rf .build
+	-rm ews_demo$(EXE) ews_htdocs.*
+.PHONY: clean
