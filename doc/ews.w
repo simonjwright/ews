@@ -963,7 +963,7 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 <hr>
 
 <p>If you're seeing this page via the demonstration
-(<tt>ews-server-test</tt>), you can view a page with <a
+(<tt>ews_demo</tt>), you can view a page with <a
 href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
 content <a href="ajax.html">here</a>.
 
