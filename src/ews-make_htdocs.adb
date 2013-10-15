@@ -78,6 +78,8 @@ procedure EWS.Make_Htdocs is
      := GNAT.Regpat.Compile ("\.js$");
    Java_File : constant GNAT.Regpat.Pattern_Matcher
      := GNAT.Regpat.Compile ("\.(class|jar)$");
+   PDF_File : constant GNAT.Regpat.Pattern_Matcher
+     := GNAT.Regpat.Compile ("\.pdf$");
    PNG_File : constant GNAT.Regpat.Pattern_Matcher
      := GNAT.Regpat.Compile ("\.png$");
    XML_File : constant GNAT.Regpat.Pattern_Matcher
@@ -128,6 +130,8 @@ procedure EWS.Make_Htdocs is
          Add_File (EWS.Types.JPEG);
       elsif GNAT.Regpat.Match (JavaScript_File, Named) >= Named'First then
          Add_File (EWS.Types.JavaScript);
+      elsif GNAT.Regpat.Match (PDF_File, Named) >= Named'First then
+         Add_File (EWS.Types.PDF);
       elsif GNAT.Regpat.Match (PNG_File, Named) >= Named'First then
          Add_File (EWS.Types.PNG);
       elsif GNAT.Regpat.Match (XML_File, Named) >= Named'First then
