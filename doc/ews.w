@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{2.x.13}
+\date{15.x.13}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -178,7 +178,9 @@ using the HTML `select' and `options'.
 
 \section{Displaying the current time}
 
-The HTML displays the current time in a span with id \verb|timeDisplay|.
+The HTML displays the current time in a span with id
+\verb|timeDisplay| inside a two-column table data cell.
+
 @d Display the current time: HTML @{@%
 <td colspan="2">
   Displaying the current date/time
@@ -217,7 +219,10 @@ function AJAX_Time
 @|AJAX_Time@}
 
 The function is registered with the server, to be called to respond to
-the URL \verb|ajaxTime|.
+the URL \verb|ajaxTime|. We need to use GNAT's implementation-defined
+attribute \verb|'Unrestricted_Access| because \verb|AJAX_Time| isn't
+declared at library level; this is unlikely to be a problem in a real
+program.
 
 @d Register dynamic pages: Ada @{@%
 Dynamic.Register (AJAX_Time'Unrestricted_Access, "/ajaxTime");
@@ -230,6 +235,9 @@ required.
 type Date_Format is (ISO, US, European, Locale);
 Current_Date_Format : Date_Format := ISO;
 @|Date_Format Current_Date_Format@}
+
+The implementation of \verb|AJAX_Time| returns the current date/time
+as plain text in the format selected in \verb|Current_Date_Format|.
 
 @D Bodies of dynamic pages: Ada @{@%
 function AJAX_Time
@@ -256,6 +264,13 @@ end AJAX_Time;
 
 \section{Changing the time display format}
 
+The choice of time format is implemented in HTML in a table data cell
+containing a form \verb|fTimeFormat| containing a drop-down list, with
+the value associated with each option being that of the corresponding
+value of the Ada \verb|Date_Format| (this makes it easy for the Ada
+code to determine which value has been sent, using
+\verb|Date_Format'Value|).
+
 @d Change the time display format: HTML @{@%
 <td>
   Using select/options
@@ -274,7 +289,8 @@ end AJAX_Time;
 
 The form \verb|fTimeFormat| nominally \verb|POST|s the request, but
 this is overridden using \verb|postChange|. The selected option is
-sent as a query in the form \verb|format=iso|, \verb|format=us| etc.
+sent as a query in the form \verb|timeformat=iso|,
+\verb|timeFormat=us| etc.
 
 @d Set up to send time format: JavaScript @{@%
 document.fTimeFormat.format.onchange = function () {
@@ -282,15 +298,15 @@ document.fTimeFormat.format.onchange = function () {
        i < o.length;
        i++) {
     if (o[i].selected) {
-      postChange.start("format=" +  o[i].value);
+      postChange.start("timeFormat=" +  o[i].value);
       break;
     }
   }
 };
 @|@}
 
-In \verb|aChange|, check whether it has been called to change the time
-format; a query \verb|foo=bar| can be retrieved from the
+In \verb|AJAX_Change|, check whether it has been called to change the
+time format; a query \verb|foo=bar| can be retrieved from the
 \verb|Request| as the property \verb|"foo"| with value \verb|"bar"|
 (if the property isn't present in the request, the empty string is
 returned).
@@ -298,10 +314,10 @@ returned).
 @d Checks for changed properties: Ada @{@%
 declare
    Property : constant String
-     := EWS.HTTP.Get_Property ("format", From_Request.all);
+     := EWS.HTTP.Get_Property ("timeFormat", From_Request.all);
 begin
    if Property /= "" then
-      Put_Line ("saw format=" & Property);
+      Put_Line ("saw timeFormat=" & Property);
       Current_Date_Format := Date_Format'Value (Property);
    end if;
 end;
@@ -322,7 +338,7 @@ field which changes, and only one can be \verb|true| at a time.
 
 Figure \ref{fig:radio-buttons} shows the part of the example that
 relates to radio buttons. There are two lights, Forward and Aft, each
-of which can show Red or Blue.
+of which can show Red or Blue. The HTML is implemented in a form with
 
 @D Radio buttons: HTML @{@%
 <tr>
@@ -368,13 +384,15 @@ of which can show Red or Blue.
     </form>
   </td>
 </tr>
-@|@}
+@|lights forward-light aft-light@}
 
 The radio button scripts have to be set up when the page is loaded.
 
 @d Set up the radio buttons: JavaScript @{@%
-setUpRadioButtons(document.lights.forward, "forward-light");
-setUpRadioButtons(document.lights.aft, "aft-light");
+@< "Set up radio buttons" utility: JavaScript @%
+    @( document.lights.forward @, "forward-light" @) @>
+@< "Set up radio buttons" utility: JavaScript @%
+    @( document.lights.aft @, "aft-light" @) @>
 @|@}
 
 The Ada code which receives the \verb|forward-| and
@@ -407,9 +425,11 @@ begin
 end;
 @|@}
 
-The current light state is retrieved every second via a
-\verb|CyclicHttpInteraction| to the URL \verb|lightState.xml|. The
-response is expected to be XML:
+Because the server can be accessed by more than one web client, and
+all the other clients need to show changes, the current light state is
+retrieved every second via a \verb|CyclicHttpInteraction| to the URL
+\verb|lightState.xml|. The response is expected to be XML:
+
 \begin{verbatim}
 <lights>
   <forward-light>lmp</forward-light>
@@ -521,16 +541,19 @@ separately switched.
     </form>
   </td>
 </tr>
-@|@}
-
-These checkboxes are accessed via their index:
-\verb|document.lamps.lamp[0]| is the first. It would be better to use
-a name (here, the \verb|value| property).
+@|lamps lamp@}
 
 The \verb|onclick| action is a function whose source is, for example,
+
 \begin{verbatim}
 postChange.start('lamp=0&value=port&checked='+document.lamps.lamp[0].checked);
 \end{verbatim}
+
+Note that this sends the clicked checkbox's index
+(\verb|document.lamps.lamp[0]| is the first) as well as the
+\verb|value| (corresponding to the internal name of the box); the
+receiving Ada code presently uses the index, though it would obviously
+be better to use the value.
 
 @d Set up the checkboxes: JavaScript @{@%
 for (var c = document.lamps.lamp, i = 0; i < c.length; i++) {
@@ -572,6 +595,10 @@ end;
 
 \chapter{File upload}
 
+Figure \ref{fig:file-upload} shows the file upload dialog. Figure
+\ref{fig:upload-done} shows the alert box displayed when the upload is
+complete.
+
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.5\columnwidth]{file-upload.png}
@@ -585,6 +612,22 @@ end;
 \caption{Upload completed}
 \label{fig:upload-done}
 \end{figure}
+
+The file upload dialog is in a form, in a table cell. The form
+contains two elements: a file selector (\verb|datafile|) and a submit
+button.
+
+When the form is submitted, the content of the selected file is sent
+as a multipart attachment to the URL \verb|/fileInput| (the form's
+\verb|action|).
+
+The other components of this example program used explicit JavaScript
+methods to send the data to the server. In the case of a file upload,
+the protocol is complex enough that it's best left to the
+browser. When the browser has submitted the request, it expects to get
+a new page in response; we don't want that, so we use the form's
+\verb|target| attribute to direct the response to an invisible frame
+\verb|iFrame| so that the current page remains displayed.
 
 @d File upload: HTML @{@%
 <tr>
@@ -604,20 +647,13 @@ end;
 </tr>
 @|@}
 
-@d File upload: HTML: target iFrame @{@%
+@d File upload's target iFrame: HTML @{@%
 <iframe name="iFrame" id="iFrame" src="about:blank" width="0" height="0">
 </iframe>
 @|iFrame@}
 
-@d Set up file upload: JavaScript @{@%
-document.fileInput.send.onclick = function () {
-  if (document.fileInput.datafile.value) {
-    document.fileInput.submit();
-  } else {
-    return 0;
-  }
-};
-@|@}
+The Ada code which receives the \verb|fileInput| request is in the
+function \verb|File_Input|.
 
 @d Specs of dynamic pages: Ada @{@%
 function File_Input
@@ -630,37 +666,37 @@ the URL \verb|fileInput|.
 
 @d Register dynamic pages: Ada @{@%
 Dynamic.Register (File_Input'Unrestricted_Access, "/fileInput");
-@|ajaxTime@}
+@|fileInput@}
 
-@d Specs of dynamic pages: Ada @{@%
-function Upload_Result
-  (For_Request : HTTP.Request_P;
-   Message : String)
-  return Dynamic.Dynamic_Response'Class;
-@|Upload_Result@}
+The response generated is a page containing an alert box
+(\ref{fig:upload-done}), which is displayed even though the
+\verb|iFrame| swallows the HTML content.
 
 @D Bodies of dynamic pages: Ada @{@%
 function File_Input
   (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class is
+   @< \verb|Upload_Result|, calculates file input result: Ada @>
    C : HTTP.Cursor;
-   N : Natural := 0;
+   Lines : Natural := 0;
    Line : String (1 .. 1024);
    Last : Natural;
    Attachments : constant HTTP.Attachments
      := HTTP.Get_Attachments (From_Request.all);
 begin
+   Put_Line ("saw fileInput with attachment length"
+             & HTTP.Get_Content (Attachments)'Length'Img);
    if HTTP.Get_Content (Attachments)'Length /= 0 then
       begin
          HTTP.Open (C, Attachments);
          while not HTTP.End_Of_File (C) loop
-            N := N + 1;
-            Put (N'Img & ": ");
+            Lines := Lines + 1;
+            Put (Lines'Img & ": ");
             HTTP.Get_Line (C, Line, Last);
             Put_Line (Line (1 .. Last));
          end loop;
          HTTP.Close (C);
          return Upload_Result
-           (From_Request, "Upload complete," & N'Img & " lines.");
+           ("Upload complete," & Lines'Img & " lines.");
       exception
          when E : others =>
             begin
@@ -669,8 +705,7 @@ begin
                when others => null;
             end;
             return Upload_Result
-              (From_Request,
-               "Upload failed: " & Ada.Exceptions.Exception_Message (E));
+              ("Upload failed: " & Ada.Exceptions.Exception_Message (E));
       end;
    else
       declare
@@ -684,12 +719,19 @@ begin
 end File_Input;
 @|File_Input@}
 
-@d Bodies of dynamic pages: Ada @{@%
-function Upload_Result
-  (For_Request : HTTP.Request_P;
-   Message : String)
+@d \verb|Upload_Result|, calculates file input result: Ada @{@%
+function Upload_Result (Message : String)
+  return Dynamic.Dynamic_Response'Class;
+@|Upload_Result@}
+
+If the \verb|Message| to be returned contains multiple lines, they
+have to be translated to the \verb|\n| that the JavaScript
+\verb|alert()| function expects.
+
+@d \verb|Upload_Result|, calculates file input result: Ada @{@%
+function Upload_Result (Message : String)
   return Dynamic.Dynamic_Response'Class is
-   Result : Dynamic.Dynamic_Response (For_Request);
+   Result : Dynamic.Dynamic_Response (From_Request);
 begin
    Dynamic.Set_Content_Type (Result, To => Types.HTML);
    Dynamic.Append (Result, "<body onload=""alert('");
@@ -697,13 +739,14 @@ begin
       case Message (C) is
          when ASCII.CR | ASCII.NUL => null;
          when ASCII.LF => Dynamic.Append (Result, "\n");
-         when others => Dynamic.Append (Result, String'(1 => Message (C)));
+         when others =>
+            Dynamic.Append (Result, String'(1 => Message (C)));
       end case;
    end loop;
    Dynamic.Append (Result, "')"">");
    return Result;
-end Upload_Result;
-@|@}
+end Upload_Result;@%
+@|Upload_Result@}
 
 \chapter{Retrieving the initial state}
 
@@ -828,18 +871,18 @@ end AJAX_Status;
 \section{Notifying the server of changes}
 
 \verb|postChange| is a one-shot interaction; it sends a request to the
-URL \verb|aChange|. If \verb|postChange.start()| is called with a
+URL \verb|ajaxChange|. If \verb|postChange.start()| is called with a
 parameter (for example, \verb|"foo=bar"|, the parameter is sent to the
 URL as a query. No specific response is expected.
 
 @d Generalised change action request: JavaScript @{@%
 var postChange = new OneshotHttpInteraction
-  ("aChange",
+  ("ajaxChange",
    null,
    function (r) { });
 @|postChange@}
 
-The Ada code which receives the \verb|aChange| request is in the
+The Ada code which receives the \verb|ajaxChange| request is in the
 function \verb|Ajax_Change|.
 
 @d Specs of dynamic pages: Ada @{@%
@@ -849,11 +892,11 @@ function AJAX_Change
 @|AJAX_Change@}
 
 The function is registered with the server, to be called to respond to
-the URL \verb|aChange|.
+the URL \verb|ajaxChange|.
 
 @d Register dynamic pages: Ada @{@%
-Dynamic.Register (AJAX_Change'Unrestricted_Access, "/aChange");
-@|aChange@}
+Dynamic.Register (AJAX_Change'Unrestricted_Access, "/ajaxChange");
+@|ajaxChange@}
 
 @D Bodies of dynamic pages: Ada @{@%
 function AJAX_Change
@@ -869,86 +912,65 @@ begin
 end AJAX_Change;
 @|AJAX_Change@}
 
-\section{Setting up radio buttons}
+\section{Set up radio buttons}
 
-This utility function, which simplifies the setting up of radio
-buttons, takes two parameters:
-\begin{enumerate}
+\verb|Set up radio buttons utility| is a \verb|nuweb| parameterised
+fragment. There's no indication in the fragment's name that it is
+parameterised; when invoked with parameters, occurrences of \verb|@@n|
+are replaced by the \verb|n|'th parameter.
 
-\item \verb|buttons| is the name of the buttons to be set up (they all
-have the same name): e.g. \verb|document.formName.buttonName|.
+The first parameter (\verb|@@1|) is the name of the buttons to be set
+up (they all have the same name): e.g. \verb|document.formName.buttonName|.
 
-\item \verb|name| is the property name that is passed to \verb|postChange|.
+The second parameter (\verb|@@2|) is the property name that is passed
+to \verb|postChange|.
 
-\end{enumerate}
+When one of the buttons is clicked, a one-shot \verb|ajaxChange|
+interaction is invoked, posting the query \verb|property=value| where
+\verb|property| is the name passed in the second parameter and
+\verb|value| is the \verb|value| attribute of the button.
 
-@d Utility to set up radio buttons: JavaScript @{@%
-function setUpRadioButtons(buttons, name) {
-  for (var i = 0; i < buttons.length; i++) {
-    buttons[i].onclick = new Function("postChange.start('"
-                                      + name
-                                      + "="
-                                      + buttons[i].value
-                                      + "');");
-  };
-}
-@|setUpRadioButtons@}
+@d "Set up radio buttons" utility: JavaScript @{@%
+for (var j = 0; j < @1.length; j++) {
+  @1[j].onclick = new Function(
+     "postChange.start('" + @2 + "=" + @1[j].value + "');");
+};@%
+@|@}
 
 \chapter{HTML pages}
 
-@d Standard introductory HTML material @{@%
-<p>EWS is a web server construction kit, designed for embedded
-applications using the <a
-href="http://libre.adacore.com/">GNAT</a> Ada
-compiler.
+@O index.html @{@%
+@<  HTML licence header @>
+<html>
+<head>
+<title>EWS</title>
+</head>
+<body bgcolor="white">
 
-<p>Other Ada web-related software is
-linked <a href="http://www.adaworld.com/internetmain.html">here</a>.
+<table width="100%">
+<tr>
+<td><h1>Embedded Web Server</h1></td>
+<td align="right">
+<a href="http://sourceforge.net"> <img
+src="http://sourceforge.net/sflogo.php?group_id=95861&amp;type=1"
+width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</td>
+</tr>
+</table>
 
-<p>The project is hosted on SourceForge. You can see
-the <a
-href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
-and you
-can <a
-href="http://embed-web-srvr.hg.sourceforge.net/hgweb/embed-web-srvr/embed-web-srvr/">browse</a>
-the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
+@< Standard introductory HTML material @>
 
-<p>Documentation will be forthcoming.
-
-<p>For the moment, and provided you are running on a Linux or Mac OS X
-system, or on Windows with Cygwin (other Unix systems should work as
-described, and the software runs on Windows but the makefile doesn't),
-
-<ul>
-
-<li>Install GNAT and XML/Ada;
-
-<li>Download
-the <a href="http://sourceforge.net/project/showfiles.php?group_id=135616">Ada
-95 Booch Components</a>, unpack, install according to the directions
-in the <tt>INSTALL</tt> file.
-
-</ul>
-
-<p>Then, in the EWS distribution's source directory
-(<tt>ews-<i>yyyymmdd</i>/src</tt>),
-<pre>
-   $ make demo
-</pre>
-
-will create a server (<tt>ews_demo</tt>), which when executed
-will listen on port 8080 and respond with these pages.
-
-<p>
-@|@}
-
-@d Author link @{@%
 <hr>
-<i>
-<address>
-<a href="mailto:simon@@pushface.org">Simon Wright</a>
-</address>
-</i>
+
+<p>If you're seeing this page via the demonstration
+(<tt>ews-server-test</tt>), you can view a page with <a
+href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
+content <a href="ajax.html">here</a>.
+
+@< Author link @>
+
+</body>
+</html>
 @|@}
 
 @O ajax.html @{@%
@@ -985,10 +1007,6 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 
 <hr>
 
-<p>If you're seeing this page via the demonstration
-(<tt>ews_demo</tt>), you can view a completely dynamic
-page <a href="/test">here</a>.
-
 <p>Below are demonstrations of
 various <a href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
 technologies:
@@ -1001,11 +1019,61 @@ technologies:
     @< File upload: HTML @>
   </table>
 </p>
-@< File upload: HTML: target iFrame @>
+@< File upload's target iFrame: HTML @>
 @< Author link @>
 
 </body>
 </html>
+@|@}
+
+@d Standard introductory HTML material @{@%
+<p>EWS is a web server construction kit, designed for embedded
+applications using the <a
+href="http://libre.adacore.com/">GNAT</a> Ada
+compiler.
+
+<p>Other Ada web-related software is
+linked <a href="http://www.adaworld.com/internetmain.html">here</a>.
+
+<p>The project is hosted on SourceForge. You can see
+the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
+and you
+can <a
+href="http://embed-web-srvr.hg.sourceforge.net/hgweb/embed-web-srvr/embed-web-srvr/">browse</a>
+the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
+
+<p>Provided you are running on a Linux or Mac OS X system, or on
+Windows with Cygwin (other Unix systems should work as described, and
+the software runs on Windows but the makefile doesn't), install GNAT
+and XML/Ada.
+
+<p>Then, in the EWS distribution's doc/ directory
+(<tt>ews-<i>yyyymmdd</i>/doc</tt>),
+<pre>
+   $ make demo
+</pre>
+
+will create a server (<tt>ews_demo</tt>), which when executed
+will listen on port 8080 and respond with these pages.
+
+<p>The facilities available in EWS, and the code for the
+demonstration, are described in <a href="ews.pdf">this document</a>,
+which also acts as the source code using the <a
+href="http://www.literateprogramming.com/">Literate Programming</a>
+facilities of <a
+href="https://sourceforge.net/projects/nuweb-py.nuweb.p/">nuweb.py</a>.
+
+<p>
+@|@}
+
+@d Author link @{@%
+<hr>
+<i>
+<address>
+<a href="mailto:simon@@pushface.org">Simon Wright</a>
+</address>
+</i>
 @|@}
 
 \chapter{JavaScript}
@@ -1022,7 +1090,7 @@ This script, loaded by \verb|ajax.html|, relies on the utility
 
 @< Generalised change action request: JavaScript @>
 
-@< Utility to set up radio buttons: JavaScript @>
+@< "Set up radio buttons" utility: JavaScript @>
 
 /**
  * Assign event handlers and begin fetching.
@@ -1034,8 +1102,6 @@ window.onload = function () {
   @< Set up to send time format: JavaScript @>
   @< Set up the radio buttons: JavaScript @>
   @< Set up the checkboxes: JavaScript @>
-  @< Set up file upload: JavaScript @>
-
 };
 @|@}
 
@@ -1062,37 +1128,6 @@ with EWS_Htdocs;
 procedure EWS_Demo is
 
    use EWS;
-
-   --  Dynamic page
-
-   function Dyn
-     (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class;
-
-   function Dyn
-     (From_Request : HTTP.Request_P) return Dynamic.Dynamic_Response'Class is
-      Result : Dynamic.Dynamic_Response (From_Request);
-   begin
-      Dynamic.Set_Content_Type (Result, To => Types.HTML);
-      Dynamic.Set_Content
-        (Result,
-         "<html><head>"
-           & "<meta http-equiv=""Refresh"" content=""1""/>"
-           & "<title>EWS dynamic page</title><head>"
-           & "<body bgcolor=""gray"""
-           & "<center>The time is <b>");
-      Dynamic.Append
-        (Result,
-         Adding => GNAT.Calendar.Time_IO.Image (Ada.Calendar.Clock,
-                                                "%c"));
-      Dynamic.Append
-        (Result,
-         "</b></center>"
-           & "</body>"
-           & "</html>");
-      return Result;
-   end Dyn;
-
-   --  AJAX page
 
    @< Specs of dynamic pages: Ada @>
 
@@ -1122,7 +1157,6 @@ begin
          return;
    end;
 
-   Dynamic.Register (Dyn'Unrestricted_Access, "/test");
    @< Register dynamic pages: Ada @>
 
    Server.Serve (Using_Port => 8080,
@@ -1166,6 +1200,16 @@ project EWS_Demo is
 end EWS_Demo;
 @|@}
 
+\appendix
+
+\chapter{About this document}
+
+This document is prepared using
+\href{https://sourceforge.net/projects/nuweb/}{nuweb}, a
+language-agnostic \href{http://www.literateprogramming.com/}{Literate Programming} tool. The actual variant used
+is
+\href{https://sourceforge.net/projects/nuweb-py.nuweb.p/}{nuweb.py}.
+
 \chapter{Index} \label{index}
 
 \section{Files}
@@ -1181,8 +1225,3 @@ end EWS_Demo;
 @u
 
 \end{document}
-
-% for Emacs:
-% Local Variables:
-% nuweb-source-mode: "ada"
-% End:
