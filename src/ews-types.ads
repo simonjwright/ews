@@ -38,6 +38,7 @@ package EWS.Types is
       JSON,
       JavaScript,
       Octet_Stream,
+      PDF,
       PNG,
       Plain,
       XML,

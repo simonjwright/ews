@@ -31,6 +31,7 @@ package body EWS.Types is
       Format_JavaScript : aliased constant String := "text/javascript";
       Format_Octet_Stream : aliased constant String
         := "application/octet-stream";
+      Format_PDF : aliased constant String := "application/pdf";
       Format_PNG : aliased constant String := "image/png";
       Format_Plain : aliased constant String := "text/plain";
       Format_XML : aliased constant String := "text/xml";
@@ -45,6 +46,7 @@ package body EWS.Types is
             Types.JSON => Format_JSON'Unchecked_Access,
             Types.JavaScript => Format_JavaScript'Unchecked_Access,
             Types.Octet_Stream => Format_Octet_Stream'Unchecked_Access,
+            Types.PDF => Format_PDF'Unchecked_Access,
             Types.PNG => Format_PNG'Unchecked_Access,
             Types.Plain => Format_Plain'Unchecked_Access,
             Types.XML => Format_XML'Unchecked_Access,
