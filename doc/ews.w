@@ -1032,9 +1032,6 @@ applications using the <a
 href="http://libre.adacore.com/">GNAT</a> Ada
 compiler.
 
-<p>Other Ada web-related software is
-linked <a href="http://www.adaworld.com/internetmain.html">here</a>.
-
 <p>The project is hosted on SourceForge. You can see
 the <a
 href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
