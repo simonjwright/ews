@@ -1090,8 +1090,6 @@ This script, loaded by \verb|ajax.html|, relies on the utility
 
 @< Generalised change action request: JavaScript @>
 
-@< "Set up radio buttons" utility: JavaScript @>
-
 /**
  * Assign event handlers and begin fetching.
  */
