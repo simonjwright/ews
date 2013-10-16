@@ -24,7 +24,13 @@ endif
 demo: ews_demo$(EXE)
 .PHONY: demo
 
-NUWEB_GENERATED = ews.pdf ews_demo.gpr ews_demo.adb ajax.html ajax.js
+NUWEB_GENERATED =				\
+  ews.pdf 					\
+  ews_demo.gpr 					\
+  ews_demo.adb 					\
+  index.html 					\
+  ajax.html 					\
+  ajax.js
 
 EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
 
@@ -37,17 +43,21 @@ HttpInteraction.js: ../lib/HttpInteraction.js
 favicon.ico: ../lib/favicon.ico
 	cp $< $@
 
+# We need to use a stamp because nuweb only touches a file (and
+# therefore changes the date) if the content has changed.
+$(NUWEB_GENERATED): nuweb-generated-stamp
 # We have to do this twice to get cross-references correct.
-$(NUWEB_GENERATED): ews.w
+nuweb-generated-stamp: ews.w
 	$(NUWEB) -r ews
 	$(PDFLATEX) ews
 	$(NUWEB) -r ews
 	$(PDFLATEX) ews
+	touch $@
 
 ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
 	gnatmake -p -P ews_demo
 
-dist:: index.html $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
+dist:: $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
 	mkdir $(DIST)/doc
 	cp $^ $(DIST)/doc/
 dist:: Makefile-dist
@@ -66,4 +76,6 @@ clean:
 	-rm -rf .build
 	-rm ews.{aux,lof,log,out,pdf,tex,toc}
 	-rm ews_demo* ews_htdocs.*
+	-rm index.html
+	-rm nuweb-generated-stamp
 .PHONY: clean
