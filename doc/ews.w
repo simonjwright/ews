@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{15.x.13}
+\date{16.x.13}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -100,18 +100,11 @@ These interactions are supported by EWS's \verb|HttpInteraction.js|.
 \section{Copyright and Licencing}
 
 \EWS itself is licenced under the
-\href{http://www.gnu.org/licenses/gpl-2.0.html}{GPL version 2}; the
-code that forms part of the run time (Ada and JavaScript) has the
-additional permission
-\begin{quote}
-As a special exception, if other files instantiate generics from this
-unit, or you link this unit with other files to produce an executable,
-this unit does not by itself cause the resulting executable to be
-covered by the GNU General Public License.  This exception does not
-however invalidate any other reasons why the executable file might be
-covered by the GNU Public License.
-\end{quote}
-which is generally known as the ``GNAT-Modified GPL'' or GMGPL.
+\href{http://www.gnu.org/licenses/gpl.html}{GPL version 3}; the code
+that forms part of the run time (Ada and JavaScript) has the
+additional permissions granted by the
+\href{http://www.gnu.org/licenses/gcc-exception.html}{GCC Runtime
+Library Exception version 3.1}.
 
 The demonstration code is released without restriction.
 
@@ -1020,6 +1013,7 @@ technologies:
   </table>
 </p>
 @< File upload's target iFrame: HTML @>
+
 @< Author link @>
 
 </body>
@@ -1045,8 +1039,16 @@ Windows with Cygwin (other Unix systems should work as described, and
 the software runs on Windows but the makefile doesn't), install GNAT
 and XML/Ada.
 
-<p>Then, in the EWS distribution's doc/ directory
+<p>Then, in the EWS distribution's top-level directory
 (<tt>ews-<i>yyyymmdd</i>/doc</tt>),
+
+<pre>
+   make
+</pre>
+
+will build the library, and, in the doc/ directory
+(<tt>ews-<i>yyyymmdd</i>/doc</tt>),
+
 <pre>
    $ make demo
 </pre>
