@@ -1040,14 +1040,14 @@ the software runs on Windows but the makefile doesn't), install GNAT
 and XML/Ada.
 
 <p>Then, in the EWS distribution's top-level directory
-(<tt>ews-<i>yyyymmdd</i>/doc</tt>),
+(<tt>ews-<i>yyyymmdd</i>/</tt>),
 
 <pre>
    make
 </pre>
 
-will build the library, and, in the doc/ directory
-(<tt>ews-<i>yyyymmdd</i>/doc</tt>),
+will build the library, and, in the <tt>doc/</tt> directory
+(<tt>ews-<i>yyyymmdd</i>/doc/</tt>),
 
 <pre>
    $ make demo
