@@ -29,7 +29,8 @@ private with EWS.HTTP.EWS_Attachments_Friend;
 package Input_Sources.EWS_Attachments is
 
    type Attachment_Input is new Input_Source with private;
-   type Attachment_Input_Access is access all Attachment_Input'Class;
+   type Attachment_Input_Access
+      is not null access all Attachment_Input'Class;
    --  A special implementation of a reader that reads from an attachment.
 
    procedure Open (From : EWS.HTTP.Attachments;

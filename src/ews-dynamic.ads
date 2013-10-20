@@ -28,7 +28,7 @@ private with EWS.Reference_Counted_Pointers_G;
 package EWS.Dynamic with Elaborate_Body is
 
    function Find
-     (For_Request : access HTTP.Request) return HTTP.Response'Class;
+     (For_Request : not null access HTTP.Request) return HTTP.Response'Class;
 
    type Dynamic_Response (R : HTTP.Request_P)
    is new HTTP.Response with private;
@@ -40,7 +40,8 @@ package EWS.Dynamic with Elaborate_Body is
    --  The server will call the given Creator when the given URL is
    --  requested.
    --  In "http://foo.com:1234/bar", for example, the URL is "/bar".
-   procedure Register (The_Creator : Creator; For_The_URL : HTTP.URL);
+   procedure Register (The_Creator : not null Creator;
+                       For_The_URL :          HTTP.URL);
 
    --  Operations callable by Creator functions.
    procedure Set_Content_Type (This : in out Dynamic_Response;
@@ -83,8 +84,8 @@ private
    procedure Finalize (U : in out Unbounded_String);
    procedure Append (To : in out Unbounded_String; S : String);
 
-   procedure Write (To : access Ada.Streams.Root_Stream_Type'Class;
-                    U  :        Unbounded_String);
+   procedure Write (To : not null access Ada.Streams.Root_Stream_Type'Class;
+                    U  :                 Unbounded_String);
    for Unbounded_String'Write use Write;
    --  No need for a Read operation.
 
@@ -102,7 +103,8 @@ private
    function Cacheable (This : Dynamic_Response) return Boolean;
    function Content_Type (This : Dynamic_Response) return String;
    function Content_Length (This : Dynamic_Response) return Integer;
-   procedure Write_Content (This :        Dynamic_Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class);
+   procedure Write_Content
+     (This :                 Dynamic_Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class);
 
 end EWS.Dynamic;

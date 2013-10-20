@@ -22,7 +22,7 @@ with Ada.Unchecked_Deallocation;
 
 package body EWS.Reference_Counted_Pointers_G is
 
-   function Create (Value : P) return Pointer
+   function Create (Value : not null P) return Pointer
    is
    begin
       return Pointer'(Ada.Finalization.Controlled

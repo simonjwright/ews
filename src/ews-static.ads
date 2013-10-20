@@ -25,7 +25,7 @@ with EWS.Types;
 package EWS.Static with Elaborate_Body is
 
    function Find
-     (For_Request : access HTTP.Request) return HTTP.Response'Class;
+     (For_Request : not null access HTTP.Request) return HTTP.Response'Class;
 
    --  These are used by ews-make_htdocs to encode the pages.
    type URL_Info is record
@@ -50,7 +50,8 @@ private
 
    function Content_Type (This : Static_Response) return String;
    function Content_Length (This : Static_Response) return Integer;
-   procedure Write_Content (This :        Static_Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class);
+   procedure Write_Content
+     (This :                 Static_Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class);
 
 end EWS.Static;
