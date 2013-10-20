@@ -461,7 +461,7 @@ package body EWS.HTTP is
    --  Response management  --
    ---------------------------
 
-   function Find (For_Request : access Request) return Response'Class
+   function Find (For_Request : not null access Request) return Response'Class
    is
    begin
       declare
@@ -525,8 +525,9 @@ package body EWS.HTTP is
    end Content;
 
 
-   procedure Write_Content (This :        Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class)
+   procedure Write_Content
+     (This :                 Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class)
    is
    begin
       String'Write (To, Content (Response'Class (This)));
@@ -580,7 +581,7 @@ package body EWS.HTTP is
    function Content (This : Not_Found_Response) return String;
 
    function Not_Found
-     (R : access Request) return Response'Class is
+     (R : not null access Request) return Response'Class is
    begin
       return Not_Found_Response'(To => Request_P (R));
    end Not_Found;
@@ -593,7 +594,7 @@ package body EWS.HTTP is
    function Content (This : Not_Implemented_Response) return String;
 
    function Not_Implemented
-     (R : access Request) return Response'Class is
+     (R : not null access Request) return Response'Class is
    begin
       return Not_Implemented_Response'(To => Request_P (R));
    end Not_Implemented;

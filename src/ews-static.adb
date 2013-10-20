@@ -44,8 +44,9 @@ package body EWS.Static is
    end Content_Length;
 
 
-   procedure Write_Content (This :        Static_Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class)
+   procedure Write_Content
+     (This :                 Static_Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class)
    is
    begin
       Ada.Streams.Write (Stream => To.all,
@@ -54,7 +55,7 @@ package body EWS.Static is
 
 
    function Find
-     (For_Request : access HTTP.Request) return HTTP.Response'Class
+     (For_Request : not null access HTTP.Request) return HTTP.Response'Class
    is
    begin
       if Pages = null then

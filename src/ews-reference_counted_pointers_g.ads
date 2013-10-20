@@ -35,7 +35,7 @@ package EWS.Reference_Counted_Pointers_G with Preelaborate is
    --  function Create (Value : T) return Pointer;
    --  Returns a new encapsulation.
 
-   function Create (Value : P) return Pointer;
+   function Create (Value : not null P) return Pointer;
    --  Returns a new encapsulation. You must NOT deallocate the Value
    --  passed; it will be deallocated when there are no more
    --  references to it.

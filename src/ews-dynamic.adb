@@ -128,7 +128,8 @@ package body EWS.Dynamic is
 
 
    function Find
-     (For_Request : access HTTP.Request) return HTTP.Response'Class is
+     (For_Request : not null access HTTP.Request) return HTTP.Response'Class
+   is
       For_URL : constant HTTP.URL := HTTP.Get_URL (For_Request.all);
       Reg : Cell_P := Registry;
    begin
@@ -148,7 +149,8 @@ package body EWS.Dynamic is
    end Initialize;
 
 
-   procedure Register (The_Creator : Creator; For_The_URL : HTTP.URL) is
+   procedure Register (The_Creator : not null Creator;
+                       For_The_URL :          HTTP.URL) is
    begin
       Registry := new Cell'(The_URL => new HTTP.URL'(For_The_URL),
                             The_Creator => The_Creator,
@@ -171,8 +173,8 @@ package body EWS.Dynamic is
    end Set_Content_Type;
 
 
-   procedure Write (To : access Ada.Streams.Root_Stream_Type'Class;
-                    U : Unbounded_String)
+   procedure Write (To : not null access Ada.Streams.Root_Stream_Type'Class;
+                    U :           Unbounded_String)
    is
       subtype Input is String (1 .. U.Last);
       subtype Output is Ada.Streams.Stream_Element_Array
@@ -183,8 +185,9 @@ package body EWS.Dynamic is
    end Write;
 
 
-   procedure Write_Content (This :        Dynamic_Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class)
+   procedure Write_Content
+     (This :                 Dynamic_Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class)
    is
       use type Unbounded_String_Pointers.Pointer;
    begin

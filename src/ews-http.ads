@@ -37,7 +37,7 @@ package EWS.HTTP is
    --------------------------
 
    type Request is limited private;
-   type Request_P is access all Request;
+   type Request_P is not null access all Request;
 
    procedure Initialize (R          : out Request;
                          From       :     GNAT.Sockets.Socket_Type;
@@ -192,21 +192,23 @@ package EWS.HTTP is
    function Content (This : Response) return String;
    --  default "".
 
-   procedure Write_Content (This :        Response;
-                            To   : access Ada.Streams.Root_Stream_Type'Class);
+   procedure Write_Content
+     (This :                 Response;
+      To   : not null access Ada.Streams.Root_Stream_Type'Class);
 
    procedure Respond (This : Response'Class;
                       To   : GNAT.Sockets.Socket_Type);
 
    --  Factory function to create a Response
 
-   function Find (For_Request : access Request) return Response'Class;
+   function Find (For_Request : not null access Request) return Response'Class;
 
    --  Utilities for standard abnormal responses
 
-   function Not_Found (R : access Request) return Response'Class;
+   function Not_Found (R : not null access Request) return Response'Class;
 
-   function Not_Implemented (R : access Request) return Response'Class;
+   function Not_Implemented
+     (R : not null access Request) return Response'Class;
 
    function Exception_Response
      (E : Ada.Exceptions.Exception_Occurrence;
@@ -287,7 +289,7 @@ private
 
    type Unbounded_Memory_Stream;
    type Unbounded_Memory_Stream_Finalizer
-     (UMS : access Unbounded_Memory_Stream)
+     (UMS : not null access Unbounded_Memory_Stream)
    is new Ada.Finalization.Limited_Controlled with null record;
    procedure Finalize (UMSF : in out Unbounded_Memory_Stream_Finalizer);
 
