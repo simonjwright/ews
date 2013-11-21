@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{16.x.13}
+\date{21.xi.13}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -908,9 +908,9 @@ end AJAX_Change;
 \section{Set up radio buttons}
 
 \verb|Set up radio buttons utility| is a \verb|nuweb| parameterised
-fragment. There's no indication in the fragment's name that it is
-parameterised; when invoked with parameters, occurrences of \verb|@@n|
-are replaced by the \verb|n|'th parameter.
+fragment. There's no indication in a parameterised fragment's name
+that it is parameterised; when invoked with parameters, occurrences of
+\verb|@@n| are replaced by the \verb|n|'th parameter.
 
 The first parameter (\verb|@@1|) is the name of the buttons to be set
 up (they all have the same name): e.g. \verb|document.formName.buttonName|.
@@ -932,44 +932,23 @@ for (var j = 0; j < @1.length; j++) {
 
 \chapter{HTML pages}
 
-@O index.html @{@%
+@o ajax.html @{@%
 @<  HTML licence header @>
 <html>
 <head>
-<title>EWS</title>
+@< HTML header @>
 </head>
 <body bgcolor="white">
-
-<table width="100%">
-<tr>
-<td><h1>Embedded Web Server</h1></td>
-<td align="right">
-<a href="http://sourceforge.net"> <img
-src="http://sourceforge.net/sflogo.php?group_id=95861&amp;type=1"
-width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
-</td>
-</tr>
-</table>
-
-@< Standard introductory HTML material @>
-
-<hr>
-
-<p>If you're seeing this page via the demonstration
-(<tt>ews_demo</tt>), you can view a page with <a
-href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
-content <a href="ajax.html">here</a>.
-
+@< Page heading @>
+@< Introductory material @>
+<p><hr>
+@< The demonstrations @>
 @< Author link @>
-
 </body>
 </html>
 @|@}
 
-@O ajax.html @{@%
-@<  HTML licence header @>
-<html>
-<head>
+@d HTML header @{@%
 <title>EWS: AJAX demonstration</title>
 
 <!-- NB,for Internet Explorer you mustn't use the empty-element
@@ -978,13 +957,14 @@ content <a href="ajax.html">here</a>.
 <script type="text/javascript"src="ajax.js"></script>
 
 <style type="text/css">
-  table { margin : 0.2em 1em; font-size : 100%; border-collapse : collapse; }
-  th,td { padding : 0.2em; }
+  div#demos table { margin : 0.2em 1em;
+                    font-size : 100%;
+                    border-collapse : collapse; }
+  div#demos th,td { padding : 0.2em; }
 </style>
+@|@}
 
-</head>
-<body bgcolor="white">
-
+@d Page heading @{@%
 <table width="100%">
 <tr>
 <td><h1>Embedded Web Server: AJAX demonstration</h1></td>
@@ -995,32 +975,9 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 </td>
 </tr>
 </table>
-
-@< Standard introductory HTML material @>
-
-<hr>
-
-<p>Below are demonstrations of
-various <a href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
-technologies:
-
-<p align="center">
-  <table border="1">
-    @< Cyclic updating and select/options: HTML @>
-    @< Radio buttons: HTML @>
-    @< Checkboxes: HTML @>
-    @< File upload: HTML @>
-  </table>
-</p>
-@< File upload's target iFrame: HTML @>
-
-@< Author link @>
-
-</body>
-</html>
 @|@}
 
-@d Standard introductory HTML material @{@%
+@d Introductory material @{@%
 <p>EWS is a web server construction kit, designed for embedded
 applications using the <a
 href="http://libre.adacore.com/">GNAT</a> Ada
@@ -1034,36 +991,28 @@ can <a
 href="http://embed-web-srvr.hg.sourceforge.net/hgweb/embed-web-srvr/embed-web-srvr/">browse</a>
 the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
 
-<p>Provided you are running on a Linux or Mac OS X system, or on
-Windows with Cygwin (other Unix systems should work as described, and
-the software runs on Windows but the makefile doesn't), install GNAT
-and XML/Ada.
-
-<p>Then, in the EWS distribution's top-level directory
-(<tt>ews-<i>yyyymmdd</i>/</tt>),
-
-<pre>
-   make
-</pre>
-
-will build the library, and, in the <tt>doc/</tt> directory
-(<tt>ews-<i>yyyymmdd</i>/doc/</tt>),
-
-<pre>
-   $ make demo
-</pre>
-
-will create a server (<tt>ews_demo</tt>), which when executed
-will listen on port 8080 and respond with these pages.
-
-<p>The facilities available in EWS, and the code for the
-demonstration, are described in <a href="ews.pdf">this document</a>,
-which also acts as the source code using the <a
+<p>EWS comes with a demonstration of its facilities. The available
+facilities are described in <a href="ews.pdf">this document</a>, which
+also acts as the source code for the demonstration using the <a
 href="http://www.literateprogramming.com/">Literate Programming</a>
 facilities of <a
 href="https://sourceforge.net/projects/nuweb-py.nuweb.p/">nuweb.py</a>.
+@|@}
 
-<p>
+@d The demonstrations @{@%
+<p>Below are demonstrations of
+various <a href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
+technologies:
+
+<div id="demos" align="center">
+  <table border="1">
+    @< Cyclic updating and select/options: HTML @>
+    @< Radio buttons: HTML @>
+    @< Checkboxes: HTML @>
+    @< File upload: HTML @>
+  </table>
+</div>
+@< File upload's target iFrame: HTML @>
 @|@}
 
 @d Author link @{@%

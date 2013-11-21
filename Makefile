@@ -29,19 +29,16 @@ all:: lib-static-stamp lib-relocatable-stamp exec-stamp
 lib-static-stamp: ews.gpr
 	$(GPRBUILD) -p -P ews.gpr -XLIBRARY_TYPE=static
 	touch $@
-.PHONY: lib-static-stamp
 
 lib-relocatable-stamp: ews.gpr
 	$(GPRBUILD) -p -P ews.gpr -XLIBRARY_TYPE=relocatable
 	touch $@
-.PHONY: lib-relocatable-stamp
 
 # Executables
 
 exec-stamp: lib-static-stamp make_htdocs.gpr
 	$(GPRBUILD) -p -P make_htdocs.gpr -XLIBRARY_TYPE=static
 	touch $@
-.PHONY: exec-stamp
 
 # Demos
 
@@ -60,7 +57,7 @@ install: install-static-lib install-relocatable-lib install-exec
 
 install-static-lib: lib-static-stamp
 	gprinstall				\
-	  -P ews.gpr			\
+	  -P ews.gpr				\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -73,7 +70,7 @@ install-static-lib: lib-static-stamp
 
 install-relocatable-lib: lib-relocatable-stamp
 	gprinstall				\
-	  -P ews.gpr			\
+	  -P ews.gpr				\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -94,10 +91,13 @@ install-exec: exec-stamp
 .PHONY: install-exec
 
 clean:
-	gnatclean -P make_htdocs.gpr
-	gnatclean -P ews.gpr
-	rm -rf .build-* bin include lib-*
-	rm *-stamp
+	-gnatclean -P make_htdocs.gpr
+	-gnatclean -P ews.gpr -XLIBRARY_TYPE=static
+	-gnatclean -P ews.gpr -XLIBRARY_TYPE=relocatable
+	rm -f *-stamp
+	for s in $(SUBDIRS); do \
+	  $(MAKE) -w -C $$s $@; \
+	done
 .PHONY: clean
 
 # Distribution.
@@ -106,18 +106,21 @@ clean:
 RELEASE ?= $(shell date +%Y%m%d)
 
 # Files to copy to the distribution (Makefile-dist done specially)
-FILES = COPYING3 COPYING.RUNTIME README ews.gpr make_htdocs.gpr
+FILES = COPYING3 COPYING.RUNTIME INSTALL README ews.gpr make_htdocs.gpr
 
 # Distribution directory - eg ews-20130705
 DISTDIR = ews-$(RELEASE)
 
-dist: $(DISTDIR).tar.gz
+dist: $(DISTDIR).tar.gz $(DISTDIR).zip
 .PHONY: dist
 
 $(DISTDIR).tar.gz: $(DISTDIR)
 	tar zcvf $@ $<
 
-$(DISTDIR):
+$(DISTDIR).zip: $(DISTDIR)
+	zip -lr $@ $</*
+
+$(DISTDIR): $(FILES) Makefile-dist
 	-rm -rf $@
 	mkdir $@
 	cp $(FILES) $@/

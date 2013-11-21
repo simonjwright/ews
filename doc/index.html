@@ -1,0 +1,126 @@
+<!--
+  Copyright 2013 Simon Wright <simon@pushface.org>
+
+  This unit is free software; you can redistribute it and/or modify
+  it as you wish. This unit is distributed in the hope that it will
+  be useful, but WITHOUT ANY WARRANTY; without even the implied
+  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<html>
+<head>
+<title>EWS</title>
+</head>
+<body bgcolor="white">
+
+<table width="100%">
+<tr>
+<td><h1>Embedded Web Server</h1></td>
+<td align="right">
+<a href="http://sourceforge.net"> <img
+src="http://sourceforge.net/sflogo.php?group_id=95861&amp;type=1"
+width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</td>
+</tr>
+</table>
+
+<h2>Introduction</h2>
+
+<p>EWS is a web server construction kit, designed for embedded
+applications using the <a
+href="http://libre.adacore.com/">GNAT</a> Ada
+compiler.
+
+<p>The project is hosted on SourceForge. You can see
+the <a
+href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
+and you
+can <a
+href="http://embed-web-srvr.hg.sourceforge.net/hgweb/embed-web-srvr/embed-web-srvr/">browse</a>
+the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
+
+<h2>Prerequisites</h2>
+
+<p>EWS requires GNAT (GNAT GPL 2012 or later, FSF GCC 4.8.0 or later)
+and XML/Ada. GNAT GPL 2013 (and, hopefully, later) includes XML/Ada;
+earlier versions supply XML/Ada as source which has to be built and
+installed.
+
+<p>EWS's build process uses GNU Make, run from the command line. This
+will be available as "make" on Linux or Mac OS X systems, and on
+Windows systems running <a href="http://www.cygwin.com">Cygwin</a>.
+
+<h3>Pure Windows systems</h3>
+
+<p>A suitable GNU Make for Windows is available
+at <a href="http://libre.adacore.com">AdaCore</a> (in the
+avr-elf-windows 2012 package). It's also
+been <a href="https://sourceforge.net/projects/embed-web-srvr/files/gnumake/">copied
+to Sourceforge</a>.
+
+<p>The download (whose MD5 hash is f97b4a805d7ec4c63ad829c822c4c42b)
+is
+<tt>gnumake-3.79.1-pentium-mingw32msv.exe</tt>. Rename it
+to <tt>gmake.exe</tt> and place it in GNAT's bin directory
+(typically <tt>C:\GNAT\2013\bin</tt>).
+
+<p>Then, in a command window in the EWS distribution's top-level
+directory (<tt>ews-yyyymmdd\</tt>),
+
+<pre>
+   > gmake
+</pre>
+
+<p>will build the library, and, in the <tt>doc\</tt> directory
+(<tt>ews-yyyymmdd\doc\</tt>),
+
+<pre>
+   > gmake demo
+</pre>
+
+<p>will create a server (<tt>ews_demo</tt>), which when executed will
+listen on port 8080 and respond with the web in the <tt>doc\</tt>
+directory.
+
+<h3>Unix-based systems</h3>
+
+<p>In the EWS distribution's top-level directory
+(<tt>ews-yyyymmdd/</tt>), <tt>make</tt> will build the library, and
+<tt>make demo</tt> will create a server in the <tt>doc/</tt> directory
+(<tt>ews-yyyymmdd/doc/ews_demo</tt>), which when executed will listen
+on port 8080 and respond with the web in the <tt>doc/</tt> directory.
+
+<p>The package can be installed with the compiler by <tt>make
+install</tt> (more likely, <tt>sudo make install</tt>). You can
+install in an alternative place by setting <tt>prefix</tt>, for
+example
+
+<pre>
+   $ make install prefix=~/local
+</pre>
+
+<h2>Documentation</h2>
+
+<p>The facilities available in EWS, and the code for the
+demonstration, are described in <a href="ews.pdf">this document</a>,
+which also acts as the source code using the <a
+href="http://www.literateprogramming.com/">Literate Programming</a>
+facilities of <a
+href="https://sourceforge.net/projects/nuweb-py.nuweb.p/">nuweb.py</a>.
+
+<h2>Demonstration</h2>
+
+<p>If you're seeing this page via the demonstration
+(<tt>ews_demo</tt>), you can view a page with <a
+href="http://www.amazon.co.uk/exec/obidos/ASIN/0471777781/qid%3D1146719450/203-6928631-0011916">AJAX</a>
+content <a href="ajax.html">here</a>.
+
+<hr>
+<i>
+<address>
+<a href="mailto:simon@pushface.org">Simon Wright</a>
+</address>
+</i>
+
+</body>
+</html>
