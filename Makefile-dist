@@ -21,6 +21,14 @@ all::
 
 GPRBUILD ?= gprbuild
 
+ifeq ($(OS),Windows_NT)
+  DEL   = del
+  TOUCH = $(MAKE) --touch
+else
+  DEL   = rm -f
+  TOUCH = touch
+endif
+
 # Subdirectories, each implements its own contribution.
 SUBDIRS = doc src
 
@@ -30,20 +38,17 @@ all:: lib-static-stamp lib-relocatable-stamp exec-stamp
 
 lib-static-stamp: ews.gpr
 	$(GPRBUILD) -p -P ews.gpr -XLIBRARY_TYPE=static
-	touch $@
-.PHONY: lib-static-stamp
+	$(TOUCH) $@
 
 lib-relocatable-stamp: ews.gpr
 	$(GPRBUILD) -p -P ews.gpr -XLIBRARY_TYPE=relocatable
-	touch $@
-.PHONY: lib-relocatable-stamp
+	$(TOUCH) $@
 
 # Executables
 
 exec-stamp: lib-static-stamp make_htdocs.gpr
 	$(GPRBUILD) -p -P make_htdocs.gpr -XLIBRARY_TYPE=static
-	touch $@
-.PHONY: exec-stamp
+	$(TOUCH) $@
 
 # Demos
 
@@ -55,14 +60,22 @@ demo:
 
 # Installation
 
+ifeq ($(OS),Windows_NT)
+# Don't know the Windows equivalent of 'which'
+ifeq ($(prefix),)
+install::
+	$(error Cant "make install" on Windows unless "prefix" is set)
+endif
+else
 prefix ?= $(realpath $(dir $(shell which gnatls))/..)
+endif
 
-install: install-static-lib install-relocatable-lib install-exec
+install:: install-static-lib install-relocatable-lib install-exec
 .PHONY: install
 
 install-static-lib: lib-static-stamp
 	gprinstall				\
-	  -P ews.gpr			\
+	  -P ews.gpr				\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -75,7 +88,7 @@ install-static-lib: lib-static-stamp
 
 install-relocatable-lib: lib-relocatable-stamp
 	gprinstall				\
-	  -P ews.gpr			\
+	  -P ews.gpr				\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -96,10 +109,13 @@ install-exec: exec-stamp
 .PHONY: install-exec
 
 clean:
-	gnatclean -P make_htdocs.gpr
-	gnatclean -P ews.gpr
-	rm -rf .build-* bin include lib-*
-	rm *-stamp
+	-gnatclean -P make_htdocs.gpr
+	-gnatclean -P ews.gpr -XLIBRARY_TYPE=static
+	-gnatclean -P ews.gpr -XLIBRARY_TYPE=relocatable
+	$(DEL) *-stamp
+	for s in $(SUBDIRS); do \
+	  $(MAKE) -w -C $$s $@; \
+	done
 .PHONY: clean
 
 # Distribution.

@@ -20,6 +20,11 @@ PDFLATEX ?= pdflatex
 ifneq (,$(findstring mingw,$(shell gcc -dumpmachine)))
   EXE = .exe
 endif
+ifeq ($(OS),Windows_NT)
+  DEL   = del
+else
+  DEL   = rm -f
+endif
 
 demo: ews_demo$(EXE)
 .PHONY: demo
@@ -28,13 +33,18 @@ NUWEB_GENERATED =				\
   ews.pdf 					\
   ews_demo.gpr 					\
   ews_demo.adb 					\
-  index.html 					\
   ajax.html 					\
   ajax.js
 
 EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
 
-$(EWS_GENERATED): index.html ajax.html ajax.js HttpInteraction.js favicon.ico
+$(EWS_GENERATED):				\
+  index.html 					\
+  ews.pdf					\
+  ajax.html					\
+  ajax.js					\
+  HttpInteraction.js				\
+  favicon.ico
 	../bin/ews-make_htdocs
 
 HttpInteraction.js: ../lib/HttpInteraction.js
@@ -57,7 +67,7 @@ nuweb-generated-stamp: ews.w
 ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
 	gnatmake -p -P ews_demo
 
-dist:: $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
+dist:: index.html $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
 	mkdir $(DIST)/doc
 	cp $^ $(DIST)/doc/
 dist:: Makefile-dist
@@ -73,9 +83,8 @@ upload: index.html ews.pdf
 .PHONY: upload
 
 clean:
-	-rm -rf .build
-	-rm ews.{aux,lof,log,out,pdf,tex,toc}
-	-rm ews_demo* ews_htdocs.*
-	-rm index.html
-	-rm nuweb-generated-stamp
+	-gnatclean -P ews_demo
+	$(DEL) ews.aux ews.lof ews.log ews.out ews.pdf ews.tex ews.toc
+	$(DEL) ews_demo* ews_htdocs.*
+	$(DEL) nuweb-generated-stamp
 .PHONY: clean

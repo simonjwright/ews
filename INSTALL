@@ -1,0 +1,63 @@
+Prerequisites
+=============
+
+EWS requires GNAT (GNAT GPL 2012 or later, FSF GCC 4.8.0 or later) and
+XML/Ada. GNAT GPL 2013 (and, hopefully, later) includes XML/Ada;
+earlier versions supply XML/Ada as source which has to be built and
+installed.
+
+EWS's build process uses GNU Make, run from the command line. This
+will be available as "make" on Linux or Mac OS X systems, and on
+Windows systems running Cygwin[1].
+
+Pure Windows systems
+====================
+
+A suitable GNU Make for Windows is available at AdaCore[2] (in the
+avr-elf-windows 2012 package). It's also been copied to
+Sourceforge[3].
+
+The download (whose MD5 hash is f97b4a805d7ec4c63ad829c822c4c42b) is
+gnumake-3.79.1-pentium-mingw32msv.exe. Rename it to gmake.exe and
+place it in GNAT's bin directory (typically C:\GNAT\2013\bin).
+
+Then, in a command window in the EWS distribution's top-level
+directory (ews-yyyymmdd\),
+
+   > gmake
+
+will build the library, and, in the doc\ directory
+(ews-yyyymmdd\doc\),
+
+   > gmake demo
+
+will create a server (ews_demo), which when executed will listen on
+port 8080 and respond with the web in the doc\ directory.
+
+Unix-based systems
+==================
+
+In the EWS distribution's top-level directory (ews-yyyymmdd/), "make"
+will build the library, and "make demo" will create a server in the
+doc/ directory (ews-yyyymmdd/doc/ews_demo), which when executed will
+listen on port 8080 and respond with the web in the doc/ directory.
+
+The package can be installed with the compiler by "make install" (more
+likely, "sudo make install"). You can install in an alternative place
+by setting "prefix", for example
+
+   $ make install prefix=~/local
+
+Using the package
+=================
+
+ews.pdf, in the doc/ directory of the distribution, contains
+descriptions of the EWS features used in the demonstration, and
+related source code.
+
+References
+==========
+
+[1] http://www.cygwin.com
+[2] http://libre.adacore.com
+[2] https://sourceforge.net/projects/embed-web-srvr/files/gnumake/

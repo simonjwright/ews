@@ -44,3 +44,6 @@ dist:
 	cp $(SRC) $(DIST)/src/
 	cp Makefile-dist $(DIST)/src/Makefile
 .PHONY: dist
+
+clean:
+.PHONY: clean
