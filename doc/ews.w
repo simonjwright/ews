@@ -10,7 +10,7 @@
 %  the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
 %  MA 02111-1307, USA.
 %
-% Copyright (c) 2013, Simon Wright
+% Copyright (c) 2013, 2014 Simon Wright
 % All rights reserved.
 
 \documentclass{report}
@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{21.xi.13}
+\date{21.i.14}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -109,7 +109,7 @@ Library Exception version 3.1}.
 The demonstration code is released without restriction.
 
 @d Copyright @{@%
-Copyright 2013 Simon Wright <simon@@pushface.org>@%
+Copyright 2013, 2014 Simon Wright <simon@@pushface.org>@%
 @}
 
 In Ada,
@@ -614,7 +614,7 @@ When the form is submitted, the content of the selected file is sent
 as a multipart attachment to the URL \verb|/fileInput| (the form's
 \verb|action|).
 
-The other components of this example program used explicit JavaScript
+The other components of this example program use explicit JavaScript
 methods to send the data to the server. In the case of a file upload,
 the protocol is complex enough that it's best left to the
 browser. When the browser has submitted the request, it expects to get
