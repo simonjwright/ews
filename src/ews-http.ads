@@ -18,6 +18,8 @@
 --
 --  Copyright Simon Wright <simon@pushface.org>
 
+pragma Ada_2012;
+
 with Ada.Exceptions;
 with Ada.IO_Exceptions;
 with Ada.Streams;

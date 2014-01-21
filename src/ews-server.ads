@@ -18,6 +18,8 @@
 --
 --  Copyright Simon Wright <simon@pushface.org>
 
+pragma Ada_2012;
+
 with GNAT.Sockets;
 with System;
 

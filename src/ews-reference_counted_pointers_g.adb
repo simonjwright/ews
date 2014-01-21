@@ -18,6 +18,8 @@
 --
 --  Copyright Simon Wright <simon@pushface.org>
 
+pragma Ada_2012;
+
 with Ada.Unchecked_Deallocation;
 
 package body EWS.Reference_Counted_Pointers_G is

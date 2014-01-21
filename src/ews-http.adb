@@ -18,6 +18,8 @@
 --
 --  Copyright Simon Wright <simon@pushface.org>
 
+pragma Ada_2012;
+
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 with Ada.Strings.Bounded;
 with Ada.Strings.Fixed;

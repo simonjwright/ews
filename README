@@ -1,4 +1,12 @@
 ************
+* 20140121 *
+************
+
+This release of EWS uses pragma Ada_2012 where required to allow its
+use in projects which specify an earlier standard. There are no
+functional changes.
+
+************
 * 20131121 *
 ************
 
