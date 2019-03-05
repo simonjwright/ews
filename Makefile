@@ -58,6 +58,7 @@ install: install-static-lib install-relocatable-lib install-exec
 install-static-lib: lib-static-stamp
 	gprinstall				\
 	  -P ews.gpr				\
+	  --install-name=ews			\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -71,6 +72,7 @@ install-static-lib: lib-static-stamp
 install-relocatable-lib: lib-relocatable-stamp
 	gprinstall				\
 	  -P ews.gpr				\
+	  --install-name=ews			\
 	  --prefix=$(prefix)			\
 	  --mode=dev				\
 	  --project-subdir=lib/gnat		\
@@ -84,6 +86,7 @@ install-relocatable-lib: lib-relocatable-stamp
 install-exec: exec-stamp
 	gprinstall				\
 	  -P make_htdocs.gpr			\
+	  --install-name=make_htdocs		\
 	  --prefix=$(prefix)			\
 	  -XLIBRARY_TYPE=static			\
 	  -f					\

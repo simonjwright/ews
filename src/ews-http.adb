@@ -27,6 +27,7 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with GNAT.Regpat;
+with Interfaces.C;
 
 with EWS.Dynamic;
 with EWS.Static;
@@ -191,7 +192,8 @@ package body EWS.HTTP is
       if Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
          Ada.Strings.Maps.Constants.Upper_Case_Map) = "GET"
-        and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match then
+        and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match
+      then
          declare
             Property_Input : constant String :=
               To_String (Query_Input, Query_Matches (Query_Match));
@@ -208,7 +210,8 @@ package body EWS.HTTP is
       elsif Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
          Ada.Strings.Maps.Constants.Upper_Case_Map) = "POST"
-        and then SS.Value (From.Content) /= null then
+        and then SS.Value (From.Content) /= null
+      then
          declare
             Property_Input : String renames SS.Value (From.Content).all;
          begin
@@ -710,7 +713,8 @@ package body EWS.HTTP is
             Potential_Match := True;
             for K in Pattern'Range loop
                if Pattern (K) /=
-                 Value (Mapping, Source (Cur_Index + K - 1)) then
+                 Value (Mapping, Source (Cur_Index + K - 1))
+               then
                   Potential_Match := False;
                   exit;
                end if;
@@ -728,7 +732,8 @@ package body EWS.HTTP is
             Potential_Match := True;
             for K in Pattern'Range loop
                if Pattern (K) /=
-                 Value (Mapping, Source (Cur_Index + K - 1)) then
+                 Value (Mapping, Source (Cur_Index + K - 1))
+               then
                   Potential_Match := False;
                   exit;
                end if;
@@ -778,7 +783,8 @@ package body EWS.HTTP is
          Finish := 0;
          return;
       elsif Content_Type'Length = 0
-        or else HTTP.Index (Content_Type, "multipart") = 0 then
+        or else HTTP.Index (Content_Type, "multipart") = 0
+      then
          Start := Text'First;
          Finish := Text'Last;
          return;
@@ -1035,9 +1041,11 @@ package body EWS.HTTP is
          while Chunk /= null loop
             Vector (Index) :=
               (Base => Chunk.Elements (Chunk.Elements'First)'Access,
-               Length => Stream_Element_Count'Min
-                 (Bytes_To_Send, Stream_Chunk_Elements'Length));
-            Bytes_To_Send := Bytes_To_Send - Vector (Index).Length;
+               Length => Interfaces.C.size_t
+                 (Stream_Element_Offset'Min
+                    (Bytes_To_Send, Stream_Chunk_Elements'Length)));
+            Bytes_To_Send :=
+              Bytes_To_Send - Stream_Element_Offset (Vector (Index).Length);
             Chunk := Chunk.Next;
             Index := Index + 1;
          end loop;

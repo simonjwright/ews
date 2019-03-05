@@ -36,7 +36,6 @@ package body EWS.HTTP.EWS_Attachments_Friend is
                           Last : out Natural)
    is
       CRLF2 : constant String := (ASCII.CR, ASCII.LF, ASCII.CR, ASCII.LF);
-      use type Smart_Strings.Pointer;
    begin
       Item := To_String_P (Smart_Strings.Value (From.Content));
       if Item = null then

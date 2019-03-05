@@ -23,3 +23,6 @@ demo:
 
 dist:
 .PHONY: dist
+
+clean:
+.PHONY: clean
