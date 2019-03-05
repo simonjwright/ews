@@ -70,11 +70,10 @@ private
    --  overflows.
    --
    --  Unbounded_Strings are limited; they're held in a
-   --  Dynamic_Response via a reference-counted pointer, using the
-   --  Booch Components' Smart_Pointers package. When the last copy of
-   --  a Dynamic_Response goes out of scope, the Unbounded_String it
-   --  contains is freed, and finalization frees all its buffer
-   --  memory.
+   --  Dynamic_Response via a reference-counted pointer. When the last
+   --  copy of a Dynamic_Response goes out of scope, the
+   --  Unbounded_String it contains is freed, and finalization frees
+   --  all its buffer memory.
 
    type String_P is access String;
    type Unbounded_String is new Ada.Finalization.Limited_Controlled with record

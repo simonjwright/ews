@@ -25,7 +25,7 @@ private with Ada.Finalization;
 generic
    type T (<>) is limited private;
    type P is access T;
-package EWS.Reference_Counted_Pointers_G with Preelaborate is
+package EWS.Reference_Counted_Pointers_G is
 
    type Pointer is private;
    --  A Pointer variable encapsulates a reference-counted accessor of

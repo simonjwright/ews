@@ -264,7 +264,8 @@ package body EWS.Server is
       use Ada.Exceptions;
    begin
       if Exception_Identity (With_Exception)
-        = GNAT.Sockets.Socket_Error'Identity then
+        = GNAT.Sockets.Socket_Error'Identity
+      then
          begin
             Logging_Via
               (Message & ", "

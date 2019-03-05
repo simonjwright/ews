@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{21.i.14}
+\date{5.iii.19}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -247,10 +247,9 @@ function AJAX_Time
       end case;
    end Format;
 begin
-   Dynamic.Set_Content_Type (Result, To => Types.Plain);
-   Dynamic.Set_Content
-     (Result,
-      GNAT.Calendar.Time_IO.Image (Ada.Calendar.Clock, Format));
+   Result.Set_Content_Type (To => Types.Plain);
+   Result.Set_Content
+     (GNAT.Calendar.Time_IO.Image (Ada.Calendar.Clock, Format));
    return Result;
 end AJAX_Time;
 @|AJAX_Time@}
@@ -472,21 +471,19 @@ function AJAX_Light_State
   return Dynamic.Dynamic_Response'Class is
    Result : Dynamic.Dynamic_Response (From_Request);
 begin
-   Dynamic.Set_Content_Type (Result, To => Types.XML);
-   Dynamic.Append (Result, "<lights>");
-   Dynamic.Append_Element
-     (Result,
-      "forward-light",
+   Result.Set_Content_Type (To => Types.XML);
+   Result.Append ("<lights>");
+   Result.Append_Element
+     ("forward-light",
       Ada.Strings.Fixed.Translate
         (Forward_Light'Img,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
-   Dynamic.Append_Element
-     (Result,
-      "aft-light",
+   Result.Append_Element
+     ("aft-light",
       Ada.Strings.Fixed.Translate
         (Aft_Light'Img,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
-   Dynamic.Append (Result, "</lights>");
+   Result.Append ("</lights>");
    return Result;
 end AJAX_Light_State;
 @|AJAX_Light_State@}
@@ -704,8 +701,8 @@ begin
       declare
          Result : Dynamic.Dynamic_Response (From_Request);
       begin
-         Dynamic.Set_Content_Type (Result, To => Types.Plain);
-         Dynamic.Set_Content (Result, "null");
+         Result.Set_Content_Type (To => Types.Plain);
+         Result.Set_Content ("null");
          return Result;
       end;
    end if;
@@ -726,17 +723,17 @@ function Upload_Result (Message : String)
   return Dynamic.Dynamic_Response'Class is
    Result : Dynamic.Dynamic_Response (From_Request);
 begin
-   Dynamic.Set_Content_Type (Result, To => Types.HTML);
-   Dynamic.Append (Result, "<body onload=""alert('");
+   Result.Set_Content_Type (To => Types.HTML);
+   Result.Append ("<body onload=""alert('");
    for C in Message'Range loop
       case Message (C) is
          when ASCII.CR | ASCII.NUL => null;
-         when ASCII.LF => Dynamic.Append (Result, "\n");
+         when ASCII.LF => Result.Append ("\n");
          when others =>
-            Dynamic.Append (Result, String'(1 => Message (C)));
+            Result.Append (String'(1 => Message (C)));
       end case;
    end loop;
-   Dynamic.Append (Result, "')"">");
+   Result.Append ("')"">");
    return Result;
 end Upload_Result;@%
 @|Upload_Result@}
@@ -826,35 +823,31 @@ function AJAX_Status
   return Dynamic.Dynamic_Response'Class is
    Result : Dynamic.Dynamic_Response (From_Request);
 begin
-   Dynamic.Set_Content_Type (Result, To => Types.XML);
-   Dynamic.Append (Result, "<state>");
-   Dynamic.Append_Element
-     (Result,
-      "time-format",
+   Result.Set_Content_Type (To => Types.XML);
+   Result.Append ("<state>");
+   Result.Append_Element
+     ("time-format",
       Ada.Strings.Fixed.Translate
         (Current_Date_Format'Img,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
-   Dynamic.Append_Element
-     (Result,
-      "forward-light",
+   Result.Append_Element
+     ("forward-light",
       Ada.Strings.Fixed.Translate
         (Forward_Light'Img,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
-   Dynamic.Append_Element
-     (Result,
-      "aft-light",
+   Result.Append_Element
+     ("aft-light",
       Ada.Strings.Fixed.Translate
         (Aft_Light'Img,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    for L in Lamps'Range loop
-      Dynamic.Append_Element
-        (Result,
-         "lamp",
+      Result.Append_Element
+        ("lamp",
          Ada.Strings.Fixed.Translate
            (Lamps (L)'Img,
             Ada.Strings.Maps.Constants.Lower_Case_Map));
    end loop;
-   Dynamic.Append (Result, "</state>");
+   Result.Append ("</state>");
    return Result;
 end AJAX_Status;
 @|AJAX_Status@}
@@ -899,8 +892,8 @@ function AJAX_Change
 begin
    Put_Line ("AJAX_Change called.");
    @< Checks for changed properties: Ada @>
-   Dynamic.Set_Content_Type (Result, To => Types.Plain);
-   Dynamic.Set_Content (Result, "OK");
+   Result.Set_Content_Type (To => Types.Plain);
+   Result.Set_Content ("OK");
    return Result;
 end AJAX_Change;
 @|AJAX_Change@}
