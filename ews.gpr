@@ -61,9 +61,6 @@ project EWS is
          for Library_Src_Dir use "./include";
          for Library_Interface use Source_Units;
       when "static" =>
-         --  Neither gnatmake nor gprbuild handles this case
-         --  properly. Rely on the relocatable build to copy the
-         --  required interface units to ./include.
          null;
    end case;
    for Library_Options use external_as_list ("LDFLAGS", " ");
@@ -81,7 +78,6 @@ project EWS is
          "-g",            --  for debug symbols
          "-O2",           --  standard optimisation
          "-fstack-check", --  ARM semantics
-         "-gnat12",       --  Ada2012
          "-gnatqQ",       --  to keep ALI files even if compilation fails
          "-gnatafo",      --  assertions, full reports, integer overflow
          "-gnaty",        --  standard style checks

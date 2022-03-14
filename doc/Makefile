@@ -13,17 +13,17 @@
 
 # Makefile for EWS documentation.
 
-all::
+all: demo
 
-NUWEB ?= ~/nuweb.py/nuweb.py
+NUWEB ?= ./nuweb.py
 PDFLATEX ?= pdflatex
 ifneq (,$(findstring mingw,$(shell gcc -dumpmachine)))
   EXE = .exe
 endif
 ifeq ($(OS),Windows_NT)
-  DEL   = del
+  DEL = del
 else
-  DEL   = rm -f
+  DEL = rm -f
 endif
 
 demo: ews_demo$(EXE)
@@ -64,26 +64,11 @@ nuweb-generated-stamp: ews.w
 	$(PDFLATEX) ews
 	touch $@
 
-ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED)
-	gnatmake -p -P ews_demo
-
-dist:: index.html $(NUWEB_GENERATED) HttpInteraction.js favicon.ico
-	mkdir $(DIST)/doc
-	cp $^ $(DIST)/doc/
-dist:: Makefile-dist
-	[ -d $(DIST)/doc ] || mkdir $(DIST)/doc
-	cp $< $(DIST)/doc/Makefile
-.PHONY: dist
-
-USER = simonjwright
-PRJ = embed-web-srvr
-
-upload: index.html ews.pdf
-	rsync -av $^ $(USER),$(PRJ)@web.sourceforge.net:htdocs/
-.PHONY: upload
+ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED) $(NUWEB_GENERATED)
+	gprbuild -P ews_demo
 
 clean:
-	-gnatclean -P ews_demo
+	-gprclean -P ews_demo
 	$(DEL) ews.aux ews.lof ews.log ews.out ews.pdf ews.tex ews.toc
 	$(DEL) ews_demo* ews_htdocs.*
 	$(DEL) nuweb-generated-stamp

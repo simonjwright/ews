@@ -19,9 +19,6 @@ all::
 
 GPRBUILD ?= gprbuild
 
-# Subdirectories, each implements its own contribution.
-SUBDIRS = doc src
-
 # Libraries
 
 all:: lib-static-stamp lib-relocatable-stamp exec-stamp
@@ -43,9 +40,7 @@ exec-stamp: lib-static-stamp make_htdocs.gpr
 # Demos
 
 demo:
-	for s in $(SUBDIRS); do \
-	  $(MAKE) -w -C $$s $@; \
-	done
+	$(MAKE) -w -C doc $@
 .PHONY: demo
 
 # Installation
@@ -86,7 +81,7 @@ install-relocatable-lib: lib-relocatable-stamp
 install-exec: exec-stamp
 	gprinstall				\
 	  -P make_htdocs.gpr			\
-	  --install-name=make_htdocs		\
+	  --install-name=ews			\
 	  --prefix=$(prefix)			\
 	  -XLIBRARY_TYPE=static			\
 	  -f					\
@@ -94,40 +89,9 @@ install-exec: exec-stamp
 .PHONY: install-exec
 
 clean:
-	-gnatclean -P make_htdocs.gpr
-	-gnatclean -P ews.gpr -XLIBRARY_TYPE=static
-	-gnatclean -P ews.gpr -XLIBRARY_TYPE=relocatable
+	-gprclean -P make_htdocs.gpr
+	-gprclean -P ews.gpr -XLIBRARY_TYPE=static
+	-gprclean -P ews.gpr -XLIBRARY_TYPE=relocatable
 	rm -f *-stamp
-	for s in $(SUBDIRS); do \
-	  $(MAKE) -w -C $$s $@; \
-	done
+	$(MAKE) -w -C doc clean
 .PHONY: clean
-
-# Distribution.
-
-# Create the current date, in the form yyyymmdd.
-RELEASE ?= $(shell date +%Y%m%d)
-
-# Files to copy to the distribution (Makefile-dist done specially)
-FILES = COPYING3 COPYING.RUNTIME INSTALL README ews.gpr make_htdocs.gpr
-
-# Distribution directory - eg ews-20130705
-DISTDIR = ews-$(RELEASE)
-
-dist: $(DISTDIR).tar.gz $(DISTDIR).zip
-.PHONY: dist
-
-$(DISTDIR).tar.gz: $(DISTDIR)
-	tar zcvf $@ $<
-
-$(DISTDIR).zip: $(DISTDIR)
-	zip -lr $@ $</*
-
-$(DISTDIR): $(FILES) Makefile-dist
-	-rm -rf $@
-	mkdir $@
-	cp $(FILES) $@/
-	cp Makefile-dist $@/Makefile
-	for s in $(SUBDIRS); do \
-	  $(MAKE) DIST=$(PWD)/$@ -C $$s dist; \
-	done

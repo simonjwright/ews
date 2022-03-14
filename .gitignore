@@ -27,7 +27,6 @@ doc/*.tex
 doc/*.toc
 doc/HttpInteraction.js
 doc/favicon.ico
-doc/ews.pdf
 doc/index.html
 doc/ajax.html
 doc/ajax.js

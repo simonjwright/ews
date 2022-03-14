@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{5.iii.19}
+\date{13.3.2022}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -62,10 +62,10 @@ urlcolor={linkcolor}
 \chapter{Introduction}
 \pagenumbering{arabic}
 
-\newcommand{\EWS}{\href{http://embed-web-srvr.sourceforge.net/}{EWS}\ }
+\newcommand{\EWS}{\href{https://github.com/simonjwright/ews}{EWS}\ }
 
 This document describes the
-\href{http://embed-web-srvr.sourceforge.net/}{Embedded Web Server}
+\href{https://github.com/simonjwright/ews}{Embedded Web Server}
 (EWS) in the form of a demonstration program.
 
 EWS is intended for small, limited embedded systems (for example, ones
@@ -109,7 +109,7 @@ Library Exception version 3.1}.
 The demonstration code is released without restriction.
 
 @d Copyright @{@%
-Copyright 2013, 2014 Simon Wright <simon@@pushface.org>@%
+Copyright 2013-2022 Simon Wright <simon@@pushface.org>@%
 @}
 
 In Ada,
@@ -972,24 +972,17 @@ width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
 
 @d Introductory material @{@%
 <p>EWS is a web server construction kit, designed for embedded
-applications using the <a
-href="http://libre.adacore.com/">GNAT</a> Ada
-compiler.
+applications using the GNAT Ada compiler.
 
-<p>The project is hosted on SourceForge. You can see
-the <a
-href="http://sourceforge.net/project/showfiles.php?group_id=95861">releases</a>,
-and you
-can <a
-href="http://embed-web-srvr.hg.sourceforge.net/hgweb/embed-web-srvr/embed-web-srvr/">browse</a>
-the <a href="http://mercurial.selenic.com">Mercurial</a> repository</a>.
+<p>The project is hosted on <a
+href="https://github.com/simonjwright/ews">Github</a>.
 
 <p>EWS comes with a demonstration of its facilities. The available
 facilities are described in <a href="ews.pdf">this document</a>, which
 also acts as the source code for the demonstration using the <a
 href="http://www.literateprogramming.com/">Literate Programming</a>
 facilities of <a
-href="https://sourceforge.net/projects/nuweb-py.nuweb.p/">nuweb.py</a>.
+href="https://github.com/simonjwright/nuweb.py">nuweb.py</a>.
 @|@}
 
 @d The demonstrations @{@%
@@ -1098,6 +1091,8 @@ begin
 
    @< Register dynamic pages: Ada @>
 
+   Put_Line ("Connect to ews_demo using e.g. http://localhost:8080");
+
    Server.Serve (Using_Port => 8080,
                  With_Stack => 40_000,
                  Tracing => Verbose);
@@ -1118,6 +1113,7 @@ project EWS_Demo is
    for Exec_Dir use ".";
    for Source_Dirs use (".");
    for Object_Dir use ".build";
+   for Create_Missing_Dirs use "true";
 
    package Builder is
       for Default_Switches ("ada") use ("-g");
@@ -1126,7 +1122,6 @@ project EWS_Demo is
    package Compiler is
       for Default_Switches ("ada") use
         (
-         "-gnat12",
          "-O2",
          "-gnatqQafoy"
         );
@@ -1147,7 +1142,7 @@ This document is prepared using
 \href{https://sourceforge.net/projects/nuweb/}{nuweb}, a
 language-agnostic \href{http://www.literateprogramming.com/}{Literate Programming} tool. The actual variant used
 is
-\href{https://sourceforge.net/projects/nuweb-py.nuweb.p/}{nuweb.py}.
+\href{https://github.com/simonjwright/nuweb.py}{nuweb.py}.
 
 \chapter{Index} \label{index}
 

@@ -26,21 +26,25 @@ project Make_Htdocs is
       for Default_Switches ("ada") use ("-g");
    end Builder;
 
-  package Compiler is
-     for Default_Switches ("Ada") use
+   package Compiler is
+      for Default_Switches ("Ada") use
         (
          "-O2",           --  standard optimisation
          "-fstack-check", --  ARM semantics
-         "-gnat12",       --  Ada2012
          "-gnatqQ",       --  to keep ALI files even if compilation fails
          "-gnatafo",      --  assertions, full reports, integer overflow
          "-gnaty",        --  standard style checks
          "-gnatwaL"       --  all standard warnings except for elaboration
         );
-  end Compiler;
+   end Compiler;
 
-  package Binder is
-     for Default_Switches ("ada") use ("-E");
-  end Binder;
+   package Binder is
+      for Default_Switches ("ada") use ("-E");
+   end Binder;
+
+   package Install is
+      for Mode use "usage";
+      for Install_Project use "false";
+   end Install;
 
 end Make_Htdocs;
