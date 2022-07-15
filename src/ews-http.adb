@@ -40,13 +40,16 @@ package body EWS.HTTP is
    use GNAT.Sockets;
    package SS renames Smart_Strings;
 
-
+   --  RFC 3986 Uniform Resource Identifier (URI): Generic Syntax,
+   --  Appendix B.  Parsing a URI Reference with a Regular Expression
+   --  defines the following regular expression:
+   --  ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
    URL_Request : constant String :=
      "(\r\n)?"
-     & "(GET|POST)"                             -- request, 2
+     & "(GET|POST|HEAD|PUT|DELETE|OPTIONS|PATCH)" -- request, 2
      & "\s"
      & "(/|((/[a-z0-9._-]+)+)/?)"               -- the URL, 3
-     & "(\?([a-z0-9._=&%-]+))?"                 -- query, 6
+     & "(\?([^#]*))?"                           -- query, 6
      & "\s"
      & "HTTP/(\d\.\d)"                          -- version, 8
      & "\r\n";
@@ -181,7 +184,7 @@ package body EWS.HTTP is
       Query_Matches : GNAT.Regpat.Match_Array (0 .. URL_Max_Parens);
       Query_Input : String renames SS.Value (From.Head).all;
       Property_Matcher : constant GNAT.Regpat.Pattern_Matcher :=
-        GNAT.Regpat.Compile ("(^|&)" & Named & "=([^&]*)",
+        GNAT.Regpat.Compile ("(^|&|\?)" & Named & "=([^&]*)",
                              Flags => GNAT.Regpat.Case_Insensitive);
       Property_Matches : GNAT.Regpat.Match_Array (0 .. 2);
       use type GNAT.Regpat.Match_Location;
@@ -191,7 +194,7 @@ package body EWS.HTTP is
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
       if Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
-         Ada.Strings.Maps.Constants.Upper_Case_Map) = "GET"
+         Ada.Strings.Maps.Constants.Upper_Case_Map) in "GET" | "OPTIONS"
         and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match
       then
          declare
