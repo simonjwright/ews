@@ -40,6 +40,7 @@ package body EWS.Dynamic is
    end record;
 
    Registry : Cell_P;
+   Default_Creator  : Creator;
 
 
    procedure Free
@@ -141,6 +142,9 @@ package body EWS.Dynamic is
          end if;
          Reg := Reg.Next;
       end loop;
+      if Default_Creator /= null then
+         return Default_Creator (HTTP.Request_P (For_Request));
+      end if;
       return HTTP.Not_Found (For_Request);
    end Find;
 
@@ -159,6 +163,10 @@ package body EWS.Dynamic is
                             Next => Registry);
    end Register;
 
+   procedure Register_Default (The_Creator : not null Creator) is
+   begin
+      Default_Creator := The_Creator;
+   end Register_Default;
 
    procedure Set_Content (This : in out Dynamic_Response;
                           To : String) is

@@ -44,6 +44,7 @@ package EWS.Dynamic with Elaborate_Body is
    --  In "http://foo.com:1234/bar", for example, the URL is "/bar".
    procedure Register (The_Creator : not null Creator;
                        For_The_URL :          HTTP.URL);
+   procedure Register_Default (The_Creator : not null Creator);
 
    --  Operations callable by Creator functions.
    procedure Set_Content_Type (This : in out Dynamic_Response;
