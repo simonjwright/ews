@@ -530,6 +530,15 @@ package body EWS.HTTP is
    end Content;
 
 
+   function Headers (This : Response) return String
+   is
+   begin
+      return "Content-Type: " & Content_Type (Response'Class (This)) & CRLF &
+        "Content-Length: " & Content_Length (Response'Class (This))'Img & CRLF;
+      --  NB the dispatching call.
+   end Headers;
+
+
    procedure Write_Content
      (This :                 Response;
       To   : not null access Ada.Streams.Root_Stream_Type'Class)
@@ -550,8 +559,7 @@ package body EWS.HTTP is
            (U'Access,
             "HTTP/1.0 " & Response_Kind (This) & CRLF &
               "Server: EWS" & CRLF &
-              "Content-Type: " & Content_Type (This) & CRLF &
-              "Content-Length: " & Content_Length (This)'Img & CRLF);
+              Headers (This));
          if Keep_Alive_After_Responding (This.To.all) then
             String'Write (U'Access, "Connection: Keep-Alive" & CRLF);
          end if;
@@ -560,8 +568,7 @@ package body EWS.HTTP is
            (U'Access,
             "HTTP/1.1 " & Response_Kind (This) & CRLF &
               "Server: EWS" & CRLF &
-              "Content-Type: " & Content_Type (This) & CRLF &
-              "Content-Length: " & Content_Length (This)'Img & CRLF);
+              Headers (This));
          if not Keep_Alive_After_Responding (This.To.all) then
             String'Write (U'Access, "Connection: close" & CRLF);
          end if;

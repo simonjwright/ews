@@ -194,6 +194,9 @@ package EWS.HTTP is
    function Content (This : Response) return String;
    --  default "".
 
+   function Headers (This : Response) return String;
+   --  Content-Type followed by Content-Length headers.
+
    procedure Write_Content
      (This :                 Response;
       To   : not null access Ada.Streams.Root_Stream_Type'Class);
