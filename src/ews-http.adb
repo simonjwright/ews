@@ -194,7 +194,8 @@ package body EWS.HTTP is
       pragma Assert (Query_Matches (0) /= GNAT.Regpat.No_Match);
       if Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
-         Ada.Strings.Maps.Constants.Upper_Case_Map) in "GET" | "OPTIONS"
+         Ada.Strings.Maps.Constants.Upper_Case_Map)
+        in "GET" | "OPTIONS" | "HEAD"
         and then Query_Matches (Query_Match) /= GNAT.Regpat.No_Match
       then
          declare
@@ -212,7 +213,8 @@ package body EWS.HTTP is
          end;
       elsif Ada.Strings.Fixed.Translate
         (To_String (Query_Input, Query_Matches (Method_Match)),
-         Ada.Strings.Maps.Constants.Upper_Case_Map) = "POST"
+         Ada.Strings.Maps.Constants.Upper_Case_Map)
+        in "POST" | "PUT" | "DELETE" | "PATCH"
         and then SS.Value (From.Content) /= null
       then
          declare
