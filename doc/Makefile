@@ -72,4 +72,5 @@ clean:
 	$(DEL) ews.aux ews.lof ews.log ews.out ews.pdf ews.tex ews.toc
 	$(DEL) ews_demo* ews_htdocs.*
 	$(DEL) nuweb-generated-stamp
+	$(DEL) HttpInteraction.js favicon.ico ajax.html ajax.js
 .PHONY: clean

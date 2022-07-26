@@ -15,9 +15,6 @@ include
 lib-relocatable
 lib-static
 
-# distributions
-ews-[0-9]*
-
 # doc/
 doc/*.aux
 doc/*.lof
@@ -27,7 +24,6 @@ doc/*.tex
 doc/*.toc
 doc/HttpInteraction.js
 doc/favicon.ico
-doc/index.html
 doc/ajax.html
 doc/ajax.js
 doc/ews_demo*
