@@ -10,7 +10,7 @@
 %  the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
 %  MA 02111-1307, USA.
 %
-% Copyright (c) 2013, 2014 Simon Wright
+% Copyright (C) Simon Wright 2013-2022, <simon@pushface.org>
 % All rights reserved.
 
 \documentclass{report}
@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{13.3.2022}
+\date{26.7.2022}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 

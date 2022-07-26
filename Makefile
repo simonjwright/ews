@@ -1,6 +1,6 @@
-# Copyright Simon Wright <simon@pushface.org>
+# Copyright (C) 2013-2022, Simon Wright <simon@pushface.org>
 
-# This file is part ofthe embedded web server EWS, hosted at Sourceforge
+# This file is part ofthe embedded web server EWS, hosted at Github
 # by Simon Wright.
 
 # EWS is free software; you can redistribute it and/or modify it under

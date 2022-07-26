@@ -16,7 +16,7 @@
 --  program; see the files COPYING3 and COPYING.RUNTIME respectively.
 --  If not, see <http://www.gnu.org/licenses/>.
 --
---  Copyright Simon Wright <simon@pushface.org>
+--  Copyright (C) Simon Wright 2002-2022, <simon@pushface.org>
 
 with Unicode.CES.Utf16;
 with Unicode.CES.Utf32;

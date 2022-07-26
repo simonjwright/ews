@@ -16,7 +16,7 @@
 --  program; see the files COPYING3 and COPYING.RUNTIME respectively.
 --  If not, see <http://www.gnu.org/licenses/>.
 --
---  Copyright Simon Wright <simon@pushface.org>
+--  Copyright (C) Simon Wright 2003-2022, <simon@pushface.org>
 
 pragma Ada_2012;
 

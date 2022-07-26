@@ -10,7 +10,7 @@
 --  along with this program; see the file COPYING3. If not, see
 --  <http://www.gnu.org/licenses/>.
 --
---  Copyright Simon Wright <simon@pushface.org>
+--  Copyright (C) Simon Wright 2003-2022, <simon@pushface.org>
 
 with Ada.Command_Line;
 with Ada.Streams.Stream_IO;
