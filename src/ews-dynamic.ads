@@ -102,9 +102,13 @@ private
       Content : Unbounded_String_Pointers.Pointer;
    end record;
 
+   overriding
    function Cacheable (This : Dynamic_Response) return Boolean;
+   overriding
    function Content_Type (This : Dynamic_Response) return String;
+   overriding
    function Content_Length (This : Dynamic_Response) return Integer;
+   overriding
    procedure Write_Content
      (This :                 Dynamic_Response;
       To   : not null access Ada.Streams.Root_Stream_Type'Class);

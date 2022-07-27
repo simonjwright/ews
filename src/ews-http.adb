@@ -594,7 +594,9 @@ package body EWS.HTTP is
    type Not_Found_Response (To : Request_P)
    is new Response (To) with null record;
 
+   overriding
    function Response_Kind (This : Not_Found_Response) return String;
+   overriding
    function Content (This : Not_Found_Response) return String;
 
    function Not_Found
@@ -607,7 +609,9 @@ package body EWS.HTTP is
    type Not_Implemented_Response (To : Request_P)
    is new Response (To) with null record;
 
+   overriding
    function Response_Kind (This : Not_Implemented_Response) return String;
+   overriding
    function Content (This : Not_Implemented_Response) return String;
 
    function Not_Implemented
@@ -622,7 +626,9 @@ package body EWS.HTTP is
          Info : Str.Bounded_String;
    end record;
 
+   overriding
    function Response_Kind (This : Exception_Response_T) return String;
+   overriding
    function Content (This : Exception_Response_T) return String;
 
    function Exception_Response

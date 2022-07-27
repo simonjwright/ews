@@ -295,7 +295,8 @@ private
    type Unbounded_Memory_Stream;
    type Unbounded_Memory_Stream_Finalizer
      (UMS : not null access Unbounded_Memory_Stream)
-   is new Ada.Finalization.Limited_Controlled with null record;
+     is new Ada.Finalization.Limited_Controlled with null record;
+   overriding
    procedure Finalize (UMSF : in out Unbounded_Memory_Stream_Finalizer);
 
    type Unbounded_Memory_Stream
@@ -306,12 +307,15 @@ private
       Head      : Stream_Chunk_P;
       Tail      : Stream_Chunk_P;
    end record;
+   not overriding
    procedure Copy  (Stream : Unbounded_Memory_Stream;
                     To     : GNAT.Sockets.Socket_Type);
    --  Read isn't meant to be called; output contents via Copy.
+   overriding
    procedure Read  (Stream : in out Unbounded_Memory_Stream;
                     Item   :    out Ada.Streams.Stream_Element_Array;
                     Last   :    out Ada.Streams.Stream_Element_Offset);
+   overriding
    procedure Write (Stream : in out Unbounded_Memory_Stream;
                     Item   :        Ada.Streams.Stream_Element_Array);
 

@@ -50,8 +50,11 @@ private
         Content : Types.Stream_Element_Array_P;
      end record;
 
+   overriding
    function Content_Type (This : Static_Response) return String;
+   overriding
    function Content_Length (This : Static_Response) return Integer;
+   overriding
    procedure Write_Content
      (This :                 Static_Response;
       To   : not null access Ada.Streams.Root_Stream_Type'Class);
