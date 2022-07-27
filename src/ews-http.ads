@@ -46,7 +46,7 @@ package EWS.HTTP is
                          Terminated : out Boolean);
 
    subtype Method is String;
-   --  GET or POST
+   --  GET|POST|HEAD|PUT|DELETE|OPTIONS|PATCH
 
    subtype Version is String;
    --  The HTTP version in use; 1.1 etc

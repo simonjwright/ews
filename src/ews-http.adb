@@ -48,10 +48,10 @@ package body EWS.HTTP is
      "(\r\n)?"
      & "(GET|POST|HEAD|PUT|DELETE|OPTIONS|PATCH)" -- request, 2
      & "\s"
-     & "(/|((/[a-z0-9._-]+)+)/?)"               -- the URL, 3
-     & "(\?([^#]*))?"                           -- query, 6
+     & "(/|((/[a-z0-9._-]+)+)/?)"                 -- the URL, 3
+     & "(\?([^#]*))?"                             -- query, 6
      & "\s"
-     & "HTTP/(\d\.\d)"                          -- version, 8
+     & "HTTP/(\d\.\d)"                            -- version, 8
      & "\r\n";
 
    Method_Match : constant := 2;
