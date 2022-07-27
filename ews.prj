@@ -1,0 +1,3 @@
+gpr_file=ews.gpr
+casing=$HOME/.emacs_case_exceptions
+$LIBRARY_TYPE=static
