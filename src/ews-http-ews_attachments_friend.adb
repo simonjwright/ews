@@ -16,7 +16,7 @@
 --  program; see the files COPYING3 and COPYING.RUNTIME respectively.
 --  If not, see <http://www.gnu.org/licenses/>.
 --
---  Copyright (C) Simon Wright 2007-2022, <simon@pushface.org>
+--  Copyright (C) 2007-2022, Simon Wright <simon@pushface.org>
 
 with Ada.Unchecked_Conversion;
 

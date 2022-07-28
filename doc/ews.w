@@ -10,7 +10,7 @@
 %  the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
 %  MA 02111-1307, USA.
 %
-% Copyright (C) Simon Wright 2013-2022, <simon@pushface.org>
+% Copyright (C) 2013-2022, Simon Wright <simon@pushface.org>
 % All rights reserved.
 
 \documentclass{report}
@@ -109,7 +109,7 @@ Library Exception version 3.1}.
 The demonstration code is released without restriction.
 
 @d Copyright @{@%
-Copyright 2013-2022 Simon Wright <simon@@pushface.org>@%
+Copyright 2013-2022, Simon Wright <simon@@pushface.org>@%
 @}
 
 In Ada,

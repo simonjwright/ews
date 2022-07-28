@@ -1,4 +1,4 @@
-#  Copyright (C) Simon Wright 2004-2022 <simon@pushface.org>
+# Copyright (C) 2004-2022 Simon Wright <simon@pushface.org>
 
 # EWS is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
