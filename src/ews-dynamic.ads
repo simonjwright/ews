@@ -47,15 +47,19 @@ package EWS.Dynamic with Elaborate_Body is
    procedure Register_Default (The_Creator : not null Creator);
 
    --  Operations callable by Creator functions.
+   not overriding
    procedure Set_Content_Type (This : in out Dynamic_Response;
                                To   :        Types.Format);
+   not overriding
    procedure Set_Content (This : in out Dynamic_Response;
                           To   :        String);
+   not overriding
    procedure Append (This   : in out Dynamic_Response;
                      Adding :        String);
 
    --  Utility for HTML/XML, for adding a single element with text
    --  content. Add elements containing other elements "by hand".
+   not overriding
    procedure Append_Element (This    : in out Dynamic_Response;
                              Element :        String;
                              Content :        String);
@@ -82,8 +86,11 @@ private
       Buf : String_P;
    end record;
 
+   overriding
    procedure Initialize (U : in out Unbounded_String);
+   overriding
    procedure Finalize (U : in out Unbounded_String);
+   not overriding
    procedure Append (To : in out Unbounded_String; S : String);
 
    procedure Write (To : not null access Ada.Streams.Root_Stream_Type'Class;
