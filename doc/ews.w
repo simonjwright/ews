@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{26.7.2022}
+\date{29.7.2022}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -476,12 +476,12 @@ begin
    Result.Append_Element
      ("forward-light",
       Ada.Strings.Fixed.Translate
-        (Forward_Light'Img,
+        (Forward_Light'Image,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    Result.Append_Element
      ("aft-light",
       Ada.Strings.Fixed.Translate
-        (Aft_Light'Img,
+        (Aft_Light'Image,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    Result.Append ("</lights>");
    return Result;
@@ -672,21 +672,29 @@ function File_Input
    Last : Natural;
    Attachments : constant HTTP.Attachments
      := HTTP.Get_Attachments (From_Request.all);
+   Content : constant HTTP.Contents
+     := HTTP.Get_Content (From => Attachments);
 begin
    Put_Line ("saw fileInput with attachment length"
-             & HTTP.Get_Content (Attachments)'Length'Img);
-   if HTTP.Get_Content (Attachments)'Length /= 0 then
+             & Content'Length'Image);
+   if Content'Length /= 0 then
       begin
-         HTTP.Open (C, Attachments);
-         while not HTTP.End_Of_File (C) loop
-            Lines := Lines + 1;
-            Put (Lines'Img & ": ");
-            HTTP.Get_Line (C, Line, Last);
-            Put_Line (Line (1 .. Last));
-         end loop;
-         HTTP.Close (C);
-         return Upload_Result
-           ("Upload complete," & Lines'Img & " lines.");
+         case HTTP.Get_Content_Kind (Content) is
+            when HTTP.Text =>
+               HTTP.Open (C, Content);
+               while not HTTP.End_Of_File (C) loop
+                  Lines := Lines + 1;
+                  Put (Lines'Image & ": ");
+                  HTTP.Get_Line (C, Line, Last);
+                  Put_Line (Line (Line'First .. Last));
+               end loop;
+               HTTP.Close (C);
+               return Upload_Result
+                 ("Upload complete," & Lines'Image & " lines.");
+            when others =>
+               return Upload_Result
+                 ("Upload complete," & Content'Length'Image & " bytes.");
+         end case;
       exception
          when E : others =>
             begin
@@ -698,13 +706,7 @@ begin
               ("Upload failed: " & Ada.Exceptions.Exception_Message (E));
       end;
    else
-      declare
-         Result : Dynamic.Dynamic_Response (From_Request);
-      begin
-         Result.Set_Content_Type (To => Types.Plain);
-         Result.Set_Content ("null");
-         return Result;
-      end;
+      return Upload_Result ("Upload complete, zero bytes.");
    end if;
 end File_Input;
 @|File_Input@}
@@ -828,23 +830,23 @@ begin
    Result.Append_Element
      ("time-format",
       Ada.Strings.Fixed.Translate
-        (Current_Date_Format'Img,
+        (Current_Date_Format'Image,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    Result.Append_Element
      ("forward-light",
       Ada.Strings.Fixed.Translate
-        (Forward_Light'Img,
+        (Forward_Light'Image,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    Result.Append_Element
      ("aft-light",
       Ada.Strings.Fixed.Translate
-        (Aft_Light'Img,
+        (Aft_Light'Image,
          Ada.Strings.Maps.Constants.Lower_Case_Map));
    for L in Lamps'Range loop
       Result.Append_Element
         ("lamp",
          Ada.Strings.Fixed.Translate
-           (Lamps (L)'Img,
+           (Lamps (L)'Image,
             Ada.Strings.Maps.Constants.Lower_Case_Map));
    end loop;
    Result.Append ("</state>");
