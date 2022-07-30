@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{29.7.2022}
+\date{30.7.2022}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -97,7 +97,125 @@ demonstrates AJAX-style interactions.
 
 These interactions are supported by EWS's \verb|HttpInteraction.js|.
 
-\section{Copyright and Licencing}
+\chapter{Ada main program}
+
+This chapter describes the Ada main program and the
+\href{https://docs.adacore.com/live/wave/gprbuild/html/gprbuild_ug/gprbuild_ug.html}{GNAT Project}
+used to build it.
+
+\section{Ada code}
+
+The main program (\verb|EWS_Demo|).
+
+@O ews_demo.adb @{@%
+@< Ada licence header @>
+   
+@< Main program standard context: Ada @>
+   
+@< Main program generated context: Ada @>
+
+procedure EWS_Demo is
+
+   use EWS;
+
+   @< Specs of dynamic pages: Ada @>
+
+   @< Global data: Ada @>
+
+   @< Bodies of dynamic pages: Ada @>
+
+   Verbose : Boolean := False;
+
+begin
+
+   begin
+      loop
+         case GNAT.Command_Line.Getopt ("v") is
+            when 'v' =>
+               Verbose := True;
+            when ASCII.NUL =>
+               exit;
+            when others =>
+               null;  -- never taken
+         end case;
+      end loop;
+   exception
+      when GNAT.Command_Line.Invalid_Switch =>
+         Put_Line (Standard_Error,
+                   "invalid switch -" & GNAT.Command_Line.Full_Switch);
+         return;
+   end;
+
+   @< Register dynamic pages: Ada @>
+
+   Put_Line ("Connect to ews_demo using e.g. http://localhost:8080");
+
+   Server.Serve (Using_Port => 8080,
+                 With_Stack => 40_000,
+                 Tracing => Verbose);
+
+   delay 1_000_000.0;
+
+end EWS_Demo;
+@| EWS_Demo @}
+
+This is the context required for the main program, with the exception
+of that for the code generated from the site file tree.
+
+@d Main program standard context: Ada @{@%
+with Ada.Calendar;
+with Ada.Exceptions;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
+with Ada.Text_IO; use Ada.Text_IO;
+with EWS.Dynamic;
+with EWS.HTTP;
+with EWS.Server;
+with EWS.Types;
+with GNAT.Calendar.Time_IO;
+with GNAT.Command_Line;
+@|@}
+
+This is the output of the program \verb|ews-make_htdocs|, which
+converts a file tree into static Ada source code.
+
+@d Main program generated context: Ada @{@%
+with EWS_Htdocs;
+@|@}
+
+\section{GNAT Project}
+
+@O ews_demo.gpr @{@%
+with "../ews";
+with "xmlada";
+project EWS_Demo is
+
+   for Main use ("ews_demo.adb");
+   for Exec_Dir use ".";
+   for Source_Dirs use (".");
+   for Object_Dir use ".build";
+   for Create_Missing_Dirs use "true";
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("ada") use
+        (
+         "-O2",
+         "-gnatqQafoy"
+        );
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E");
+   end Binder;
+
+end EWS_Demo;
+@|@}
+
+\chapter{Copyright and Licencing}
 
 \EWS itself is licenced under the
 \href{http://www.gnu.org/licenses/gpl.html}{GPL version 3}; the code
@@ -1037,103 +1155,6 @@ window.onload = function () {
   @< Set up the radio buttons: JavaScript @>
   @< Set up the checkboxes: JavaScript @>
 };
-@|@}
-
-\chapter{Ada}
-
-\section{Ada code}
-
-@O ews_demo.adb @{@%
-@< Ada licence header @>
-with Ada.Calendar;
-with Ada.Exceptions;
-with Ada.Strings.Fixed;
-with Ada.Strings.Maps.Constants;
-with Ada.Text_IO; use Ada.Text_IO;
-with EWS.Dynamic;
-with EWS.HTTP;
-with EWS.Server;
-with EWS.Types;
-with GNAT.Calendar.Time_IO;
-with GNAT.Command_Line;
-
-with EWS_Htdocs;
-
-procedure EWS_Demo is
-
-   use EWS;
-
-   @< Specs of dynamic pages: Ada @>
-
-   @< Global data: Ada @>
-
-   @< Bodies of dynamic pages: Ada @>
-
-   Verbose : Boolean := False;
-
-begin
-
-   begin
-      loop
-         case GNAT.Command_Line.Getopt ("v") is
-            when 'v' =>
-               Verbose := True;
-            when ASCII.NUL =>
-               exit;
-            when others =>
-               null;  -- never taken
-         end case;
-      end loop;
-   exception
-      when GNAT.Command_Line.Invalid_Switch =>
-         Put_Line (Standard_Error,
-                   "invalid switch -" & GNAT.Command_Line.Full_Switch);
-         return;
-   end;
-
-   @< Register dynamic pages: Ada @>
-
-   Put_Line ("Connect to ews_demo using e.g. http://localhost:8080");
-
-   Server.Serve (Using_Port => 8080,
-                 With_Stack => 40_000,
-                 Tracing => Verbose);
-
-   delay 1_000_000.0;
-
-end EWS_Demo;
-@|@}
-
-\section{GNAT Project}
-
-@O ews_demo.gpr @{@%
-with "../ews";
-with "xmlada";
-project EWS_Demo is
-
-   for Main use ("ews_demo.adb");
-   for Exec_Dir use ".";
-   for Source_Dirs use (".");
-   for Object_Dir use ".build";
-   for Create_Missing_Dirs use "true";
-
-   package Builder is
-      for Default_Switches ("ada") use ("-g");
-   end Builder;
-
-   package Compiler is
-      for Default_Switches ("ada") use
-        (
-         "-O2",
-         "-gnatqQafoy"
-        );
-   end Compiler;
-
-   package Binder is
-      for Default_Switches ("ada") use ("-E");
-   end Binder;
-
-end EWS_Demo;
 @|@}
 
 \appendix
