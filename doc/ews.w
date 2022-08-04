@@ -1082,9 +1082,11 @@ for (var j = 0; j < @1.length; j++) {
 <tr>
 <td><h1>Embedded Web Server: AJAX demonstration</h1></td>
 <td align="right">
-<a href="http://sourceforge.net"> <img
-src="http://sourceforge.net/sflogo.php?group_id=95861&amp;type=1"
-width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+<a href="https://github.com">
+<img
+src="GitHub_Logo.png"
+width="88" height="31" border="0" alt="Github Logo" />
+</a>
 </td>
 </tr>
 </table>
