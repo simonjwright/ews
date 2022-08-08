@@ -12,6 +12,9 @@
 --
 --  Copyright (C) 2003-2022, Simon Wright <simon@pushface.org>
 
+--  This program traverses a directory structure, generating a binary
+--  repreentation of the contents to be served by EWS.Server.
+
 with Ada.Command_Line;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -20,7 +23,7 @@ with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 with GNAT.Regpat;
 
-procedure EWS.Make_Htdocs is
+procedure Generator is
 
    procedure Scan_Directory (Named : GNAT.Directory_Operations.Dir_Name_Str);
    procedure Save_File (Named : String);
@@ -88,7 +91,7 @@ procedure EWS.Make_Htdocs is
      := GNAT.Regpat.Compile ("\.xsl$");
 
    type String_P is access constant String;
-   subtype Content_Type is Types.Format;
+   subtype Content_Type is EWS.Types.Format;
    type File_Info;
    type File_Info_P is access File_Info;
    type File_Info is record
@@ -328,4 +331,4 @@ begin
    Put_Line ("end EWS_Htdocs;");
    Output_Management.Reset_Standard_Output;
 
-end EWS.Make_Htdocs;
+end Generator;

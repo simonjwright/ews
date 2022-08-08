@@ -1,0 +1,14 @@
+syntax: glob
+
+*.aux
+*.lof
+*.log
+*.out
+*.tex
+*.toc
+HttpInteraction.js
+favicon.ico
+ajax.html
+ajax.js
+ews_demo*
+ews_htdocs.*

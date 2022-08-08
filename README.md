@@ -18,7 +18,7 @@ The package can be installed with the compiler by `make install` (more likely, `
 
 ## Documentation ##
 
-The facilities available in EWS, and the code for the demonstration, are described in `doc/ews.pdf`, which is derived from `doc/ews.w`. As well as being the document source, `ews.w` also acts as the source code using the [Literate Programming](http://www.literateprogramming.com/) facilities of [nuweb.py](https://github.com/simonjwright/nuweb.py).
+The facilities available in EWS, and the code for the demonstration, are described in `demonstrator/ews.pdf`, which is derived from `demonstrator/ews.w`. As well as being the document source, `ews.w` also acts as the source code using the [Literate Programming](http://www.literateprogramming.com/) facilities of [nuweb.py](https://github.com/simonjwright/nuweb.py).
 
 ## Demonstration ##
 

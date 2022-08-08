@@ -12,17 +12,17 @@
 --  write to the Free Software Foundation, 59 Temple Place - Suite
 --  330, Boston, MA 02111-1307, USA.
 
-with "ews";
+project EWS_Generator is
 
-project Make_Htdocs is
-
-   for Main use ("ews-make_htdocs.adb");
-   for Exec_Dir use "bin";
-   for Object_Dir use ".build-make_htdocs";
-   for Source_Dirs use ("src");
-   for Source_Files use ("ews-make_htdocs.adb");
+   for Main use ("generator.adb");
+   for Exec_Dir use "../bin";
+   for Object_Dir use ".build";
+   for Source_Dirs use (".", "../src");
+   for Source_Files use
+     ("generator.adb", "ews.ads", "ews-types.ads", "ews-types.adb");
 
    package Builder is
+      for Executable ("generator.adb") use "ews_generator";
       for Default_Switches ("ada") use ("-g");
    end Builder;
 
@@ -47,4 +47,4 @@ project Make_Htdocs is
       for Install_Project use "false";
    end Install;
 
-end Make_Htdocs;
+end EWS_Generator;

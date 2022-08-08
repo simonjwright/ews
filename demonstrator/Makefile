@@ -11,9 +11,18 @@
 # along with this program; see the file COPYING3.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-# Makefile for EWS documentation.
+# Makefile for EWS demonstration.
 
-all: demo
+# For Alire puroses, only the demo_code target applies; it's called in
+# a pre-build action, while the actual build is done by alr
+# build. This is needed because
+#
+# - the actual GPR is created by nuweb from ews.py
+# - Alire needs a GPR (here, and by default, demonstrator.gpr)
+# - demonstrator.gpr is an aggregate project which calls up the generated
+#   project.
+
+all: demo demo_code pdf
 
 NUWEB ?= ./nuweb.py
 PDFLATEX ?= pdflatex
@@ -25,27 +34,32 @@ ifeq ($(OS),Windows_NT)
 else
   DEL = rm -f
 endif
+GENERATOR = ../bin/ews_generator
 
-demo: ews_demo$(EXE)
-.PHONY: demo
+$(GENERATOR):
+ifeq ($(ALIRE),)
+	cd ../generator; gprbuild -P ews_generator
+endif
 
-NUWEB_GENERATED =				\
-  ews.pdf 					\
+CODE_GENERATED = \
   ews_demo.gpr 					\
   ews_demo.adb 					\
   ajax.html 					\
   ajax.js
 
+$(CODE_GENERATED): ews.w
+	$(NUWEB) -t $<
+
 EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
 
-$(EWS_GENERATED):				\
-  index.html 					\
+$(EWS_GENERATED): $(GENERATOR)			\
+  index.html					\
   ews.pdf					\
   ajax.html					\
   ajax.js					\
   HttpInteraction.js				\
   favicon.ico
-	../bin/ews-make_htdocs
+	$(GENERATOR)
 
 HttpInteraction.js: ../lib/HttpInteraction.js
 	cp $< $@
@@ -53,24 +67,27 @@ HttpInteraction.js: ../lib/HttpInteraction.js
 favicon.ico: ../lib/favicon.ico
 	cp $< $@
 
-# We need to use a stamp because nuweb only touches a file (and
-# therefore changes the date) if the content has changed.
-$(NUWEB_GENERATED): nuweb-generated-stamp
-# We have to do this twice to get cross-references correct.
-nuweb-generated-stamp: ews.w
-	$(NUWEB) -r ews
-	$(PDFLATEX) ews
-	$(NUWEB) -r ews
-	$(PDFLATEX) ews
-	touch $@
+demo: ews_demo$(EXE)
+.PHONY: demo
 
-ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED) $(NUWEB_GENERATED)
+demo_code: $(CODE_GENERATED) $(EWS_GENERATED)
+.PHONY: demo_code
+
+pdf: ews.pdf
+.PHONY: pdf
+
+ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED) $(CODE_GENERATED)
 	gprbuild -P ews_demo
+
+ews.pdf: ews.w
+	$(NUWEB) -r ews
+	$(PDFLATEX) ews
+	$(NUWEB) -r ews
+	$(PDFLATEX) ews
 
 clean:
 	-gprclean -P ews_demo
-	$(DEL) ews.aux ews.lof ews.log ews.out ews.pdf ews.tex ews.toc
+	$(DEL) ews.aux ews.lof ews.log ews.out ews.tex ews.toc
 	$(DEL) ews_demo* ews_htdocs.*
-	$(DEL) nuweb-generated-stamp
 	$(DEL) HttpInteraction.js favicon.ico ajax.html ajax.js
 .PHONY: clean

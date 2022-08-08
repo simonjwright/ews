@@ -49,7 +49,7 @@ urlcolor={linkcolor}
 \usepackage{graphicx}
 
 \title{Embedded Web Server}
-\date{30.7.2022}
+\date{9.viii.2022}
 \author{Simon Wright
 \\ \sl simon@@pushface.org}
 
@@ -71,7 +71,7 @@ This document describes the
 EWS is intended for small, limited embedded systems (for example, ones
 with no file system).
 
-It provides a program (\verb|ews-make_htdocs|) which converts a
+It provides a program (\verb|ews_generator|) which converts a
 directory structure containing a set of web pages into an Ada data
 structure to be compiled with the EWS library and your application and
 served at run time.
@@ -109,9 +109,9 @@ The main program (\verb|EWS_Demo|).
 
 @O ews_demo.adb @{@%
 @< Ada licence header @>
-   
+
 @< Main program standard context: Ada @>
-   
+
 @< Main program generated context: Ada @>
 
 procedure EWS_Demo is
@@ -185,7 +185,7 @@ with EWS_Htdocs;
 
 \section{GNAT Project}
 
-@O ews_demo.gpr @{@%
+@o ews_demo.gpr @{@%
 with "../ews";
 with "xmlada";
 project EWS_Demo is

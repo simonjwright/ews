@@ -33,14 +33,14 @@ lib-relocatable-stamp: ews.gpr
 
 # Executables
 
-exec-stamp: lib-static-stamp make_htdocs.gpr
-	$(GPRBUILD) -p -P make_htdocs.gpr -XLIBRARY_TYPE=static
+exec-stamp: lib-static-stamp
+	$(GPRBUILD) -p -P generator/ews_generator.gpr -XLIBRARY_TYPE=static
 	touch $@
 
 # Demos
 
-demo:
-	$(MAKE) -w -C doc $@
+demo: exec-stamp
+	$(MAKE) -w -C demonstrator $@
 .PHONY: demo
 
 # Installation
@@ -89,9 +89,9 @@ install-exec: exec-stamp
 .PHONY: install-exec
 
 clean:
-	-gprclean -P make_htdocs.gpr
+	-gprclean -P generator/ews_generator.gpr
 	-gprclean -P ews.gpr -XLIBRARY_TYPE=static
 	-gprclean -P ews.gpr -XLIBRARY_TYPE=relocatable
 	rm -f *-stamp
-	$(MAKE) -w -C doc clean
+	$(MAKE) -w -C demonstrator clean
 .PHONY: clean

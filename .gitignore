@@ -8,23 +8,13 @@ syntax: glob
 *.orig
 *-stamp
 
+# Alire stuff
+alire/
+config/
+
 # Ada build stuff
 .build*
 bin
 include
 lib-relocatable
 lib-static
-
-# doc/
-doc/*.aux
-doc/*.lof
-doc/*.log
-doc/*.out
-doc/*.tex
-doc/*.toc
-doc/HttpInteraction.js
-doc/favicon.ico
-doc/ajax.html
-doc/ajax.js
-doc/ews_demo*
-doc/ews_htdocs.*
