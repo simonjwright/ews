@@ -47,8 +47,11 @@ CODE_GENERATED = \
   ajax.html 					\
   ajax.js
 
-$(CODE_GENERATED): ews.w
+# Work round missing 'grouped target' in GNU make < 4.3.
+$(CODE_GENERATED): code-generated-stamp ;
+code-generated-stamp: ews.w
 	$(NUWEB) -t $<
+	touch $@
 
 EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
 
@@ -89,5 +92,6 @@ clean:
 	-gprclean -P ews_demo
 	$(DEL) ews.aux ews.lof ews.log ews.out ews.tex ews.toc
 	$(DEL) ews_demo* ews_htdocs.*
+	$(DEL) code-generated-stamp
 	$(DEL) HttpInteraction.js favicon.ico ajax.html ajax.js
 .PHONY: clean

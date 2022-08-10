@@ -346,7 +346,6 @@ class InvokingCodeLine(CodeLine):
         p = re.match(CodeLine.parameter_matcher, fragment)
         if p:
             fragment = p.group('fragment').strip()
-            print("INVOKINGCODELINE: PARAMETERS %s" % p.group('parameters'))
             parameters = re.split(r'\s*@,\s*',
                                   p.group('parameters').strip())
         else:
@@ -908,13 +907,11 @@ class Fragment(CodeElement):
             return True
         elif invocation[-3:] == '...' \
                 and self.name[:len(invocation)-3] == invocation[:-3]:
-            print("HAHAHA I found one!!!!!")
             return True
         elif self.name[-3:] == '...' \
                 and invocation[:len(self.name)-3] == self.name[:-3]:
             # This covers the case where the invocation is the full name.
             self.name = invocation
-            print("HAHAHA I found another!!!!!")
             return True
         else:
             return False
