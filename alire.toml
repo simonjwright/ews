@@ -8,9 +8,9 @@ The project is hosted at https://github.com/simonjwright/ews.
 
 """
 name = "ews"
-version = "1.11.0"
+version = "1.11.0-1"
 authors = ["Simon Wright <simon@pushface.org>"]
-licenses = "GPL-3.0-only WITH GCC-exception-3.1"
+licenses = "GPL-3.0-or-later WITH GCC-exception-3.1"
 maintainers = ["Simon Wright <simon@pushface.org>"]
 maintainers-logins = ["simonjwright"]
 project-files = ["ews.gpr"]

@@ -12,9 +12,9 @@ installation of LaTeX (e.g. TeX Live).
 
 """
 name = "demonstrator"
-version = "1.11.0"
+version = "1.11.0-1"
 authors = ["Simon Wright <simon@pushface.org>"]
-licenses = "GPL-3.0-only WITH GCC-exception-3.1"
+licenses = "Unlicense"
 maintainers = ["Simon Wright <simon@pushface.org>"]
 maintainers-logins = ["simonjwright"]
 project-files = ["demonstrator.gpr"]

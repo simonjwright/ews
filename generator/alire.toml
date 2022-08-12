@@ -11,9 +11,9 @@ source code corresponding to a web source directory tree.
 
 """
 name = "generator"
-version = "1.11.0"
+version = "1.11.0-1"
 authors = ["Simon Wright <simon@pushface.org>"]
-licenses = "GPL-3.0-only WITH GCC-exception-3.1"
+licenses = "GPL-3.0-or-later WITH GCC-exception-3.1"
 maintainers = ["Simon Wright <simon@pushface.org>"]
 maintainers-logins = ["simonjwright"]
 project-files = ["ews_generator.gpr"]
