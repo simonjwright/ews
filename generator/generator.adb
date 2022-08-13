@@ -23,6 +23,8 @@
 
 with Ada.Command_Line;
 with Ada.Directories;
+with Ada.Exceptions;
+with Ada.IO_Exceptions;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO; use Ada.Text_IO;
 with EWS.Types;
@@ -33,6 +35,27 @@ with GNAT.Regpat;
 with GNAT.Strings;
 
 procedure Generator is
+
+   package Command_Line is
+      procedure Initialize
+      with
+        Pre => not Initialized,
+        Post => Initialized;
+
+      function Verbose return Boolean
+      with
+        Pre => Initialized;
+
+      function Input_Directory return String
+      with
+        Pre => Initialized;
+
+      function Output_Directory return String
+      with
+        Pre => Initialized;
+
+      function Initialized return Boolean;
+   end Command_Line;
 
    procedure Scan_Directory (Named : GNAT.Directory_Operations.Dir_Name_Str);
    procedure Save_File (Named : String);
@@ -62,15 +85,24 @@ procedure Generator is
                                             Str => Str,
                                             Last => Last);
             exit when Last = 0;
-            if Str (1 .. Last) /= "." and Str (1 .. Last) /= ".." then
-               if GNAT.OS_Lib.Is_Directory (Named & Str (1 .. Last)) then
-                  Scan_Directory
-                    (Named & Str (1 .. Last)
-                       & GNAT.OS_Lib.Directory_Separator);
+            declare
+               Name : constant String := Str (1 .. Last);
+               Full_Name : constant String
+                 := Named & GNAT.OS_Lib.Directory_Separator & Name;
+            begin
+               if not GNAT.OS_Lib.Is_Directory (Full_Name)
+               then
+                  --  Put_Line (Standard_Error, ".. saving " & Full_Name);
+                  Save_File (Full_Name);
+               elsif Name /= "." and Name /= ".."
+               then
+                  --  Put_Line (Standard_Error, ".. scanning " & Name);
+                  Scan_Directory (Full_Name);
                else
-                  Save_File (Named & Str (1 .. Last));
+                  --  Put_Line (Standard_Error, ".. skipped");
+                  null;
                end if;
-            end if;
+            end;
          end loop;
       end;
       GNAT.Directory_Operations.Close (Dir => Wd);
@@ -119,6 +151,9 @@ procedure Generator is
                              Kind => Kind,
                              Next => null);
       begin
+         if Command_Line.Verbose then
+            Put_Line (Standard_Error, Named);
+         end if;
          if First_File = null then
             First_File := Info;
             Last_File := Info;
@@ -165,7 +200,9 @@ procedure Generator is
          return Res (Res'First + 1 .. Res'Last);
       end Image;
       function Image (F : String) return String is
-         Start : constant Positive := F'First + Base_Dir_Len - 1;
+         --  Skip leading {base_dir}, leaving the leading /, which the
+         --  browser will insert.
+         Start : constant Positive := F'First + Base_Dir_Len;
          Result : String := F (Start .. F'Last);
       begin
          for C in Result'Range loop
@@ -262,6 +299,105 @@ procedure Generator is
       Ada.Streams.Stream_IO.Close (File);
    end Output_Contents;
 
+   package body Command_Line is
+
+      Command_Line_Config : GNAT.Command_Line.Command_Line_Configuration;
+
+      Is_Initialized : Boolean := False;
+      function Initialized return Boolean is (Is_Initialized);
+
+      Is_Verbose : aliased Boolean := False;
+      New_Input_Directory : aliased GNAT.Strings.String_Access
+        := new String'("");
+      New_Output_Directory : aliased GNAT.Strings.String_Access
+        := new String'("");
+
+      Initial_Directory : constant String
+        := Ada.Directories.Current_Directory;
+
+      function Add_Path_Component (Component : String) return String;
+
+      procedure Initialize is
+      begin
+         GNAT.Command_Line.Set_Usage
+           (Command_Line_Config,
+            Usage => "",
+            Help  => "process the tree, output corresponding Ada code");
+
+         GNAT.Command_Line.Define_Switch
+           (Command_Line_Config,
+            Switch      => "-h",
+            Long_Switch => "--help",
+            Help        => "Request help");
+
+         GNAT.Command_Line.Define_Switch
+           (Command_Line_Config,
+            Is_Verbose'Access,
+            Switch      => "-v",
+            Long_Switch => "--verbose",
+            Help        => "Log processing");
+
+         GNAT.Command_Line.Define_Switch
+           (Command_Line_Config,
+            Output      => New_Input_Directory'Access,
+            Switch      => "-i:",
+            Long_Switch => "--input-dir:",
+            Help        => "Where to output generated files (D: current dir",
+            Argument    => "DIR");
+
+         GNAT.Command_Line.Define_Switch
+           (Command_Line_Config,
+            Output      => New_Output_Directory'Access,
+            Switch      => "-o:",
+            Long_Switch => "--output-dir:",
+            Help        => "Where to output generated files (D: current dir",
+            Argument    => "DIR");
+
+         GNAT.Command_Line.Getopt (Command_Line_Config);
+
+         if GNAT.Command_Line.Get_Argument /= "" then
+            raise GNAT.Command_Line.Exit_From_Command_Line
+              with "arguments ignored";
+         end if;
+
+         Is_Initialized := True;
+      end Initialize;
+
+      function Verbose return Boolean is (Is_Verbose);
+
+      function Input_Directory return String
+      is
+      begin
+         return Add_Path_Component (New_Input_Directory.all);
+      end Input_Directory;
+
+      function Output_Directory return String
+      is
+      begin
+         return Add_Path_Component (New_Output_Directory.all);
+      end Output_Directory;
+
+      function Add_Path_Component (Component : String) return String is
+      begin
+         if Component = "" then
+            return Initial_Directory;
+         else
+            Ada.Directories.Set_Directory (Component);
+            declare
+               Result : constant String := Ada.Directories.Current_Directory;
+            begin
+               Ada.Directories.Set_Directory (Initial_Directory);
+               return Result;
+            end;
+         end if;
+      exception
+         when E : Ada.IO_Exceptions.Name_Error =>
+            raise GNAT.Command_Line.Exit_From_Command_Line
+              with Ada.Exceptions.Exception_Message (E);
+      end Add_Path_Component;
+
+   end Command_Line;
+
    package body Output_Management is
 
       File : File_Type;
@@ -288,79 +424,51 @@ procedure Generator is
 
    end Output_Management;
 
-   Command_Line_Config : GNAT.Command_Line.Command_Line_Configuration;
-   Output_Directory : aliased GNAT.Strings.String_Access
-     := new String'(GNAT.Directory_Operations.Get_Current_Dir);
-
 begin
+   Command_Line.Initialize;
 
-   GNAT.Command_Line.Set_Usage
-     (Command_Line_Config,
-      Usage => "[input-directory]",
-      Help  => "process the tree in input-directory (D:current directory)");
-
-   GNAT.Command_Line.Define_Switch
-     (Command_Line_Config,
-      Switch      => "-h",
-      Long_Switch => "--help",
-      Help        => "Request help");
-
-   GNAT.Command_Line.Define_Switch
-     (Command_Line_Config,
-      Output      => Output_Directory'Access,
-      Switch      => "-o:",
-      Long_Switch => "--output-dir:",
-      Help        => "Where to output generated files",
-      Argument    => "DIR");
-
-   GNAT.Command_Line.Getopt (Command_Line_Config);
-
-   if GNAT.Command_Line.Get_Argument /= "" then
-      begin
-         GNAT.Directory_Operations.Change_Dir
-           (GNAT.Command_Line.Get_Argument);
-      exception
-         when GNAT.Directory_Operations.Directory_Error =>
-            Put_Line (Standard_Error,
-                      "unable to open " & GNAT.Command_Line.Get_Argument);
-            Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
-            return;
-      end;
+   if Command_Line.Verbose then
+      Put_Line (Standard_Error,
+                "Input directory:  " & Command_Line.Input_Directory);
+      Put_Line (Standard_Error,
+                "Output directory: " & Command_Line.Output_Directory);
    end if;
 
+   Setup_And_Check_Output_Spec_File :
    begin
       Output_Management.Set_Standard_Output
         (Ada.Directories.Compose
-           (Containing_Directory => Output_Directory.all,
+           (Containing_Directory => Command_Line.Output_Directory,
             Name                 => "ews_htdocs.ads"));
    exception
-      when Name_Error =>
+      when others =>
          Put_Line (Standard_Error,
-                   "unable to open ews_htdocs.ads in " & Output_Directory.all);
+                   "unable to open ews_htdocs.ads in "
+                     & Command_Line.Output_Directory);
          Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
          return;
-   end;
+   end Setup_And_Check_Output_Spec_File;
 
-   Put_Line ("--  Generated by ews-make_htdocs");
-   Put_Line ("--  Source: " & GNAT.Directory_Operations.Get_Current_Dir);
+   Put_Line ("--  Generated by ews_generator");
+   Put_Line ("--  Source: " & Command_Line.Input_Directory);
    Put_Line ("package EWS_Htdocs with Elaborate_Body is");
    Put_Line ("end EWS_Htdocs;");
    Output_Management.Reset_Standard_Output;
 
    Output_Management.Set_Standard_Output
      (Ada.Directories.Compose
-        (Containing_Directory => Output_Directory.all,
+        (Containing_Directory => Command_Line.Output_Directory,
          Name                 => "ews_htdocs.adb"));
    Put_Line ("pragma Style_Checks (Off);");
-   Put_Line ("--  Generated by ews-make_htdocs");
-   Put_Line ("--  Source: " & GNAT.Directory_Operations.Get_Current_Dir);
+   Put_Line ("--  Generated by ews_generator");
+   Put_Line ("--  Source: " & Command_Line.Input_Directory);
    Put_Line ("with Ada.Streams; use Ada.Streams;");
    Put_Line ("with EWS.Static; use EWS.Static;");
    Put_Line ("with EWS.Types; use EWS.Types;");
    Put_Line ("package body EWS_Htdocs is");
 
-   Scan_Directory (GNAT.Directory_Operations.Get_Current_Dir);
-   Output (GNAT.Directory_Operations.Get_Current_Dir);
+   Scan_Directory (Command_Line.Input_Directory);
+   Output (Command_Line.Input_Directory);
 
    Put_Line ("begin");
    Put_Line ("   Register (Documents'Access);");
@@ -368,5 +476,7 @@ begin
    Output_Management.Reset_Standard_Output;
 
 exception
-   when GNAT.Command_Line.Exit_From_Command_Line => null;
+   when E : GNAT.Command_Line.Exit_From_Command_Line =>
+      Put_Line (Standard_Error,
+                Ada.Exceptions.Exception_Message (E));
 end Generator;
