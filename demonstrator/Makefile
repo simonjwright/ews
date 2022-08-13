@@ -55,14 +55,18 @@ code-generated-stamp: ews.w
 
 EWS_GENERATED = ews_htdocs.ads ews_htdocs.adb
 
-$(EWS_GENERATED): $(GENERATOR)			\
+# This actually depends on ews.pdf, but if we mention it here it'll be
+# rebuilt (well, it'll almost certainly fail to be rebuilt (unless the
+# user has pdflatex installed))
+$(EWS_GENERATED): ews-generated-stamp ;
+ews-generated-stamp: $(GENERATOR)		\
   index.html					\
-  ews.pdf					\
   ajax.html					\
   ajax.js					\
   HttpInteraction.js				\
   favicon.ico
 	$(GENERATOR)
+	touch $@
 
 HttpInteraction.js: ../lib/HttpInteraction.js
 	cp $< $@
@@ -73,13 +77,13 @@ favicon.ico: ../lib/favicon.ico
 demo: ews_demo$(EXE)
 .PHONY: demo
 
-demo_code: $(CODE_GENERATED) $(EWS_GENERATED)
+demo_code:: $(CODE_GENERATED) $(EWS_GENERATED)
 .PHONY: demo_code
 
 pdf: ews.pdf
 .PHONY: pdf
 
-ews_demo$(EXE): ews_demo.gpr ews_demo.adb $(EWS_GENERATED) $(CODE_GENERATED)
+ews_demo$(EXE): demo_code
 	gprbuild -P ews_demo
 
 ews.pdf: ews.w
@@ -92,6 +96,6 @@ clean:
 	-gprclean -P ews_demo
 	$(DEL) ews.aux ews.lof ews.log ews.out ews.tex ews.toc
 	$(DEL) ews_demo* ews_htdocs.*
-	$(DEL) code-generated-stamp
+	$(DEL) *-stamp
 	$(DEL) HttpInteraction.js favicon.ico ajax.html ajax.js
 .PHONY: clean
