@@ -387,10 +387,7 @@ procedure Generator is
       function Justify
         (Line : String; Max_Length : Positive := 79) return String
       is
-         Term : constant String :=
-           (if GNAT.OS_Lib.Directory_Separator = '\'
-            then (1 => ASCII.CR, 2 => ASCII.LF)
-            else (1 => ASCII.LF));
+         Term : constant String := (1 => ASCII.LF);
       begin
          if Line'Length <= Max_Length then
             return Line;
