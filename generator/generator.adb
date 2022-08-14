@@ -315,14 +315,21 @@ procedure Generator is
       Initial_Directory : constant String
         := Ada.Directories.Current_Directory;
 
+      function Justify
+        (Line : String; Max_Length : Positive := 79) return String;
       function Add_Path_Component (Component : String) return String;
 
       procedure Initialize is
       begin
          GNAT.Command_Line.Set_Usage
            (Command_Line_Config,
-            Usage => "",
-            Help  => "process the tree, output corresponding Ada code");
+            Usage => "[switches]",
+            Help  =>
+              Justify
+                ("Process the web source tree and output corresponding Ada"
+                   & " code. Unless overridden by switches, the input tree"
+                   & " and the output Ada code are respectively taken from"
+                   & " and written to the current directory."));
 
          GNAT.Command_Line.Define_Switch
            (Command_Line_Config,
@@ -342,7 +349,7 @@ procedure Generator is
             Output      => New_Input_Directory'Access,
             Switch      => "-i:",
             Long_Switch => "--input-dir:",
-            Help        => "Where to output generated files (D: current dir",
+            Help        => "Where to find the web source (D: current dir)",
             Argument    => "DIR");
 
          GNAT.Command_Line.Define_Switch
@@ -350,14 +357,14 @@ procedure Generator is
             Output      => New_Output_Directory'Access,
             Switch      => "-o:",
             Long_Switch => "--output-dir:",
-            Help        => "Where to output generated files (D: current dir",
+            Help        => "Where to output generated files (D: current dir)",
             Argument    => "DIR");
 
          GNAT.Command_Line.Getopt (Command_Line_Config);
 
          if GNAT.Command_Line.Get_Argument /= "" then
-            raise GNAT.Command_Line.Exit_From_Command_Line
-              with "arguments ignored";
+            raise GNAT.Command_Line.Invalid_Switch
+              with "ews_generator does not accept arguments";
          end if;
 
          Is_Initialized := True;
@@ -377,6 +384,40 @@ procedure Generator is
          return Add_Path_Component (New_Output_Directory.all);
       end Output_Directory;
 
+      function Justify
+        (Line : String; Max_Length : Positive := 79) return String
+      is
+         Term : constant String :=
+           (if GNAT.OS_Lib.Directory_Separator = '\'
+            then (1 => ASCII.CR, 2 => ASCII.LF)
+            else (1 => ASCII.LF));
+      begin
+         if Line'Length <= Max_Length then
+            return Line;
+         else
+            declare
+               End_Pos : Natural := Line'First + Max_Length - 1;
+               Next_Pos : Positive;
+            begin
+               --  Find the first space before the starting position
+               while End_Pos > Line'First and then Line (End_Pos) /= ' ' loop
+                  End_Pos := End_Pos - 1;
+               end loop;
+               --  Find the first non-space before that
+               while End_Pos > Line'First and then Line (End_Pos) = ' ' loop
+                  End_Pos := End_Pos - 1;
+               end loop;
+               Next_Pos := End_Pos + 1;
+               while Next_Pos < Line'Last and then Line (Next_Pos) = ' ' loop
+                  Next_Pos := Next_Pos + 1;
+               end loop;
+               return Line (Line'First .. End_Pos)
+                 & Term
+                 & Justify (Line (Next_Pos .. Line'Last), Max_Length);
+            end;
+         end if;
+      end Justify;
+
       function Add_Path_Component (Component : String) return String is
       begin
          if Component = "" then
@@ -392,7 +433,7 @@ procedure Generator is
          end if;
       exception
          when E : Ada.IO_Exceptions.Name_Error =>
-            raise GNAT.Command_Line.Exit_From_Command_Line
+            raise GNAT.Command_Line.Invalid_Switch
               with Ada.Exceptions.Exception_Message (E);
       end Add_Path_Component;
 
@@ -476,7 +517,9 @@ begin
    Output_Management.Reset_Standard_Output;
 
 exception
-   when E : GNAT.Command_Line.Exit_From_Command_Line =>
+   when GNAT.Command_Line.Exit_From_Command_Line =>
+      null;
+   when E : GNAT.Command_Line.Invalid_Switch =>
       Put_Line (Standard_Error,
-                Ada.Exceptions.Exception_Message (E));
+                "command line error: " & Ada.Exceptions.Exception_Message (E));
 end Generator;
