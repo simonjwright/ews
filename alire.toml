@@ -27,8 +27,8 @@ LIBRARY_TYPE = ["relocatable", "static"]
 type = "post-build"
 command = ["gprbuild", "-P", "generator/ews_generator.gpr"]
 
-[environment]
-PATH.append="${CRATE_ROOT}/bin"
+[environment.PATH]
+append="${CRATE_ROOT}/bin"
 
 [configuration]
 disabled = true
