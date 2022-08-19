@@ -12,7 +12,7 @@ installation of LaTeX (e.g. TeX Live).
 
 """
 name = "demonstrator"
-version = "1.11.0-1"
+version = "1.11.0"
 authors = ["Simon Wright <simon@pushface.org>"]
 licenses = "Unlicense"
 maintainers = ["Simon Wright <simon@pushface.org>"]
