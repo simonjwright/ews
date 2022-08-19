@@ -29,7 +29,7 @@ package EWS.Static with Elaborate_Body is
    function Find
      (For_Request : not null access HTTP.Request) return HTTP.Response'Class;
 
-   --  These are used by ews-make_htdocs to encode the pages.
+   --  These are used by ews_generator to encode the pages.
    type URL_Info is record
       URL : Types.String_P;
       Doc : Types.Stream_Element_Array_P;

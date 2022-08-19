@@ -176,7 +176,7 @@ with GNAT.Calendar.Time_IO;
 with GNAT.Command_Line;
 @|@}
 
-This is the output of the program \verb|ews-make_htdocs|, which
+This is the output of the program \verb|ews_generator|, which
 converts a file tree into static Ada source code.
 
 @d Main program generated context: Ada @{@%

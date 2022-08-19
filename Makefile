@@ -78,9 +78,9 @@ install-relocatable-lib: lib-relocatable-stamp
 	  -p
 .PHONY: install-relocatable-lib
 
-install-exec: exec-stamp
+install-exec: exec-stamp			\
 	gprinstall				\
-	  -P make_htdocs.gpr			\
+	  -P generator/ews_generator.gpr	\
 	  --install-name=ews			\
 	  --prefix=$(prefix)			\
 	  -XLIBRARY_TYPE=static			\
